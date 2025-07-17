@@ -10,7 +10,7 @@ interface AppSidebarProps {
 const menuItems = [
   { id: 'dashboard' as DashboardView, title: "Dashboard", icon: Home },
   { id: 'manage-workflows' as DashboardView, title: "Manage Workflows", icon: Book },
-  { id: 'workflow' as DashboardView, title: "Grant Writing Workflow", icon: Workflow },
+  { id: 'workflow' as DashboardView, title: "Lit Review Workflow", icon: Workflow },
   { id: 'prompts' as DashboardView, title: "Prompt Library", icon: Lightbulb },
 ];
 
@@ -28,7 +28,7 @@ export function AppSidebar({ currentView, onNavigate }: AppSidebarProps) {
             </div>
             {!collapsed && (
               <div>
-                <h1 className="font-bold text-lg gradient-text">Grant AI</h1>
+                <h1 className="font-bold text-lg gradient-text">Lit Review AI</h1>
                 <p className="text-xs text-muted-foreground">Research Learning Hub</p>
               </div>
             )}

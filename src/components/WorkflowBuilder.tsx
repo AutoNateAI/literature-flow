@@ -38,317 +38,384 @@ const workflowSteps: WorkflowStep[] = [
   {
     id: "research-setup",
     title: "Research Environment Setup",
-    description: "Create a dedicated workspace and import relevant documents",
-    phase: "Preparation",
+    description: "Create a dedicated workspace and organize your literature review system",
+    phase: "Setup",
     estimatedTime: "30 minutes",
     isCompleted: false,
-    content: `Create a dedicated workspace in NotebookLM or similar tool and import:
-• Previous successful grant examples
-• Funder guidelines and priorities  
-• Your preliminary data and publications
-• Any feedback from previous submissions`,
+    content: `Create a dedicated workspace in NotebookLM or similar tool and organize:
+• Your reference management system (Zotero, Mendeley, etc.)
+• Research question and objectives documents
+• Initial paper collection and reading lists
+• Note-taking templates and organization system`,
     tips: [
-      "Organize all documents in a single workspace for easy access",
-      "Use consistent naming conventions for your files",
-      "Keep original guidelines documents separate from your working drafts"
+      "Use a consistent file naming system for papers and notes",
+      "Set up automated backup for your reference database",
+      "Create folder structures that match your planned review themes"
     ]
   },
   {
-    id: "funding-analysis",
-    title: "Funding Alignment Analysis",
-    description: "Analyze how your research aligns with the funder's priorities",
-    phase: "Preparation", 
+    id: "research-question",
+    title: "Research Question Refinement",
+    description: "Define clear, focused research questions for your literature review",
+    phase: "Setup", 
     estimatedTime: "45 minutes",
     isCompleted: false,
-    content: `Use AI to analyze the alignment between your research and the funder's priorities. This critical step ensures your proposal speaks the funder's language and addresses their specific interests.
+    content: `Use AI to refine and clarify your research questions, ensuring they're specific enough to guide your literature search effectively.
 
 **Use this prompt:**
 
-Analyze my research focus on [YOUR TOPIC] and the priorities of [FUNDING AGENCY] as described in the following guidelines: [PASTE GUIDELINES]. 
-Identify:
-1. 3-5 key alignment points between my research and their priorities
-2. Potential gaps or misalignments I should address
-3. Specific terminology and frameworks the funder values`,
+Help me refine my research interest in [BROAD TOPIC] into a focused research question.
+
+Specifically, I'm interested in:
+- [SPECIFIC ASPECT 1]
+- [SPECIFIC ASPECT 2]
+- [SPECIFIC ASPECT 3]
+
+For my research question:
+1. Propose 3-5 clearly formulated research questions
+2. For each question, explain why it's significant
+3. Identify key concepts that should be included
+4. Suggest limitations for scope (time period, populations, etc.)
+5. Recommend inclusion/exclusion criteria for my literature review`,
     tips: [
-      "Focus on terminology the funder uses in their guidelines",
-      "Identify specific programs or initiatives your work supports",
-      "Note any recent announcements or priority shifts from the funder"
+      "Start broad but quickly narrow to a specific, answerable question",
+      "Consider what databases and search terms your question suggests",
+      "Think about the practical scope - how many papers can you realistically review?"
     ]
   },
   {
-    id: "proposal-structure",
-    title: "Proposal Structure Generation", 
-    description: "Create a tailored outline based on funder guidelines",
-    phase: "Strategic Planning",
+    id: "search-strategy",
+    title: "Literature Search Strategy", 
+    description: "Develop a comprehensive and systematic search approach",
+    phase: "Collection",
     estimatedTime: "30 minutes",
     isCompleted: false,
-    content: `Generate a customized proposal structure that follows the funder's specific requirements while highlighting your research strengths.
+    content: `Create a systematic search strategy that will ensure you capture all relevant literature for your review.
 
 **Use this prompt:**
 
-Based on these [FUNDER] guidelines, create a detailed outline for my grant proposal on [RESEARCH TOPIC]. Include:
-1. All required sections with word/page count allocations
-2. Key points to emphasize in each section
-3. Suggested data visualization opportunities
-4. References to preliminary data I should include`,
+Based on my research question: [INSERT RESEARCH QUESTION]
+
+Help me develop a comprehensive search strategy that includes:
+1. Primary search terms with Boolean operators (AND, OR, NOT)
+2. Secondary terms and synonyms to include
+3. Key databases to search (e.g., PubMed, Web of Science, ACM Digital Library)
+4. Recommended filters (publication years, methodologies, languages)
+5. Suggestions for citation tracking and reference list checking
+6. Gray literature sources worth exploring
+7. A structured approach to document my search process
+
+My field of study is [YOUR FIELD], and I'm particularly interested in [SPECIFIC INTERESTS].`,
     tips: [
-      "Pay attention to word/page limits for each section",
-      "Note required vs. optional sections",
-      "Plan for visual elements and data presentations"
+      "Test search terms in multiple databases to refine your strategy",
+      "Document your search process for reproducibility",
+      "Plan to search both recent papers and seminal older works"
     ]
   },
   {
-    id: "research-narrative",
-    title: "Develop Core Research Narrative",
-    description: "Craft a compelling story that connects problem to solution",
-    phase: "Strategic Planning",
+    id: "paper-analysis",
+    title: "Systematic Paper Analysis",
+    description: "Analyze individual papers using AI to extract key insights",
+    phase: "Analysis",
     estimatedTime: "60 minutes", 
     isCompleted: false,
-    content: `Develop the central narrative that will thread through your entire proposal, connecting the significance of the problem to your innovative solution.
+    content: `Use AI to systematically analyze each paper, extracting key findings, methodologies, and theoretical frameworks.
 
 **Use this prompt:**
 
-Help me craft a compelling 2-paragraph research narrative for a [FUNDER] grant that:
-1. Establishes the significance of [PROBLEM]
-2. Identifies the gap in current approaches
-3. Introduces my innovative approach using [YOUR METHOD]
-4. Emphasizes potential impact in terms that align with [FUNDER]'s priorities`,
+Provide a comprehensive summary of this academic paper:
+[PASTE PAPER TEXT OR TITLE/ABSTRACT]
+
+Include:
+1. Full citation information
+2. Research objectives and questions addressed
+3. Theoretical framework or conceptual model used
+4. Methodology (design, sample, measures, procedures)
+5. Key findings organized by research questions/objectives
+6. Stated limitations and future research directions
+7. Practical or theoretical implications
+8. Connections to [MY RESEARCH FOCUS]
+9. Key quotations worth noting (with page numbers if available)
+
+Format this summary for easy reference later in my literature review.`,
     tips: [
-      "Start with a hook that grabs reviewer attention",
-      "Clearly articulate the gap your research fills",
-      "Connect to broader societal or scientific impacts"
+      "Process papers in batches for efficiency",
+      "Save detailed notes in your reference manager",
+      "Look for recurring themes across papers"
     ]
   },
   {
-    id: "background-section",
-    title: "Background & Significance Section",
-    description: "Establish the importance and context of your research",
-    phase: "Content Generation",
+    id: "thematic-analysis",
+    title: "Multi-Paper Thematic Analysis",
+    description: "Identify themes and patterns across multiple papers",
+    phase: "Analysis",
     estimatedTime: "90 minutes",
     isCompleted: false,
-    content: `Draft a compelling background section that establishes the critical importance of your research problem and positions your approach as the logical next step.
+    content: `Analyze groups of papers to identify common themes, methodological approaches, and areas of consensus or debate.
 
 **Use this prompt:**
 
-Draft a background and significance section (approximately 500 words) for my grant proposal on [RESEARCH TOPIC] that:
-1. Establishes the importance of the problem
-2. Summarizes current knowledge and approaches
-3. Identifies specific gaps or limitations
-4. Explains how my approach addresses these limitations
-5. Connects to broader impacts valued by [FUNDER]
+Analyze these paper summaries on [TOPIC] and identify key themes:
+[PASTE MULTIPLE PAPER SUMMARIES]
 
-Based on these key papers:
-[PASTE 3-5 REFERENCE ABSTRACTS]`,
+For this analysis:
+1. Identify 5-7 major themes that emerge across these papers
+2. For each theme, note which papers address it and their key findings
+3. Highlight areas of consensus among researchers
+4. Identify contradictions or debates within each theme
+5. Note methodological approaches used to study each theme
+6. Suggest how these themes relate to each other
+7. Indicate which themes appear most established vs. emerging
+
+Present the results as a thematic map I can use to structure my literature review.`,
     tips: [
-      "Use recent, high-impact citations",
-      "Avoid simply summarizing literature - synthesize it",
-      "End with a clear statement of the gap you'll address"
+      "Look for both explicit and implicit themes",
+      "Pay attention to methodological patterns",
+      "Note which themes have strong vs. weak evidence"
     ]
   },
   {
-    id: "aims-objectives", 
-    title: "Aims and Objectives",
-    description: "Define clear, measurable, and achievable research goals",
-    phase: "Content Generation",
+    id: "synthesis-framework", 
+    title: "Literature Synthesis & Framework Development",
+    description: "Synthesize findings into coherent frameworks and identify gaps",
+    phase: "Synthesis",
     estimatedTime: "75 minutes",
     isCompleted: false,
-    content: `Create specific aims that are independent, feasible, and collectively address your research question while fitting within the proposed timeframe.
+    content: `Synthesize your analyzed literature into coherent narratives and identify research gaps for future work.
 
 **Use this prompt:**
 
-Based on my research focus [BRIEF DESCRIPTION], generate 3 specific aims for a [FUNDER] grant proposal that:
-1. Are clear, measurable, and achievable within [TIMEFRAME]
-2. Build logically on each other but aren't dependent on earlier aims' success
-3. Align with [FUNDER]'s priorities
-4. Collectively address the research question: [QUESTION]
+Synthesize the literature on [TOPIC] based on these paper summaries:
+[PASTE SUMMARIES OR REFERENCE NOTEBOOK]
 
-For each aim, include:
-- A concise title
-- 1-2 sentence overview
-- 2-3 specific objectives or tasks`,
+Create a comprehensive synthesis that:
+1. Integrates findings across studies into a coherent narrative
+2. Organizes insights by the key themes:
+   [LIST YOUR IDENTIFIED THEMES]
+3. Highlights the strength of evidence for each major conclusion
+4. Articulates areas of scholarly consensus and disagreement
+5. Places findings in theoretical context
+6. Discusses practical implications of the collective evidence
+7. Identifies patterns in how research has approached this topic
+8. Connects this synthesis to my research focus on [YOUR FOCUS]
+
+Format this as a scholarly synthesis I can adapt for my literature review.`,
     tips: [
-      "Each aim should be testable and have clear success metrics",
-      "Aims should build on each other but not depend on prior success",
-      "Include potential alternative approaches for risky elements"
+      "Focus on synthesis rather than just summarization",
+      "Identify both theoretical and methodological contributions",
+      "Look for opportunities to propose new conceptual frameworks"
     ]
   },
   {
-    id: "methods-section",
-    title: "Methods Section",
-    description: "Detail your experimental approach and methodology",
-    phase: "Content Generation", 
+    id: "gap-analysis",
+    title: "Research Gap Analysis",
+    description: "Identify opportunities for future research and contribution",
+    phase: "Synthesis", 
     estimatedTime: "120 minutes",
     isCompleted: false,
-    content: `Provide detailed methodology that demonstrates feasibility while showing innovation and rigor in your experimental design.
+    content: `Conduct a systematic analysis to identify gaps in the literature that represent opportunities for future research.
 
 **Use this prompt:**
 
-Draft a methods section for Aim [NUMBER]: [AIM TITLE] that:
-1. Outlines the experimental approach
-2. Describes specific techniques, analyses, and tools
-3. Addresses potential challenges and alternative approaches
-4. Includes success metrics and validation strategies
-5. References preliminary data showing feasibility
+Based on my literature review on [TOPIC], conduct a comprehensive gap analysis:
 
-Technical details to include:
-[PASTE YOUR METHODS NOTES]`,
+1. Identify explicit gaps mentioned by authors in their future research sections
+2. Detect implicit gaps based on:
+   - Limitations across multiple studies
+   - Inconsistent or contradictory findings
+   - Theoretical weaknesses or assumptions
+   - Methodological shortcomings
+   - Underrepresented populations or contexts
+   - Emerging phenomena not yet well-studied
+3. Categorize gaps as theoretical, methodological, contextual, or practical
+4. Assess the significance of each gap to advancing knowledge in the field
+5. Evaluate which gaps align with my research interests in [YOUR INTEREST]
+6. Suggest how addressing these gaps could contribute to theory or practice
+7. Recommend specific research questions that would address priority gaps
+
+Present this as a structured gap analysis I can use to position my research.`,
     tips: [
-      "Include preliminary data to show feasibility",
-      "Address potential technical challenges",
-      "Reference your expertise and available resources"
+      "Look for both explicit and implicit gaps",
+      "Consider gaps across different levels (theoretical, methodological, empirical)",
+      "Prioritize gaps based on significance and feasibility"
     ]
   },
   {
-    id: "budget-justification",
-    title: "Budget Justification",
-    description: "Create detailed budget with clear justifications",
-    phase: "Content Generation",
+    id: "writing-process",
+    title: "Literature Review Writing",
+    description: "Draft your literature review sections systematically",
+    phase: "Output Generation",
     estimatedTime: "60 minutes", 
     isCompleted: false,
-    content: `Develop a realistic budget that directly supports your research aims with clear justification for every expense.
+    content: `Begin writing your literature review using AI assistance to create well-structured, scholarly sections.
 
 **Use this prompt:**
 
-Create a detailed budget justification for a [AMOUNT] [FUNDER] grant over [DURATION] years that includes:
-1. Personnel costs and roles (including [LIST KEY PERSONNEL])
-2. Equipment needs for [LIST METHODS]
-3. Supply costs
-4. Travel expenses for [CONFERENCES/FIELDWORK]
-5. Other relevant categories
+Draft an introduction for my literature review on [TOPIC] that:
 
-For each item, provide 1-2 sentences explaining its necessity for the project.`,
+1. Establishes the importance and relevance of the topic
+2. Clearly states my specific focus and research question:
+   [YOUR RESEARCH QUESTION]
+3. Briefly explains the scope of the review (time period, types of studies, etc.)
+4. Provides context on the current state of knowledge
+5. Outlines the structure of the review organized by:
+   [YOUR MAJOR THEMES]
+6. States the purpose and contribution of this review
+7. Includes appropriate academic language and transitions
+
+Write this in a formal academic style suitable for [INTENDED AUDIENCE/PUBLICATION].`,
     tips: [
-      "Be specific about personnel time allocations",
-      "Include equipment maintenance and calibration costs",
-      "Factor in inflation for multi-year budgets"
+      "Start with your strongest argument for the topic's importance",
+      "Clearly define your scope and limitations",
+      "Use signposting to guide readers through your review structure"
     ]
   },
   {
-    id: "reviewer-analysis",
-    title: "Reviewer Perspective Analysis", 
-    description: "Review your draft from a critical reviewer's viewpoint",
+    id: "quality-review",
+    title: "Quality and Consistency Review", 
+    description: "Review your draft for quality, flow, and consistency",
     phase: "Refinement",
     estimatedTime: "45 minutes",
     isCompleted: false,
-    content: `Take a step back and critically evaluate your proposal as an experienced reviewer would, identifying potential weaknesses and areas for improvement.
+    content: `Systematically review your literature review draft to ensure it meets academic standards and flows coherently.
 
 **Use this prompt:**
 
-You are an experienced grant reviewer for [FUNDER]. Review this draft section critically:
-[PASTE SECTION]
+Review my draft literature review on [TOPIC] for quality and consistency:
+[PASTE YOUR DRAFT]
 
-Provide feedback on:
-1. Scientific merit and innovation
-2. Methodology and approach
-3. Feasibility within timeframe and budget
-4. Alignment with funding priorities
-5. Clarity and organization
-6. Potential questions or concerns
+Evaluate:
+1. Logical flow and organization of ideas
+2. Consistency in terminology and concepts throughout
+3. Balance in coverage across themes and perspectives
+4. Integration of critical analysis (not just summarizing papers)
+5. Appropriate use of citations and evidence
+6. Clarity and academic tone of writing
+7. Strengths of the current draft
+8. Specific areas for improvement
 
-Be specific about both strengths and weaknesses.`,
+Provide detailed feedback I can use to refine my literature review.`,
     tips: [
-      "Look for unsupported claims or logical gaps",
-      "Check that methodology matches stated aims",
-      "Ensure innovation is clearly articulated"
+      "Check for consistent terminology and definitions throughout",
+      "Ensure you're synthesizing rather than just summarizing",
+      "Verify that your conclusions are supported by the evidence presented"
     ]
   },
   {
-    id: "visual-assets",
-    title: "Visual Asset Development",
-    description: "Create figures, charts, and visual aids",
+    id: "visual-elements",
+    title: "Visual Elements Creation",
+    description: "Create conceptual maps, timelines, and other visual aids",
     phase: "Refinement",
     estimatedTime: "90 minutes",
     isCompleted: false,
-    content: `Develop clear, professional visual elements that enhance understanding and make complex concepts accessible to reviewers.
+    content: `Create visual elements that enhance your literature review and make complex relationships clear to readers.
 
 **Use this prompt:**
 
-Based on this textual description of [DATA/CONCEPT]:
-[PASTE DESCRIPTION]
+Based on my literature review on [TOPIC], describe how to create these visual elements:
 
-Suggest a visual representation that would strengthen my grant proposal by:
-1. Clarifying the complex concept of [CONCEPT]
-2. Making the information more accessible
-3. Providing a detailed diagram caption
-4. Suggesting an effective format (flowchart, graph, table, etc.)`,
+1. A conceptual map showing relationships between key theories and concepts
+2. A chronological timeline of major developments in this research area
+3. A methodological comparison table categorizing studies by approach
+4. A gap analysis visualization highlighting research opportunities
+5. A thematic network showing connections between major themes
+
+For each visual, provide:
+- Key elements to include
+- Suggested structure and organization
+- Data to be represented
+- Design considerations
+- How it will enhance understanding of the literature
+- A detailed description I can use to create it`,
     tips: [
-      "Use consistent styling across all figures",
-      "Include detailed, informative captions",
-      "Make sure visuals are readable when printed in black and white"
+      "Focus on visuals that add value, not just decoration",
+      "Make sure complex relationships are clearly represented",
+      "Consider your audience's familiarity with visual conventions in your field"
     ]
   },
   {
-    id: "executive-summary",
-    title: "Executive Summary Creation",
-    description: "Write a compelling summary that hooks reviewers",
+    id: "abstract-creation",
+    title: "Abstract Creation",
+    description: "Write a compelling abstract that summarizes your review",
     phase: "Finalization",
     estimatedTime: "45 minutes",
     isCompleted: false,
-    content: `Craft an engaging executive summary that captures the essence of your proposal and motivates reviewers to read further.
+    content: `Create a comprehensive abstract that effectively summarizes your entire literature review for potential readers.
 
 **Use this prompt:**
 
-Create a compelling executive summary (250 words) for my grant proposal on [TOPIC] that:
-1. Hooks the reviewer with the significance of the problem
-2. Clearly states my central hypothesis
-3. Briefly outlines my innovative approach and aims
-4. Emphasizes expected outcomes and broader impacts
-5. Uses accessible language while maintaining scientific precision`,
+Based on my completed literature review on [TOPIC], draft a comprehensive abstract (250 words max) that:
+
+1. Introduces the topic and its importance
+2. States the specific focus and purpose of the review
+3. Briefly describes the review methodology (sources, inclusion criteria)
+4. Summarizes key findings organized by main themes
+5. Highlights significant gaps or contradictions identified
+6. Concludes with implications and future research directions
+7. Follows conventions for academic abstracts in [YOUR FIELD]
+
+Write this in a formal, concise style suitable for academic publication.`,
     tips: [
-      "Start with the problem's significance",
-      "Clearly state your innovative approach",
-      "End with expected impact and broader implications"
+      "Make every word count within the word limit",
+      "Follow the standard abstract structure for your field",
+      "Ensure the abstract can stand alone as a complete summary"
     ]
   },
   {
-    id: "coherence-check",
-    title: "Coherence and Flow Check",
-    description: "Ensure logical flow and consistency throughout",
+    id: "citation-check",
+    title: "Citation and Evidence Review",
+    description: "Strengthen your evidence base and citation practices",
     phase: "Finalization",
     estimatedTime: "60 minutes",
     isCompleted: false,
-    content: `Review your complete proposal for logical consistency, smooth transitions, and a coherent narrative thread that connects all sections.
+    content: `Systematically review your citations and evidence to ensure they properly support your arguments and meet academic standards.
 
 **Use this prompt:**
 
-Review my complete grant proposal for coherence and flow:
-[PASTE FULL PROPOSAL]
+Review the use of citations and evidence in my literature review:
+[PASTE YOUR DRAFT]
 
-Identify:
-1. Any logical gaps between sections
-2. Inconsistent terminology or concepts
-3. Repetitive content that could be streamlined
-4. Missing transitions between major ideas
-5. Opportunities to strengthen the narrative thread`,
+Assess:
+1. Areas that need additional citation support
+2. Places where evidence presented doesn't fully support claims made
+3. Sections relying too heavily on a single source
+4. Opportunities to integrate additional perspectives
+5. Balance between seminal works and current research
+6. Use of primary vs secondary sources
+7. Potential citation patterns that could suggest bias
+
+Provide specific suggestions for strengthening the evidence base of my review.`,
     tips: [
-      "Check that conclusions match your stated aims",
-      "Ensure consistent terminology throughout",
-      "Verify that each section builds logically on previous ones"
+      "Ensure every major claim is supported by appropriate evidence",
+      "Balance recent research with foundational work in the field",
+      "Check that citation format is consistent throughout"
     ]
   },
   {
-    id: "final-qa",
-    title: "Final Quality Assurance",
-    description: "Comprehensive final review for submission readiness",
+    id: "final-review",
+    title: "Final Literature Review Polish",
+    description: "Final comprehensive review and polishing for publication",
     phase: "Finalization", 
     estimatedTime: "90 minutes",
     isCompleted: false,
-    content: `Conduct a thorough final review to ensure your proposal meets all requirements and presents your research in the best possible light.
+    content: `Conduct a comprehensive final review to ensure your literature review is polished and ready for submission or publication.
 
 **Use this prompt:**
 
-Review this grant proposal for:
-1. Alignment with all [FUNDER] guidelines and requirements
-2. Consistency in formatting, references, and terminology
-3. Grammatical issues or awkward phrasing
-4. Balance between technical detail and accessibility
-5. Compelling first and last paragraphs in each section
+Perform a final review of my literature review on [TOPIC] for:
+1. Overall argument strength and logical progression
+2. Consistency in writing style and academic tone
+3. Completeness of the literature coverage
+4. Clarity of the research gaps identified
+5. Strength of conclusions and future research recommendations
+6. Formatting, citations, and reference list accuracy
+7. Adherence to target journal or submission guidelines
 
-Suggest specific improvements for any issues found.`,
+Provide specific recommendations for final improvements before submission.`,
     tips: [
-      "Double-check all formatting requirements",
-      "Verify all references are complete and correctly formatted",
-      "Have a colleague review for clarity and completeness"
+      "Read your review aloud to catch awkward phrasing",
+      "Verify that your conclusions follow logically from your analysis",
+      "Double-check that all cited works appear in your reference list"
     ]
   }
 ];
@@ -601,9 +668,9 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps = {}) {
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold gradient-text">Grant Writing Workflow</h1>
+        <h1 className="text-4xl font-bold gradient-text">Literature Review Workflow</h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Follow this comprehensive AI-assisted workflow to dramatically accelerate and improve your grant writing process. 
+          Follow this comprehensive AI-assisted workflow to dramatically accelerate and improve your literature review process. 
           Each step includes specific prompts and templates to guide you through creating compelling, fundable proposals.
         </p>
         {workflowData && (
@@ -850,7 +917,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps = {}) {
           <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-green-400 mb-2">Workflow Complete!</h2>
           <p className="text-muted-foreground">
-            Congratulations! You've completed all steps in the Grant Writing Workflow. 
+            Congratulations! You've completed all steps in the Literature Review Workflow. 
             Your proposal is now ready for final review and submission.
           </p>
         </Card>

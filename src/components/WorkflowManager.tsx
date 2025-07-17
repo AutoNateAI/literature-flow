@@ -54,7 +54,7 @@ export const WorkflowManager = ({ onSelectWorkflow }: WorkflowManagerProps) => {
       
       const formattedWorkflows = data?.map(workflow => ({
         id: workflow.id,
-        title: (workflow.workflow_data as any)?.title || 'Untitled Grant',
+        title: (workflow.workflow_data as any)?.title || 'Untitled Literature Review',
         description: (workflow.workflow_data as any)?.description || '',
         funding_agency: (workflow.workflow_data as any)?.funding_agency || '',
         deadline: (workflow.workflow_data as any)?.deadline || '',
@@ -105,7 +105,7 @@ export const WorkflowManager = ({ onSelectWorkflow }: WorkflowManagerProps) => {
 
       toast({
         title: "Success",
-        description: "Grant workflow created successfully"
+        description: "Literature review created successfully"
       });
 
       setIsCreateDialogOpen(false);
@@ -169,31 +169,31 @@ export const WorkflowManager = ({ onSelectWorkflow }: WorkflowManagerProps) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">My Grant Workflows</h2>
-          <p className="text-muted-foreground">Manage your grant writing projects</p>
+          <h2 className="text-2xl font-bold">My Literature Reviews</h2>
+          <p className="text-muted-foreground">Manage your literature review projects</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              New Grant Workflow
+               New Literature Review
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Grant Workflow</DialogTitle>
+              <DialogTitle>Create New Literature Review</DialogTitle>
               <DialogDescription>
-                Start tracking a new grant application process
+                Start tracking a new literature review process
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="title">Grant Title</Label>
+                <Label htmlFor="title">Research Topic</Label>
                 <Input
                   id="title"
                   value={newWorkflow.title}
                   onChange={(e) => setNewWorkflow(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g., NIH R01 Research Grant"
+                  placeholder="e.g., AI in Healthcare Literature Review"
                 />
               </div>
               <div>
@@ -206,7 +206,7 @@ export const WorkflowManager = ({ onSelectWorkflow }: WorkflowManagerProps) => {
                 />
               </div>
               <div>
-                <Label htmlFor="amount">Grant Amount</Label>
+                <Label htmlFor="amount">Research Area</Label>
                 <Input
                   id="amount"
                   value={newWorkflow.amount}
@@ -244,9 +244,9 @@ export const WorkflowManager = ({ onSelectWorkflow }: WorkflowManagerProps) => {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Grant Workflows Yet</h3>
+            <h3 className="text-lg font-semibold mb-2">No Literature Reviews Yet</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Create your first grant workflow to start tracking your application progress
+              Create your first literature review to start tracking your research progress
             </p>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />

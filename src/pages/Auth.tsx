@@ -63,12 +63,12 @@ export const Auth = () => {
               <Book className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Grant AI</h1>
+              <h1 className="text-2xl font-bold">Lit Review AI</h1>
               <p className="text-sm text-muted-foreground">Research Learning Hub</p>
             </div>
           </div>
           <p className="text-muted-foreground">
-            Sign in to continue your grant writing journey
+            Sign in to continue your literature review journey
           </p>
         </div>
 

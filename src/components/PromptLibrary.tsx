@@ -204,7 +204,7 @@ export function PromptLibrary() {
           <div>
             <h1 className="text-3xl font-bold gradient-text mb-2">Prompt Library</h1>
             <p className="text-muted-foreground">
-              Discover AI prompts to accelerate your grant writing workflow
+              Discover AI prompts to accelerate your literature review workflow
             </p>
           </div>
           <div className="text-right">
