@@ -339,7 +339,7 @@ export function PromptDetail({ promptId, onBack }: PromptDetailProps) {
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-3">Prompt Content</h3>
           <div className="glass-card p-6 bg-black/20 rounded-lg max-h-96 overflow-y-auto">
-            <div className="prose prose-invert max-w-none">
+            <div className="prose prose-invert max-w-none whitespace-pre-wrap">
               {prompt.content.replace(/\\n/g, '\n').split('\n\n').map((paragraph, index) => {
                 // Handle code blocks
                 if (paragraph.startsWith('```')) {
