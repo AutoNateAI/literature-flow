@@ -14,7 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      prompts: {
+        Row: {
+          category: string | null
+          content: string
+          copy_count: number
+          created_at: string
+          id: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          copy_count?: number
+          created_at?: string
+          id?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          copy_count?: number
+          created_at?: string
+          id?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      templates: {
+        Row: {
+          category: string | null
+          content: string
+          copy_count: number
+          created_at: string
+          id: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          copy_count?: number
+          created_at?: string
+          id?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          copy_count?: number
+          created_at?: string
+          id?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_interactions: {
+        Row: {
+          created_at: string
+          id: string
+          interaction_type: string
+          item_id: string
+          item_type: string
+          user_id: string
+          workflow_data: Json | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interaction_type: string
+          item_id: string
+          item_type: string
+          user_id: string
+          workflow_data?: Json | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interaction_type?: string
+          item_id?: string
+          item_type?: string
+          user_id?: string
+          workflow_data?: Json | null
+        }
+        Relationships: []
+      }
+      workflows: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+          workflow_data: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          workflow_data: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          workflow_data?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
