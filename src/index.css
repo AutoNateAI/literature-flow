@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Glassmorphic Background System */
+    --background: 240 30% 8%;
+    --background-secondary: 240 25% 12%;
+    --foreground: 210 40% 98%;
+
+    /* Glass Cards */
+    --glass: 240 30% 15% / 0.4;
+    --glass-hover: 240 30% 20% / 0.6;
+    --glass-border: 240 40% 30% / 0.3;
+    
+    /* Primary Brand Colors */
+    --primary: 220 100% 65%;
+    --primary-glow: 220 100% 75%;
+    --primary-foreground: 210 40% 98%;
+    
+    /* Secondary Colors */
+    --secondary: 280 60% 60%;
+    --secondary-glow: 280 60% 70%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Accent Colors */
+    --accent: 160 80% 50%;
+    --accent-glow: 160 80% 60%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Muted Colors */
+    --muted: 240 20% 25%;
+    --muted-foreground: 215 20% 65%;
+
+    /* Interactive Elements */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --success: 140 60% 50%;
+    --warning: 35 100% 60%;
+
+    /* Borders and Inputs */
+    --border: 240 30% 25% / 0.5;
+    --input: 240 30% 20% / 0.8;
+    --ring: 220 100% 65%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-glow)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-glow)));
+    --gradient-glass: linear-gradient(135deg, 
+      hsl(240 30% 15% / 0.6), 
+      hsl(240 30% 20% / 0.3)
+    );
+
+    /* Shadows */
+    --shadow-glass: 0 8px 32px hsl(240 30% 10% / 0.4);
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.3);
+    --shadow-elevated: 0 25px 50px hsl(240 30% 5% / 0.5);
+
+    /* Animation Variables */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    --radius: 1rem;
+
+    /* Sidebar Variables */
+    --sidebar-background: 240 30% 12% / 0.8;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 220 100% 65%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 240 30% 20% / 0.6;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 240 30% 25% / 0.5;
+    --sidebar-ring: 220 100% 65%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground overflow-x-hidden;
+    background: radial-gradient(ellipse at top, 
+      hsl(240 30% 12% / 0.8) 0%, 
+      hsl(240 30% 8%) 50%,
+      hsl(240 35% 6%) 100%);
+    min-height: 100vh;
+  }
+
+  /* Glassmorphic utility classes */
+  .glass-card {
+    @apply backdrop-blur-xl border border-white/10;
+    background: var(--gradient-glass);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-button {
+    @apply backdrop-blur-lg border border-white/20 transition-all duration-300;
+    background: linear-gradient(135deg, 
+      hsl(var(--primary) / 0.2), 
+      hsl(var(--primary) / 0.1)
+    );
+  }
+
+  .glass-button:hover {
+    background: linear-gradient(135deg, 
+      hsl(var(--primary) / 0.3), 
+      hsl(var(--primary) / 0.2)
+    );
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-2px);
+  }
+
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .floating-animation {
+    animation: floating 3s ease-in-out infinite;
+  }
+
+  @keyframes floating {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .glow-effect {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.5);
+  }
+
+  .interactive-card {
+    @apply glass-card transition-all duration-300 cursor-pointer;
+  }
+
+  .interactive-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: var(--shadow-elevated);
+  }
+}
