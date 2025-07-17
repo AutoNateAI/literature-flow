@@ -14,13 +14,128 @@ export type Database = {
   }
   public: {
     Tables: {
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          parent_comment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          parent_comment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          parent_comment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          institution: string | null
+          research_area: string | null
+          title: string | null
+          total_prompts_copied: number | null
+          total_templates_copied: number | null
+          updated_at: string
+          user_id: string
+          weekly_streak: number | null
+          xp_points: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          institution?: string | null
+          research_area?: string | null
+          title?: string | null
+          total_prompts_copied?: number | null
+          total_templates_copied?: number | null
+          updated_at?: string
+          user_id: string
+          weekly_streak?: number | null
+          xp_points?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          institution?: string | null
+          research_area?: string | null
+          title?: string | null
+          total_prompts_copied?: number | null
+          total_templates_copied?: number | null
+          updated_at?: string
+          user_id?: string
+          weekly_streak?: number | null
+          xp_points?: number | null
+        }
+        Relationships: []
+      }
       prompts: {
         Row: {
           category: string | null
           content: string
           copy_count: number
           created_at: string
+          created_by: string | null
+          description: string | null
+          difficulty_level: string | null
+          dislike_count: number | null
+          estimated_time: string | null
           id: string
+          is_featured: boolean | null
+          like_count: number | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -31,7 +146,14 @@ export type Database = {
           content: string
           copy_count?: number
           created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          dislike_count?: number | null
+          estimated_time?: string | null
           id?: string
+          is_featured?: boolean | null
+          like_count?: number | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -42,7 +164,14 @@ export type Database = {
           content?: string
           copy_count?: number
           created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          dislike_count?: number | null
+          estimated_time?: string | null
           id?: string
+          is_featured?: boolean | null
+          like_count?: number | null
           tags?: string[] | null
           title?: string
           updated_at?: string
@@ -56,9 +185,17 @@ export type Database = {
           content: string
           copy_count: number
           created_at: string
+          created_by: string | null
+          description: string | null
+          download_count: number | null
+          file_size: string | null
+          file_type: string | null
           id: string
+          is_featured: boolean | null
+          like_count: number | null
           tags: string[] | null
           title: string
+          type: string | null
           updated_at: string
           user_id: string
         }
@@ -67,9 +204,17 @@ export type Database = {
           content: string
           copy_count?: number
           created_at?: string
+          created_by?: string | null
+          description?: string | null
+          download_count?: number | null
+          file_size?: string | null
+          file_type?: string | null
           id?: string
+          is_featured?: boolean | null
+          like_count?: number | null
           tags?: string[] | null
           title: string
+          type?: string | null
           updated_at?: string
           user_id: string
         }
@@ -78,9 +223,17 @@ export type Database = {
           content?: string
           copy_count?: number
           created_at?: string
+          created_by?: string | null
+          description?: string | null
+          download_count?: number | null
+          file_size?: string | null
+          file_type?: string | null
           id?: string
+          is_featured?: boolean | null
+          like_count?: number | null
           tags?: string[] | null
           title?: string
+          type?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -113,6 +266,30 @@ export type Database = {
           item_type?: string
           user_id?: string
           workflow_data?: Json | null
+        }
+        Relationships: []
+      }
+      user_workflows: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          workflow_data: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          workflow_data: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          workflow_data?: Json
         }
         Relationships: []
       }
