@@ -124,7 +124,7 @@ export type Database = {
       }
       prompts: {
         Row: {
-          category: string | null
+          category: string
           content: string
           copy_count: number
           created_at: string
@@ -142,7 +142,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          category?: string | null
+          category: string
           content: string
           copy_count?: number
           created_at?: string
@@ -160,7 +160,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          category?: string | null
+          category?: string
           content?: string
           copy_count?: number
           created_at?: string
@@ -181,7 +181,7 @@ export type Database = {
       }
       templates: {
         Row: {
-          category: string | null
+          category: string
           content: string
           copy_count: number
           created_at: string
@@ -195,12 +195,12 @@ export type Database = {
           like_count: number | null
           tags: string[] | null
           title: string
-          type: string | null
+          type: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          category?: string | null
+          category: string
           content: string
           copy_count?: number
           created_at?: string
@@ -214,12 +214,12 @@ export type Database = {
           like_count?: number | null
           tags?: string[] | null
           title: string
-          type?: string | null
+          type?: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          category?: string | null
+          category?: string
           content?: string
           copy_count?: number
           created_at?: string
@@ -233,7 +233,7 @@ export type Database = {
           like_count?: number | null
           tags?: string[] | null
           title?: string
-          type?: string | null
+          type?: string
           updated_at?: string
           user_id?: string
         }
@@ -247,7 +247,6 @@ export type Database = {
           item_id: string
           item_type: string
           user_id: string
-          workflow_data: Json | null
         }
         Insert: {
           created_at?: string
@@ -256,7 +255,6 @@ export type Database = {
           item_id: string
           item_type: string
           user_id: string
-          workflow_data?: Json | null
         }
         Update: {
           created_at?: string
@@ -265,7 +263,6 @@ export type Database = {
           item_id?: string
           item_type?: string
           user_id?: string
-          workflow_data?: Json | null
         }
         Relationships: []
       }
