@@ -14,6 +14,14 @@ const nojekyllPath = path.join(distDir, '.nojekyll');
 fs.writeFileSync(nojekyllPath, '');
 console.log('Created .nojekyll file');
 
+// Copy CNAME file to dist directory for custom domain
+const sourceCNAME = path.join(__dirname, 'public', 'CNAME');
+const destCNAME = path.join(distDir, 'CNAME');
+if (fs.existsSync(sourceCNAME)) {
+  fs.copyFileSync(sourceCNAME, destCNAME);
+  console.log('Copied CNAME file to dist directory');
+}
+
 // Copy 404.html to the dist directory for SPA routing
 const source404 = path.join(__dirname, 'public', '404.html');
 const dest404 = path.join(distDir, '404.html');
@@ -30,7 +38,7 @@ if (fs.existsSync(source404)) {
   <meta charset="utf-8">
   <title>Page not found</title>
   <script>
-    window.location.href = window.location.origin + '/literature-flow';
+    window.location.href = window.location.origin + '/';
   </script>
 </head>
 <body>
