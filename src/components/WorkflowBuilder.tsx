@@ -648,7 +648,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps = {}) {
     try {
       await navigator.clipboard.writeText(cleanContent);
       
-      // Track the copy action
+      // Track the copy action FIRST, then show toast
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const interactionData = {
@@ -658,14 +658,14 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps = {}) {
           item_id: workflowId || 'general_workflow'
         };
 
-        try {
-          await supabase
-            .from('user_interactions')
-            .insert(interactionData);
-          
+        const { error: trackingError } = await supabase
+          .from('user_interactions')
+          .insert(interactionData);
+        
+        if (trackingError) {
+          console.error('❌ Error tracking prompt copy:', trackingError);
+        } else {
           console.log('✅ Prompt copy action tracked successfully');
-        } catch (error) {
-          console.error('❌ Error tracking prompt copy:', error);
         }
       }
       
