@@ -219,7 +219,7 @@ export function EntryModule({ onProjectCreated }: EntryModuleProps) {
                   <SelectTrigger className="glass-input">
                     <SelectValue placeholder="Select your research domain" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border-border shadow-lg z-50" side="bottom" align="start">
                     {researchThemes.map((themeOption) => (
                       <SelectItem key={themeOption} value={themeOption}>
                         {themeOption}
