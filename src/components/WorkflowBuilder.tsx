@@ -450,7 +450,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps = {}) {
         .from('user_workflows')
         .select('*')
         .eq('id', workflowId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       
@@ -532,7 +532,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps = {}) {
         .from('user_workflows')
         .select('workflow_data')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (data?.workflow_data) {
         const workflowData = data.workflow_data as any;
