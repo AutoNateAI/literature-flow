@@ -202,6 +202,17 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
               };
             }
           }
+          // For prompt_copied from workflow
+          else if (interaction.interaction_type === 'prompt_copied' && interaction.item_type === 'workflow_prompt') {
+            // Try to get workflow info for better display
+            const workflowData = workflows?.find(w => w.id === interaction.item_id)?.workflow_data as any;
+            if (workflowData) {
+              metadata = {
+                workflowName: workflowData?.title || workflowData?.name || 'Literature Review',
+                workflowType: workflowData?.paper_type || 'workflow'
+              };
+            }
+          }
           // For prompt activities
           else if (interaction.item_type === 'prompt' && interaction.item_id) {
             const promptInfo = promptsMap.get(interaction.item_id);
