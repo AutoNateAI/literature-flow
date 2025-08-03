@@ -556,7 +556,7 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
                   <div className="flex-1">
                     <p className="text-sm">
                       {activity.activity_type === 'copy' ? 'Copied' :
-                       activity.activity_type === 'prompt_copied' ? 'Copied workflow prompt' :
+                       activity.activity_type === 'prompt_copied' ? 'Copied workflow prompt from' :
                        activity.activity_type === 'like' ? 'Liked' :
                        activity.activity_type === 'comment' ? 'Commented on' :
                        activity.activity_type === 'favorite' ? 'Favorited' :
@@ -572,6 +572,17 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
                       {(activity.type === 'workflow' || activity.activity_type === 'workflow_step_completed') && activity.metadata?.workflowName && (
                         <span className="text-blue-400 ml-1">
                           {activity.metadata.workflowName}
+                        </span>
+                      )}
+                      {/* Enhanced prompt_copied metadata */}
+                      {activity.activity_type === 'prompt_copied' && activity.metadata?.workflowName && (
+                        <span className="text-blue-400 ml-1">
+                          "{activity.metadata.workflowName}"
+                        </span>
+                      )}
+                      {activity.activity_type === 'prompt_copied' && activity.metadata?.workflowType && (
+                        <span className="text-muted-foreground ml-1 text-xs">
+                          ({activity.metadata.workflowType === 'research' ? 'Research Paper' : 'Stand-Alone Paper'})
                         </span>
                       )}
                       {/* Prompt/Template metadata */}
