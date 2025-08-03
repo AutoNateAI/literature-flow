@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      claims: {
+        Row: {
+          claim_type: string | null
+          confidence_score: number | null
+          content: string
+          created_at: string
+          id: string
+          passage_id: string
+          project_id: string
+          source_text: string | null
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          claim_type?: string | null
+          confidence_score?: number | null
+          content: string
+          created_at?: string
+          id?: string
+          passage_id: string
+          project_id: string
+          source_text?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          claim_type?: string | null
+          confidence_score?: number | null
+          content?: string
+          created_at?: string
+          id?: string
+          passage_id?: string
+          project_id?: string
+          source_text?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claims_passage_id_fkey"
+            columns: ["passage_id"]
+            isOneToOne: false
+            referencedRelation: "passages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claims_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           content: string
@@ -71,6 +128,238 @@ export type Database = {
         }
         Relationships: []
       }
+      graph_edges: {
+        Row: {
+          annotation: string | null
+          created_at: string
+          edge_type: string
+          id: string
+          project_id: string
+          source_node_id: string
+          strength: number | null
+          target_node_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          annotation?: string | null
+          created_at?: string
+          edge_type: string
+          id?: string
+          project_id: string
+          source_node_id: string
+          strength?: number | null
+          target_node_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          annotation?: string | null
+          created_at?: string
+          edge_type?: string
+          id?: string
+          project_id?: string
+          source_node_id?: string
+          strength?: number | null
+          target_node_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "graph_edges_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "graph_edges_source_node_id_fkey"
+            columns: ["source_node_id"]
+            isOneToOne: false
+            referencedRelation: "graph_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "graph_edges_target_node_id_fkey"
+            columns: ["target_node_id"]
+            isOneToOne: false
+            referencedRelation: "graph_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      graph_nodes: {
+        Row: {
+          color: string | null
+          content: string | null
+          created_at: string
+          id: string
+          node_type: string
+          notebook_id: string | null
+          passage_id: string | null
+          position_x: number | null
+          position_y: number | null
+          project_id: string
+          size: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          node_type: string
+          notebook_id?: string | null
+          passage_id?: string | null
+          position_x?: number | null
+          position_y?: number | null
+          project_id: string
+          size?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          node_type?: string
+          notebook_id?: string | null
+          passage_id?: string | null
+          position_x?: number | null
+          position_y?: number | null
+          project_id?: string
+          size?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "graph_nodes_notebook_id_fkey"
+            columns: ["notebook_id"]
+            isOneToOne: false
+            referencedRelation: "notebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "graph_nodes_passage_id_fkey"
+            columns: ["passage_id"]
+            isOneToOne: false
+            referencedRelation: "passages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "graph_nodes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notebooks: {
+        Row: {
+          briefing: string | null
+          created_at: string
+          id: string
+          notebook_url: string | null
+          project_id: string
+          title: string
+          updated_at: string
+          upload_count: number | null
+          user_id: string
+        }
+        Insert: {
+          briefing?: string | null
+          created_at?: string
+          id?: string
+          notebook_url?: string | null
+          project_id: string
+          title: string
+          updated_at?: string
+          upload_count?: number | null
+          user_id: string
+        }
+        Update: {
+          briefing?: string | null
+          created_at?: string
+          id?: string
+          notebook_url?: string | null
+          project_id?: string
+          title?: string
+          updated_at?: string
+          upload_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notebooks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          notebook_id: string
+          page_number: number | null
+          project_id: string
+          source_file: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          notebook_id: string
+          page_number?: number | null
+          project_id: string
+          source_file?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          notebook_id?: string
+          page_number?: number | null
+          project_id?: string
+          source_file?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passages_notebook_id_fkey"
+            columns: ["notebook_id"]
+            isOneToOne: false
+            referencedRelation: "notebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -119,6 +408,96 @@ export type Database = {
           user_id?: string
           weekly_streak?: number | null
           xp_points?: number | null
+        }
+        Relationships: []
+      }
+      project_workflow_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          insights: string | null
+          is_completed: boolean | null
+          notes: string | null
+          project_id: string
+          stage_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          insights?: string | null
+          is_completed?: boolean | null
+          notes?: string | null
+          project_id: string
+          stage_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          insights?: string | null
+          is_completed?: boolean | null
+          notes?: string | null
+          project_id?: string
+          stage_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_workflow_progress_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_workflow_progress_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          hypothesis: string | null
+          id: string
+          paper_type: string
+          structural_outline: Json | null
+          theme: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hypothesis?: string | null
+          id?: string
+          paper_type: string
+          structural_outline?: Json | null
+          theme?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hypothesis?: string | null
+          id?: string
+          paper_type?: string
+          structural_outline?: Json | null
+          theme?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -287,6 +666,42 @@ export type Database = {
           updated_at?: string
           user_id?: string
           workflow_data?: Json
+        }
+        Relationships: []
+      }
+      workflow_stages: {
+        Row: {
+          created_at: string
+          description: string
+          estimated_time: string | null
+          id: string
+          name: string
+          order_index: number
+          paper_type: string
+          prompt_templates: Json | null
+          theme: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          estimated_time?: string | null
+          id?: string
+          name: string
+          order_index: number
+          paper_type: string
+          prompt_templates?: Json | null
+          theme?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          estimated_time?: string | null
+          id?: string
+          name?: string
+          order_index?: number
+          paper_type?: string
+          prompt_templates?: Json | null
+          theme?: string | null
         }
         Relationships: []
       }
