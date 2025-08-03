@@ -639,6 +639,50 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps = {}) {
     });
   };
 
+  const copyStepPrompt = async (promptContent: string) => {
+    if (!promptContent) return;
+
+    // Clean the prompt content for copying
+    const cleanContent = promptContent.trim();
+    
+    try {
+      await navigator.clipboard.writeText(cleanContent);
+      
+      // Track the copy action
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const interactionData = {
+          user_id: user.id,
+          interaction_type: 'prompt_copied',
+          item_type: 'workflow_prompt',
+          item_id: workflowId || 'general_workflow'
+        };
+
+        try {
+          await supabase
+            .from('user_interactions')
+            .insert(interactionData);
+          
+          console.log('✅ Prompt copy action tracked successfully');
+        } catch (error) {
+          console.error('❌ Error tracking prompt copy:', error);
+        }
+      }
+      
+      toast({
+        title: "Prompt copied!",
+        description: "The prompt has been copied to your clipboard.",
+      });
+    } catch (error) {
+      console.error('Failed to copy prompt:', error);
+      toast({
+        title: "Copy failed",
+        description: "Failed to copy the prompt. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const groupedSteps = steps.reduce((acc, step) => {
     if (!acc[step.phase]) {
       acc[step.phase] = [];
@@ -677,7 +721,7 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps = {}) {
           <div className="mt-6 p-4 bg-muted rounded-lg max-w-2xl mx-auto">
             <h3 className="font-semibold text-lg">{workflowData.title}</h3>
             <p className="text-sm text-muted-foreground">
-              {workflowData.funding_agency} • {workflowData.amount} • Due: {new Date(workflowData.deadline).toLocaleDateString()}
+              {workflowData.funding_agency} • {workflowData.amount} • Due: {workflowData.deadline ? new Date(workflowData.deadline).toLocaleDateString() : 'TBD'}
             </p>
             {workflowData.description && (
               <p className="text-sm text-muted-foreground mt-2">{workflowData.description}</p>
@@ -811,10 +855,17 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps = {}) {
                               {/* Prompt Section */}
                               {promptContent && (
                                 <div>
-                                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                    <Copy className="w-4 h-4 text-accent" />
-                                    📝 Use this prompt:
-                                  </h4>
+                                   <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                     <Button 
+                                       variant="ghost" 
+                                       size="sm" 
+                                       onClick={() => copyStepPrompt(promptContent)}
+                                       className="p-1 h-auto"
+                                     >
+                                       <Copy className="w-4 h-4 text-accent" />
+                                     </Button>
+                                     📝 Use this prompt:
+                                   </h4>
                                   <div className="glass-card p-4 bg-black/20 rounded-lg border-l-4 border-accent">
                                     <pre className="whitespace-pre-wrap text-sm font-mono text-green-400 leading-relaxed">
                                       {promptContent.trim()}

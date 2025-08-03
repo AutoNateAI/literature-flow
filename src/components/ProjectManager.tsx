@@ -197,27 +197,29 @@ export function ProjectManager({ onSelectProject, onCreateNew }: ProjectManagerP
                   </CardDescription>
                 )}
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-3">
+              <CardContent className="flex-1 flex flex-col">
+                <div className="flex-1 space-y-3">
                   {project.hypothesis && (
                     <p className="text-sm text-muted-foreground line-clamp-3">
                       {project.hypothesis}
                     </p>
                   )}
-                  
+                </div>
+                
+                <div className="mt-auto space-y-3">
                   <div className="flex items-center text-xs text-muted-foreground">
                     <Calendar className="w-3 h-3 mr-1" />
                     Created {new Date(project.created_at).toLocaleDateString()}
                   </div>
+                  
+                  <Button 
+                    onClick={() => onSelectProject?.(project.id)} 
+                    className="w-full glass-button"
+                    size="sm"
+                  >
+                    Continue Project
+                  </Button>
                 </div>
-                
-                <Button 
-                  onClick={() => onSelectProject?.(project.id)} 
-                  className="w-full glass-button mt-auto"
-                  size="sm"
-                >
-                  Continue Project
-                </Button>
               </CardContent>
             </Card>
           );
