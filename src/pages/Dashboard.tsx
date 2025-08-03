@@ -5,8 +5,9 @@ import { DashboardContent } from "@/components/DashboardContent";
 import { PromptLibrary } from "@/components/PromptLibrary";
 import { WorkflowBuilder } from "@/components/WorkflowBuilder";
 import { WorkflowManager } from "@/components/WorkflowManager";
+import { EntryModule } from "@/components/EntryModule";
 
-export type DashboardView = 'dashboard' | 'prompts' | 'workflow' | 'manage-workflows';
+export type DashboardView = 'dashboard' | 'prompts' | 'workflow' | 'manage-workflows' | 'new-project';
 
 const Dashboard = () => {
   const [currentView, setCurrentView] = useState<DashboardView>('dashboard');
@@ -35,6 +36,12 @@ const Dashboard = () => {
         return <WorkflowManager key={refreshTrigger} onSelectWorkflow={(id) => {
           setSelectedWorkflowId(id);
           setCurrentView('workflow');
+        }} />;
+      case 'new-project':
+        return <EntryModule onProjectCreated={(projectId) => {
+          setSelectedWorkflowId(projectId);
+          setCurrentView('workflow');
+          setRefreshTrigger(prev => prev + 1);
         }} />;
       default:
         return <DashboardContent key={refreshTrigger} onNavigate={handleNavigate} onSelectWorkflow={setSelectedWorkflowId} />;
