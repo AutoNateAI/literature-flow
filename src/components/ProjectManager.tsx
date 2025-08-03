@@ -200,9 +200,9 @@ export function ProjectManager({ onSelectProject, onCreateNew }: ProjectManagerP
                 )}
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
-                <div className="flex-1 space-y-3">
+                <div className="flex-1">
                   {project.hypothesis && (
-                    <p className="text-sm text-muted-foreground line-clamp-3">
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
                       {project.hypothesis}
                     </p>
                   )}

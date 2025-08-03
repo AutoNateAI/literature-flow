@@ -721,10 +721,10 @@ export function WorkflowBuilder({ workflowId }: WorkflowBuilderProps = {}) {
           <div className="mt-6 p-4 bg-muted rounded-lg max-w-2xl mx-auto">
             <h3 className="font-semibold text-lg">{workflowData.title}</h3>
             <p className="text-sm text-muted-foreground">
-              {workflowData.funding_agency} • {workflowData.amount} • Due: {workflowData.deadline ? new Date(workflowData.deadline).toLocaleDateString() : 'TBD'}
+              {workflowData.paper_type === 'research' ? 'Research Paper' : 'Stand-Alone Paper'} • {workflowData.theme}
             </p>
-            {workflowData.description && (
-              <p className="text-sm text-muted-foreground mt-2">{workflowData.description}</p>
+            {workflowData.hypothesis && (
+              <p className="text-sm text-muted-foreground mt-2 italic">"{workflowData.hypothesis}"</p>
             )}
           </div>
         )}
