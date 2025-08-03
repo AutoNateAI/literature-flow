@@ -157,8 +157,8 @@ export function ProjectManager({ onSelectProject, onCreateNew }: ProjectManagerP
           const Icon = getProjectIcon(project.paper_type);
           
           return (
-            <Card key={project.id} className="glass-card hover:shadow-lg transition-all">
-              <CardHeader>
+            <Card key={project.id} className="glass-card hover:shadow-lg transition-all flex flex-col">
+              <CardHeader className="flex-shrink-0">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     <Icon className="w-5 h-5 text-primary" />
@@ -197,21 +197,23 @@ export function ProjectManager({ onSelectProject, onCreateNew }: ProjectManagerP
                   </CardDescription>
                 )}
               </CardHeader>
-              <CardContent className="space-y-4">
-                {project.hypothesis && (
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {project.hypothesis}
-                  </p>
-                )}
-                
-                <div className="flex items-center text-xs text-muted-foreground">
-                  <Calendar className="w-3 h-3 mr-1" />
-                  Created {new Date(project.created_at).toLocaleDateString()}
+              <CardContent className="flex-1 flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  {project.hypothesis && (
+                    <p className="text-sm text-muted-foreground line-clamp-3">
+                      {project.hypothesis}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    <Calendar className="w-3 h-3 mr-1" />
+                    Created {new Date(project.created_at).toLocaleDateString()}
+                  </div>
                 </div>
                 
                 <Button 
                   onClick={() => onSelectProject?.(project.id)} 
-                  className="w-full glass-button"
+                  className="w-full glass-button mt-auto"
                   size="sm"
                 >
                   Continue Project

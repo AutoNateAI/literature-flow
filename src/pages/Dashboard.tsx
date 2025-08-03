@@ -47,8 +47,9 @@ const Dashboard = () => {
       case 'manage-projects':
         return <ProjectManager 
           onSelectProject={(projectId) => {
-            console.log('Project selected:', projectId);
-            // TODO: Navigate to project workflow or details
+            setSelectedWorkflowId(projectId);
+            setCurrentView('workflow');
+            setRefreshTrigger(prev => prev + 1);
           }}
           onCreateNew={() => setCurrentView('new-project')}
         />;
