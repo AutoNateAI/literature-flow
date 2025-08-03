@@ -162,7 +162,9 @@ export function ProjectManager({ onSelectProject, onCreateNew }: ProjectManagerP
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     <Icon className="w-5 h-5 text-primary" />
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className={`text-xs ${
+                      project.paper_type === 'research' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
+                    }`}>
                       {getProjectTypeLabel(project.paper_type)}
                     </Badge>
                   </div>

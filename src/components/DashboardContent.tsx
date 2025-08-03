@@ -465,6 +465,7 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
               <>
                 <div className="text-sm font-medium text-blue-400">
                   {recentActivity[0].activity_type === 'copy' ? 'Copied prompt' :
+                   recentActivity[0].activity_type === 'prompt_copied' ? 'Copied workflow prompt' :
                    recentActivity[0].activity_type === 'like' ? 'Liked content' :
                    recentActivity[0].activity_type === 'comment' ? 'Added comment' :
                    recentActivity[0].activity_type === 'favorite' ? 'Favorited prompt' :
@@ -534,6 +535,7 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
                 <div key={`${activity.type}-${activity.id}-${index}`} className="flex items-start space-x-4">
                   <div className={`w-2 h-2 rounded-full mt-2 ${
                     activity.activity_type === 'copy' ? 'bg-blue-500' :
+                    activity.activity_type === 'prompt_copied' ? 'bg-cyan-500' :
                     activity.activity_type === 'like' ? 'bg-green-500' :
                     activity.activity_type === 'comment' ? 'bg-purple-500' :
                     activity.activity_type === 'favorite' ? 'bg-red-500' :
@@ -543,12 +545,14 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
                   <div className="flex-1">
                     <p className="text-sm">
                       {activity.activity_type === 'copy' ? 'Copied' :
+                       activity.activity_type === 'prompt_copied' ? 'Copied workflow prompt' :
                        activity.activity_type === 'like' ? 'Liked' :
                        activity.activity_type === 'comment' ? 'Commented on' :
                        activity.activity_type === 'favorite' ? 'Favorited' :
                        activity.activity_type === 'workflow_update' ? 'Updated' :
                        activity.activity_type === 'workflow_step_completed' ? 'Completed' :
                        'Interacted with'} {
+                        activity.activity_type === 'prompt_copied' ? '' :
                         activity.activity_type === 'workflow_step_completed' ? 'step in' :
                         activity.type === 'workflow' ? 'workflow' : 
                         activity.item_type || 'content'
