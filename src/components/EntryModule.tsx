@@ -62,7 +62,8 @@ export function EntryModule({ onProjectCreated }: EntryModuleProps) {
       // Generate structural outline based on theme and paper type
       const structuralOutline = generateOutline(paperType, theme);
 
-      const { data, error } = await supabase
+      // Create the project first
+      const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .insert({
           user_id: user.id,
@@ -75,10 +76,31 @@ export function EntryModule({ onProjectCreated }: EntryModuleProps) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (projectError) throw projectError;
+
+      // Create corresponding user_workflow record
+      const { data: workflowData, error: workflowError } = await supabase
+        .from('user_workflows')
+        .insert({
+          id: projectData.id, // Use the same ID as the project
+          user_id: user.id,
+          workflow_data: {
+            project_id: projectData.id,
+            title: title.trim(),
+            paper_type: paperType,
+            theme: theme || null,
+            steps_completed: [],
+            progress: 0,
+            created_at: new Date().toISOString()
+          }
+        })
+        .select()
+        .single();
+
+      if (workflowError) throw workflowError;
 
       toast.success("Project created successfully!");
-      onProjectCreated(data.id);
+      onProjectCreated(projectData.id);
     } catch (error) {
       console.error('Error creating project:', error);
       toast.error("Failed to create project. Please try again.");
