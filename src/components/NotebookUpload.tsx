@@ -314,7 +314,7 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
   return (
     <div className="space-y-4 md:space-y-6">
       <Tabs defaultValue="workflow" className="space-y-6 md:space-y-6">
-        <div className="mb-8 md:mb-6">
+        <div className="mb-12 md:mb-8">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 bg-muted/50 p-1 rounded-lg">
             <TabsTrigger 
               value="workflow" 
