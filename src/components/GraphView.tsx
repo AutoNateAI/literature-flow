@@ -271,7 +271,7 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
   const isMobile = useIsMobile();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [layoutMode, setLayoutMode] = useState<'hierarchical' | 'spatial'>('hierarchical');
+  const [layoutMode, setLayoutMode] = useState<'hierarchical' | 'spatial'>('spatial');
 
   const nodeStats = {
     concept: 3,
@@ -282,6 +282,83 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
     gaps: 1,
     discrepancies: 1,
   };
+
+  const applyHierarchicalLayout = useCallback(() => {
+    const hierarchicalNodes = nodes.map((node) => {
+      let newPosition = { x: 0, y: 0 };
+      
+      // Define hierarchy levels and positions
+      if (node.id === 'research-focus') {
+        newPosition = { x: 400, y: 100 }; // Top center
+      } else if (node.data.type === 'Concept') {
+        const conceptIndex = ['concept-1', 'concept-2', 'concept-3'].indexOf(node.id);
+        newPosition = { x: 200 + (conceptIndex * 200), y: 200 };
+      } else if (node.data.type === 'Research Gap') {
+        newPosition = { x: 400, y: 300 };
+      } else if (node.data.type === 'Notebook') {
+        newPosition = { x: 100, y: 50 };
+      } else if (node.data.type === 'Publication') {
+        const sourceIndex = ['source-1', 'source-2'].indexOf(node.id);
+        newPosition = { x: 300 + (sourceIndex * 200), y: 400 };
+      } else if (node.data.type === 'Insight') {
+        newPosition = { x: 200, y: 450 };
+      } else if (node.data.type === 'Discrepancy') {
+        newPosition = { x: 600, y: 450 };
+      }
+      
+      return {
+        ...node,
+        position: newPosition,
+      };
+    });
+    
+    setNodes(hierarchicalNodes);
+  }, [nodes, setNodes]);
+
+  const applySpatialLayout = useCallback(() => {
+    const spatialNodes = nodes.map((node) => {
+      let newPosition = { x: 0, y: 0 };
+      
+      // Restore original spatial positions
+      if (node.id === 'research-focus') {
+        newPosition = { x: 400, y: 200 };
+      } else if (node.id === 'concept-1') {
+        newPosition = { x: 100, y: 50 };
+      } else if (node.id === 'concept-2') {
+        newPosition = { x: 700, y: 50 };
+      } else if (node.id === 'concept-3') {
+        newPosition = { x: 50, y: 350 };
+      } else if (node.id === 'gap-1') {
+        newPosition = { x: 300, y: 50 };
+      } else if (node.id === 'source-1') {
+        newPosition = { x: 600, y: 350 };
+      } else if (node.id === 'source-2') {
+        newPosition = { x: 750, y: 300 };
+      } else if (node.id === 'insight-1') {
+        newPosition = { x: 250, y: 350 };
+      } else if (node.id === 'notebook-1') {
+        newPosition = { x: 500, y: 50 };
+      } else if (node.id === 'discrepancy-1') {
+        newPosition = { x: 450, y: 350 };
+      }
+      
+      return {
+        ...node,
+        position: newPosition,
+      };
+    });
+    
+    setNodes(spatialNodes);
+  }, [nodes, setNodes]);
+
+  const handleLayoutChange = useCallback((mode: 'hierarchical' | 'spatial') => {
+    setLayoutMode(mode);
+    if (mode === 'hierarchical') {
+      applyHierarchicalLayout();
+    } else {
+      applySpatialLayout();
+    }
+  }, [applyHierarchicalLayout, applySpatialLayout]);
 
   return (
     <div className="h-full flex flex-col">
@@ -321,7 +398,7 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
         <Button
           variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
           size="sm"
-          onClick={() => setLayoutMode('hierarchical')}
+          onClick={() => handleLayoutChange('hierarchical')}
           className="flex items-center gap-2"
         >
           <Network className="h-4 w-4" />
@@ -330,7 +407,7 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
         <Button
           variant={layoutMode === 'spatial' ? 'default' : 'outline'}
           size="sm"
-          onClick={() => setLayoutMode('spatial')}
+          onClick={() => handleLayoutChange('spatial')}
           className="flex items-center gap-2"
         >
           <Grid className="h-4 w-4" />
