@@ -184,4 +184,43 @@ All colors MUST be HSL.
     transform: translateY(-5px) scale(1.02);
     box-shadow: var(--shadow-elevated);
   }
+
+  /* Custom edge animations for React Flow */
+  @keyframes dash {
+    to {
+      stroke-dashoffset: -12;
+    }
+  }
+
+  @keyframes flow {
+    0%, 100% {
+      stroke-dashoffset: 0;
+    }
+    50% {
+      stroke-dashoffset: -20;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      stroke-dashoffset: 0;
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      stroke-dashoffset: -12;
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes glow {
+    0% {
+      filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.6));
+    }
+    100% {
+      filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.9));
+    }
+  }
 }

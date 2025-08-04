@@ -26,6 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit, Folder } from "lucide-react";
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, MarkerType } from '@xyflow/react';
 
 interface GraphViewProps {
   projectId: string;
@@ -341,6 +342,220 @@ const ProjectNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: {
   </div>
 );
 
+// Animated Edge Components with distinct colors and flow animations
+const ConceptToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  return (
+    <>
+      <defs>
+        <linearGradient id={`concept-gradient-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#1D4ED8" stopOpacity="1" />
+        </linearGradient>
+        <marker
+          id={`concept-arrow-${id}`}
+          markerWidth="12"
+          markerHeight="8"
+          refX="10"
+          refY="4"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <polygon points="0,0 0,8 10,4" fill="#1D4ED8" />
+        </marker>
+      </defs>
+      <BaseEdge
+        path={edgePath}
+        style={{
+          stroke: `url(#concept-gradient-${id})`,
+          strokeWidth: 3,
+          animation: 'dash 2s linear infinite',
+          strokeDasharray: '8,4',
+        }}
+        markerEnd={`url(#concept-arrow-${id})`}
+      />
+    </>
+  );
+};
+
+const ConceptToInsightEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  return (
+    <>
+      <defs>
+        <linearGradient id={`insight-gradient-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#D97706" stopOpacity="1" />
+        </linearGradient>
+        <marker
+          id={`insight-arrow-${id}`}
+          markerWidth="12"
+          markerHeight="8"
+          refX="10"
+          refY="4"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <polygon points="0,0 0,8 10,4" fill="#D97706" />
+        </marker>
+      </defs>
+      <BaseEdge
+        path={edgePath}
+        style={{
+          stroke: `url(#insight-gradient-${id})`,
+          strokeWidth: 3,
+          animation: 'pulse 1.5s ease-in-out infinite',
+        }}
+        markerEnd={`url(#insight-arrow-${id})`}
+      />
+    </>
+  );
+};
+
+const ConceptToHypothesisEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  return (
+    <>
+      <defs>
+        <linearGradient id={`hypothesis-gradient-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#10B981" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#059669" stopOpacity="1" />
+        </linearGradient>
+        <marker
+          id={`hypothesis-arrow-${id}`}
+          markerWidth="12"
+          markerHeight="8"
+          refX="10"
+          refY="4"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <polygon points="0,0 0,8 10,4" fill="#059669" />
+        </marker>
+      </defs>
+      <BaseEdge
+        path={edgePath}
+        style={{
+          stroke: `url(#hypothesis-gradient-${id})`,
+          strokeWidth: 3,
+          animation: 'flow 3s ease-in-out infinite',
+          strokeDasharray: '12,8',
+        }}
+        markerEnd={`url(#hypothesis-arrow-${id})`}
+      />
+    </>
+  );
+};
+
+const NotebookToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  return (
+    <>
+      <defs>
+        <linearGradient id={`notebook-gradient-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#7C3AED" stopOpacity="1" />
+        </linearGradient>
+        <marker
+          id={`notebook-arrow-${id}`}
+          markerWidth="12"
+          markerHeight="8"
+          refX="10"
+          refY="4"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <polygon points="0,0 0,8 10,4" fill="#7C3AED" />
+        </marker>
+      </defs>
+      <BaseEdge
+        path={edgePath}
+        style={{
+          stroke: `url(#notebook-gradient-${id})`,
+          strokeWidth: 2.5,
+          animation: 'shimmer 2.5s linear infinite',
+          strokeDasharray: '6,6',
+        }}
+        markerEnd={`url(#notebook-arrow-${id})`}
+      />
+    </>
+  );
+};
+
+const ProjectToNotebookEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  return (
+    <>
+      <defs>
+        <linearGradient id={`project-gradient-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#EC4899" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#BE185D" stopOpacity="1" />
+        </linearGradient>
+        <marker
+          id={`project-arrow-${id}`}
+          markerWidth="12"
+          markerHeight="8"
+          refX="10"
+          refY="4"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <polygon points="0,0 0,8 10,4" fill="#BE185D" />
+        </marker>
+      </defs>
+      <BaseEdge
+        path={edgePath}
+        style={{
+          stroke: `url(#project-gradient-${id})`,
+          strokeWidth: 4,
+          animation: 'glow 2s ease-in-out infinite alternate',
+        }}
+        markerEnd={`url(#project-arrow-${id})`}
+      />
+    </>
+  );
+};
+
 const createNodeTypes = (
   multiSelectedConcepts: string[],
   setMultiSelectedConcepts: (fn: (prev: string[]) => string[]) => void,
@@ -391,6 +606,37 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
   const nodeTypes = useMemo(() => 
     createNodeTypes(multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen), 
     [multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen]
+  );
+
+  // Create edge types with different animations and colors
+  const getEdgeType = (edge: any) => {
+    const sourceType = nodes.find(n => n.id === edge.source)?.type;
+    const targetType = nodes.find(n => n.id === edge.target)?.type;
+    
+    if (sourceType === 'concept' && targetType === 'concept') return 'conceptToConcept';
+    if (sourceType === 'concept' && targetType === 'insight') return 'conceptToInsight';
+    if (sourceType === 'concept' && targetType === 'hypothesis') return 'conceptToHypothesis';
+    if (sourceType === 'notebook' && targetType === 'concept') return 'notebookToConcept';
+    if (sourceType === 'project' && targetType === 'notebook') return 'projectToNotebook';
+    
+    return 'default';
+  };
+
+  const edgeTypes = useMemo(() => ({
+    conceptToConcept: ConceptToConceptEdge,
+    conceptToInsight: ConceptToInsightEdge,
+    conceptToHypothesis: ConceptToHypothesisEdge,
+    notebookToConcept: NotebookToConceptEdge,
+    projectToNotebook: ProjectToNotebookEdge,
+  }), []);
+
+  // Process edges with proper types
+  const processedEdges = useMemo(() => 
+    edges.map(edge => ({
+      ...edge,
+      type: getEdgeType(edge),
+      animated: true,
+    })), [edges, nodes]
   );
 
   // Preserve layout mode and node positions
@@ -1476,11 +1722,12 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       <div className="h-full border rounded-lg bg-background">
         <ReactFlow
           nodes={nodes}
-          edges={edges}
+          edges={processedEdges}
           onNodesChange={onNodesChangeWithSave}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
           minZoom={0.01}
           maxZoom={4}
