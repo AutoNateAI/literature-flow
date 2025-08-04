@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, Trash2, ExternalLink, BookOpen, Target, Edit3 } from "lucide-react";
+import { Plus, FileText, Trash2, ExternalLink, BookOpen, Target, Edit3, TrendingUp, Lightbulb, AlertTriangle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -50,6 +51,8 @@ const SOURCE_TYPES = [
 
 export function NotebookUpload({ projectId }: NotebookUploadProps) {
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
+  const [insights, setInsights] = useState<any[]>([]);
+  const [showInsightModal, setShowInsightModal] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNotebook, setEditingNotebook] = useState<Notebook | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -69,6 +72,7 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
 
   useEffect(() => {
     fetchNotebooks();
+    fetchInsights();
   }, [projectId, user]);
 
   const fetchNotebooks = async () => {
@@ -86,6 +90,38 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
       setNotebooks(data || []);
     } catch (error) {
       console.error("Error fetching notebooks:", error);
+    }
+  };
+
+  const fetchInsights = async () => {
+    if (!user) return;
+
+    try {
+      // Get insights with their connected concepts
+      const { data: insightsData, error: insightsError } = await supabase
+        .from('graph_nodes')
+        .select(`
+          *,
+          source_edges:graph_edges!target_node_id(
+            source_node:graph_nodes!source_node_id(*)
+          )
+        `)
+        .eq('project_id', projectId)
+        .eq('user_id', user.id)
+        .eq('node_type', 'insight')
+        .order('created_at', { ascending: false });
+
+      if (insightsError) throw insightsError;
+
+      // Format the data to include concepts
+      const formattedInsights = (insightsData || []).map(insight => ({
+        ...insight,
+        concepts: insight.source_edges?.map(edge => edge.source_node).filter(Boolean) || []
+      }));
+
+      setInsights(formattedInsights);
+    } catch (error) {
+      console.error("Error fetching insights:", error);
     }
   };
 
@@ -528,24 +564,68 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
               <h3 className="text-lg font-semibold">Research Insights</h3>
               <p className="text-sm text-muted-foreground">Insights derived from literature map analysis</p>
             </div>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Insight
-            </Button>
+            <Dialog open={showInsightModal} onOpenChange={setShowInsightModal}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Insight
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                <ConceptExtractor 
+                  projectId={projectId} 
+                  onConceptCreated={() => {
+                    fetchInsights();
+                    setShowInsightModal(false);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
           </div>
-          {notebooks[0] ? (
-            <ResourceManager 
-              notebookId={notebooks[0].id} 
-              projectId={projectId}
-            />
-          ) : (
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <Target className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                <p className="text-muted-foreground">Create a notebook first to manage resources</p>
-              </CardContent>
-            </Card>
-          )}
+          
+          <div className="space-y-4">
+            {insights.length === 0 ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-muted-foreground text-center py-8">
+                    No insights created yet. Create insights by connecting concepts from your research graph.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              insights.map((insight) => (
+                <Card key={insight.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5" />
+                      {insight.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p>{insight.content}</p>
+                    {insight.concepts && insight.concepts.length > 0 && (
+                      <div>
+                        <Label className="text-sm font-medium">Supporting Concepts:</Label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {insight.concepts.map((concept) => (
+                            <Badge key={concept.id} variant="secondary" className="flex items-center gap-1">
+                              {concept.node_type === 'concept' && <Lightbulb className="h-3 w-3" />}
+                              {concept.node_type === 'gap' && <AlertTriangle className="h-3 w-3" />}
+                              {concept.node_type === 'hypothesis' && <Target className="h-3 w-3" />}
+                              {concept.title}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="text-xs text-muted-foreground">
+                      Created: {new Date(insight.created_at).toLocaleDateString()}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
         </div>
       </TabsContent>
     </Tabs>

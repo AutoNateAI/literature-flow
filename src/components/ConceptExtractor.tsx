@@ -14,6 +14,7 @@ import { toast } from "sonner";
 interface ConceptExtractorProps {
   projectId: string;
   notebookId?: string;
+  onConceptCreated?: () => void;
 }
 
 interface ConceptSource {
@@ -37,7 +38,7 @@ const nodeTypes = [
   { value: "hypothesis", label: "Research Question/Hypothesis", icon: Target, color: "bg-purple-100 text-purple-800" }
 ];
 
-export function ConceptExtractor({ projectId, notebookId }: ConceptExtractorProps) {
+export function ConceptExtractor({ projectId, notebookId, onConceptCreated }: ConceptExtractorProps) {
   const [form, setForm] = useState<ConceptForm>({
     title: "",
     content: "",
@@ -167,6 +168,8 @@ export function ConceptExtractor({ projectId, notebookId }: ConceptExtractorProp
           interaction_type: 'created'
         });
 
+      toast.success("Concept added to graph successfully!");
+      
       // Reset form
       setForm({
         title: "",
@@ -176,7 +179,10 @@ export function ConceptExtractor({ projectId, notebookId }: ConceptExtractorProp
         confidenceScore: 1.0
       });
 
-      toast.success("Concept added to graph!");
+      // Call the callback if provided
+      if (onConceptCreated) {
+        onConceptCreated();
+      }
     } catch (error) {
       console.error("Error creating concept:", error);
       toast.error("Failed to create concept");
