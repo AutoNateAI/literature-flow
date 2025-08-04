@@ -387,6 +387,14 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       // Save position changes to database with layout-specific columns
       changes.forEach(async (change) => {
         if (change.type === 'position' && change.position && user) {
+          // Only save positions for nodes that exist in the graph_nodes table
+          // Skip synthetic nodes like "project-..." and "notebook-..." and "source-..."
+          if (change.id.startsWith('project-') || 
+              change.id.startsWith('notebook-') || 
+              change.id.startsWith('source-')) {
+            return;
+          }
+
           try {
             const updateData = layoutMode === 'hierarchical' 
               ? {
