@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardContent } from "@/components/DashboardContent";
 import { PromptLibrary } from "@/components/PromptLibrary";
@@ -10,7 +10,6 @@ import { ProjectManager } from "@/components/ProjectManager";
 import { NotebookUpload } from "@/components/NotebookUpload";
 import { GraphView } from "@/components/GraphView";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useSidebar } from "@/components/ui/sidebar";
 
 export type DashboardView = 'dashboard' | 'prompts' | 'workflow' | 'new-project' | 'manage-projects' | 'graph-view';
 
@@ -21,15 +20,10 @@ const Dashboard = () => {
   const [graphControls, setGraphControls] = useState<any>(null);
   const mainRef = useRef<HTMLElement>(null);
   const isMobile = useIsMobile();
-  const { setOpen } = useSidebar();
 
   const handleNavigate = (view: DashboardView) => {
     setCurrentView(view);
     setRefreshTrigger(prev => prev + 1); // Trigger data refresh
-    // Close sidebar on mobile after navigation
-    if (isMobile) {
-      setOpen(false);
-    }
     // Scroll to top when switching views
     if (mainRef.current) {
       mainRef.current.scrollTo(0, 0);
@@ -69,23 +63,19 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex w-full">
-      <AppSidebar 
-        currentView={currentView} 
-        onNavigate={handleNavigate} 
-        graphControls={graphControls}
-        isMobile={isMobile}
-      />
-      <main ref={mainRef} className={`flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-6'}`}>
-        {/* Mobile hamburger menu trigger */}
-        {isMobile && (
-          <div className="mb-4">
-            <SidebarTrigger className="mb-2" />
-          </div>
-        )}
-        {renderContent()}
-      </main>
-    </div>
+    <SidebarProvider defaultOpen={!isMobile}>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar 
+          currentView={currentView} 
+          onNavigate={handleNavigate} 
+          graphControls={graphControls}
+          isMobile={isMobile}
+        />
+        <main ref={mainRef} className={`flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-6'}`}>
+          {renderContent()}
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 

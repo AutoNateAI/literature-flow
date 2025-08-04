@@ -261,9 +261,9 @@ export function EntryModule({ onProjectCreated }: EntryModuleProps) {
           {/* Paper Type Toggle */}
           <div className="space-y-4">
             <Label className="text-base font-medium">Paper Type</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div 
-                className={`p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                   paperType === 'research' 
                     ? 'border-primary bg-primary/10 shadow-lg' 
                     : 'border-border hover:border-primary/50'
@@ -275,16 +275,16 @@ export function EntryModule({ onProjectCreated }: EntryModuleProps) {
                     checked={paperType === 'research'} 
                     onChange={() => setPaperType('research')}
                   />
-                  <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="font-medium text-sm md:text-base">Research Paper</span>
+                  <BookOpen className="w-5 h-5" />
+                  <span className="font-medium">Research Paper</span>
                 </div>
-                <p className="text-xs md:text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Multi-source literature-based research with systematic analysis
                 </p>
               </div>
 
               <div 
-                className={`p-3 md:p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                   paperType === 'standalone' 
                     ? 'border-primary bg-primary/10 shadow-lg' 
                     : 'border-border hover:border-primary/50'
@@ -296,10 +296,10 @@ export function EntryModule({ onProjectCreated }: EntryModuleProps) {
                     checked={paperType === 'standalone'} 
                     onChange={() => setPaperType('standalone')}
                   />
-                  <Lightbulb className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="font-medium text-sm md:text-base">Stand-Alone Paper</span>
+                  <Lightbulb className="w-5 h-5" />
+                  <span className="font-medium">Stand-Alone Paper</span>
                 </div>
-                <p className="text-xs md:text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Synthesis, review, or opinion piece with focused analysis
                 </p>
               </div>
