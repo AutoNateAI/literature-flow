@@ -1572,241 +1572,6 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Layout Toggle & Add Insight Button - Only show for desktop */}
-          {!isMobile && (
-            <div className="flex justify-between items-center">
-              <div className="flex gap-2">
-                <Button
-                  variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setLayoutMode('hierarchical')}
-                  className="flex items-center gap-2"
-                >
-                  <GitBranch className="h-4 w-4" />
-                  Hierarchical
-                </Button>
-                <Button
-                  variant={layoutMode === 'spatial' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setLayoutMode('spatial')}
-                  className="flex items-center gap-2"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                  Spatial
-                </Button>
-              </div>
-              <Dialog open={insightDialogOpen} onOpenChange={setInsightDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Insight
-                  </Button>
-                </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Insight</DialogTitle>
-                </DialogHeader>
-                 <div className="space-y-4">
-                   <div>
-                     <Label htmlFor="insight-title">Title</Label>
-                     <Input
-                       id="insight-title"
-                       value={insightTitle}
-                       onChange={(e) => setInsightTitle(e.target.value)}
-                       placeholder="Enter insight title..."
-                     />
-                   </div>
-                   <div>
-                     <Label htmlFor="insight-details">Details</Label>
-                     <Textarea
-                       id="insight-details"
-                       value={insightDetails}
-                       onChange={(e) => setInsightDetails(e.target.value)}
-                       placeholder="Describe your insight..."
-                       rows={3}
-                     />
-                   </div>
-
-                    {/* Source Selection Rows */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <Label>Source & Concept Selection</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={addSourceSelectionRow}
-                          className="h-8"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add Row
-                        </Button>
-                      </div>
-                      
-                      {sourceSelectionRows.map((row, index) => (
-                        <div key={row.id} className="border rounded-lg p-3 space-y-2">
-                          <div className="flex justify-between items-center">
-                            <Label className="text-sm font-medium">Selection {index + 1}</Label>
-                            {sourceSelectionRows.length > 1 && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeSourceSelectionRow(row.id)}
-                                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                              >
-                                ×
-                              </Button>
-                            )}
-                          </div>
-                          
-                          <div className="grid grid-cols-3 gap-2">
-                            {/* Notebook Selection */}
-                            <div>
-                              <Label className="text-xs text-muted-foreground">Notebook</Label>
-                              <Select 
-                                value={row.notebook} 
-                                onValueChange={(value) => updateSourceSelectionRow(row.id, 'notebook', value)}
-                              >
-                                <SelectTrigger className="h-8">
-                                  <SelectValue placeholder="Select..." />
-                                </SelectTrigger>
-                                <SelectContent className="bg-background border border-border z-50 max-h-48 overflow-y-auto">
-                                  {nodes.filter(n => n.type === 'notebook').map(notebook => (
-                                    <SelectItem 
-                                      key={notebook.id} 
-                                      value={notebook.id}
-                                      className="bg-background hover:bg-accent focus:bg-accent"
-                                    >
-                                      {notebook.data.title}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Source Selection */}
-                            <div>
-                              <Label className="text-xs text-muted-foreground">Source</Label>
-                              <Select 
-                                value={row.source} 
-                                onValueChange={(value) => updateSourceSelectionRow(row.id, 'source', value)}
-                                disabled={!row.notebook}
-                              >
-                                <SelectTrigger className="h-8">
-                                  <SelectValue placeholder="Select..." />
-                                </SelectTrigger>
-                                <SelectContent className="bg-background border border-border z-50 max-h-48 overflow-y-auto">
-                                  {nodes.filter(n => 
-                                    n.type === 'source' && 
-                                    (!row.notebook || n.data.notebook_id === row.notebook.replace('notebook-', ''))
-                                  ).map(source => (
-                                    <SelectItem 
-                                      key={source.id} 
-                                      value={source.id}
-                                      className="bg-background hover:bg-accent focus:bg-accent"
-                                    >
-                                      {source.data.title}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Concept Selection */}
-                            <div>
-                              <Label className="text-xs text-muted-foreground">Concept</Label>
-                              <Select 
-                                value={row.concept} 
-                                onValueChange={(value) => {
-                                  updateSourceSelectionRow(row.id, 'concept', value);
-                                  if (value && !selectedConcepts.includes(value)) {
-                                    setSelectedConcepts([...selectedConcepts, value]);
-                                  }
-                                }}
-                                disabled={!row.source}
-                              >
-                                <SelectTrigger className="h-8">
-                                  <SelectValue placeholder="Select..." />
-                                </SelectTrigger>
-                                <SelectContent className="bg-background border border-border z-50 max-h-48 overflow-y-auto">
-                                  {getConceptNodes().filter(node => 
-                                    !row.source || 
-                                    (node.data.concept_source && 
-                                     nodes.find(n => n.id === row.source)?.data.title &&
-                                     (node.data.concept_source.includes(nodes.find(n => n.id === row.source)?.data.title) ||
-                                      nodes.find(n => n.id === row.source)?.data.title.includes(node.data.concept_source)))
-                                  ).map(concept => (
-                                    <SelectItem 
-                                      key={concept.id} 
-                                      value={concept.id}
-                                      className="bg-background hover:bg-accent focus:bg-accent"
-                                    >
-                                      {concept.data.title}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                   {/* Selected Concepts Display */}
-                   <div>
-                     <Label>Selected Concepts ({selectedConcepts.length})</Label>
-                     <div className="border rounded-lg p-3 max-h-32 overflow-y-auto bg-muted/5">
-                       {selectedConcepts.length === 0 ? (
-                         <p className="text-sm text-muted-foreground">No concepts selected</p>
-                       ) : (
-                         <div className="flex flex-wrap gap-1">
-                           {selectedConcepts.map(conceptId => {
-                             const concept = nodes.find(n => n.id === conceptId);
-                             return concept ? (
-                               <Badge 
-                                 key={conceptId} 
-                                 variant="secondary" 
-                                 className="flex items-center gap-1"
-                               >
-                                 {concept.data.title}
-                                 <button
-                                   onClick={() => setSelectedConcepts(selectedConcepts.filter(id => id !== conceptId))}
-                                   className="ml-1 text-xs hover:text-destructive"
-                                 >
-                                   ×
-                                 </button>
-                               </Badge>
-                             ) : null;
-                           })}
-                         </div>
-                       )}
-                     </div>
-                   </div>
-
-                   <div className="flex gap-2">
-                     <Button 
-                       onClick={createInsight}
-                       disabled={!insightTitle || selectedConcepts.length === 0}
-                     >
-                       Create Insight
-                     </Button>
-                     <Button variant="outline" onClick={() => {
-                       setInsightDialogOpen(false);
-                       setSelectedNotebook("");
-                       setSelectedSource("");
-                       setSelectedConcept("");
-                       setSelectedConcepts([]);
-                     }}>
-                       Cancel
-                     </Button>
-                   </div>
-                 </div>
-              </DialogContent>
-             </Dialog>
-            </div>
-          )}
-
           {/* Improved Legend */}
           <div className="border rounded-lg p-4 bg-muted/5">
             <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
@@ -1868,46 +1633,46 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
           {/* Node Statistics */}
           <div className="flex flex-wrap gap-2">
             {nodeStats.hypothesis && (
-              <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+              <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
                 {nodeStats.hypothesis} Research Question{nodeStats.hypothesis > 1 ? 's' : ''}
               </Badge>
             )}
             {nodeStats.concept && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
                 {nodeStats.concept} Concept{nodeStats.concept > 1 ? 's' : ''}
               </Badge>
             )}
             {nodeStats.gap && (
-              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
                 {nodeStats.gap} Research Gap{nodeStats.gap > 1 ? 's' : ''}
               </Badge>
             )}
             {nodeStats.discrepancy && (
-              <Badge variant="secondary" className="bg-red-100 text-red-800">
+              <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
                 {nodeStats.discrepancy} Discrepanc{nodeStats.discrepancy > 1 ? 'ies' : 'y'}
               </Badge>
             )}
             {nodeStats.publication && (
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
+              <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
                 {nodeStats.publication} Key Publication{nodeStats.publication > 1 ? 's' : ''}
               </Badge>
             )}
             {nodeStats.notebook && (
-              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+              <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs">
                 {nodeStats.notebook} Notebook{nodeStats.notebook > 1 ? 's' : ''}
               </Badge>
             )}
             {nodeStats.source && (
-              <Badge variant="secondary" className="bg-teal-100 text-teal-800">
+              <Badge variant="secondary" className="bg-teal-100 text-teal-800 text-xs">
                 {nodeStats.source} Source{nodeStats.source > 1 ? 's' : ''}
               </Badge>
             )}
             {nodeStats.insight && (
-              <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">
+              <Badge variant="secondary" className="bg-indigo-100 text-indigo-800 text-xs">
                 {nodeStats.insight} Insight{nodeStats.insight > 1 ? 's' : ''}
               </Badge>
             )}
-            <Badge variant="outline">
+            <Badge variant="outline" className="text-xs">
               {edges.length} Connection{edges.length !== 1 ? 's' : ''}
             </Badge>
           </div>
@@ -1922,6 +1687,137 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       </Card>
 
       {/* React Flow Graph */}
+      <Card className="flex-1 p-0 overflow-hidden">
+        <div className="h-[400px] md:h-[600px]">
+          <ReactFlow
+            nodes={highlightedNodes}
+            edges={highlightedEdges}
+            onNodesChange={onNodesChangeWithSave}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onNodeClick={handleNodeClick}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            fitView
+            attributionPosition="bottom-left"
+            defaultViewport={{ x: 0, y: 0, zoom: isMobile ? 0.6 : 0.8 }}
+            minZoom={0.2}
+            maxZoom={2}
+            style={{ backgroundColor: 'hsl(var(--background))' }}
+            connectionLineStyle={{ stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+            defaultEdgeOptions={{ 
+              type: 'smoothstep',
+              style: { strokeWidth: 2, stroke: '#10b981' }
+            }}
+          >
+            <Controls showZoom showFitView showInteractive />
+            {!isMobile && (
+              <MiniMap 
+                nodeColor={(node) => {
+                  const colors = {
+                    hypothesis: '#8b5cf6',
+                    concept: '#3b82f6',
+                    gap: '#f59e0b',
+                    discrepancy: '#ef4444',
+                    publication: '#10b981',
+                    notebook: '#f97316',
+                    source: '#14b8a6',
+                    insight: '#6366f1'
+                  };
+                  return colors[node.type as keyof typeof colors] || '#6b7280';
+                }}
+                maskColor="hsl(var(--muted) / 0.3)"
+                style={{ 
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))'
+                }}
+                pannable
+                zoomable
+              />
+            )}
+            <Background gap={20} size={1} color="hsl(var(--border))" />
+          </ReactFlow>
+        </div>
+      </Card>
+
+      {/* Mobile and Desktop Controls - Always below graph */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:justify-between">
+          {/* Layout Controls */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setLayoutMode('hierarchical')}
+              className="flex items-center gap-2"
+            >
+              <GitBranch className="h-4 w-4" />
+              Hierarchical
+            </Button>
+            <Button
+              variant={layoutMode === 'spatial' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setLayoutMode('spatial')}
+              className="flex items-center gap-2"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              Spatial
+            </Button>
+          </div>
+
+          {/* Add Insight Button */}
+          <Dialog open={insightDialogOpen} onOpenChange={setInsightDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2 bg-primary hover:bg-primary/90">
+                <Plus className="h-4 w-4" />
+                Add Insight
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md w-[95vw] md:w-full">
+              <DialogHeader>
+                <DialogTitle className="text-base md:text-lg">Create New Insight</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="insight-title" className="text-sm md:text-base">Title</Label>
+                  <Input
+                    id="insight-title"
+                    value={insightTitle}
+                    onChange={(e) => setInsightTitle(e.target.value)}
+                    placeholder="Enter insight title..."
+                    className="text-sm md:text-base"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="insight-details" className="text-sm md:text-base">Details</Label>
+                  <Textarea
+                    id="insight-details"
+                    value={insightDetails}
+                    onChange={(e) => setInsightDetails(e.target.value)}
+                    placeholder="Describe your insight..."
+                    rows={3}
+                    className="text-sm md:text-base"
+                  />
+                </div>
+                <div className="flex flex-col md:flex-row justify-end gap-2">
+                  <Button variant="outline" onClick={() => setInsightDialogOpen(false)} className="text-sm">
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={createInsight}
+                    disabled={!insightTitle}
+                    className="text-sm"
+                  >
+                    Create Insight
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </Card>
+
+      {/* React Flow Graph Container */}
       <div className={`${isMobile ? 'h-96' : 'h-full'} border rounded-lg bg-background relative`}>
         <ReactFlow
           nodes={highlightedNodes}

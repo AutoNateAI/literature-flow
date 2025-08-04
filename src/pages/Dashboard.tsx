@@ -10,6 +10,7 @@ import { ProjectManager } from "@/components/ProjectManager";
 import { NotebookUpload } from "@/components/NotebookUpload";
 import { GraphView } from "@/components/GraphView";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export type DashboardView = 'dashboard' | 'prompts' | 'workflow' | 'new-project' | 'manage-projects' | 'graph-view';
 
@@ -20,10 +21,15 @@ const Dashboard = () => {
   const [graphControls, setGraphControls] = useState<any>(null);
   const mainRef = useRef<HTMLElement>(null);
   const isMobile = useIsMobile();
+  const { setOpen } = useSidebar();
 
   const handleNavigate = (view: DashboardView) => {
     setCurrentView(view);
     setRefreshTrigger(prev => prev + 1); // Trigger data refresh
+    // Close sidebar on mobile after navigation
+    if (isMobile) {
+      setOpen(false);
+    }
     // Scroll to top when switching views
     if (mainRef.current) {
       mainRef.current.scrollTo(0, 0);
