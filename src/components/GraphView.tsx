@@ -349,7 +349,7 @@ const ProjectNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: {
 );
 
 // Animated Edge Components with distinct colors and flow animations
-const ConceptToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+const ConceptToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }: any) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -376,11 +376,24 @@ const ConceptToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePo
           animation: 'dash 2s linear infinite',
         }}
       />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            fontSize: 11,
+            pointerEvents: 'all',
+          }}
+          className="bg-white/95 px-2 py-1 rounded-md border border-purple-200 text-purple-800 font-medium shadow-sm"
+        >
+          {data?.edge_type || 'relates to'}
+        </div>
+      </EdgeLabelRenderer>
     </>
   );
 };
 
-const ConceptToInsightEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+const ConceptToInsightEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }: any) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -416,13 +429,26 @@ const ConceptToInsightEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePo
           strokeWidth: 3,
           animation: 'pulse 1.5s ease-in-out infinite',
         }}
-        markerEnd={`url(#insight-arrow-${id})`}
-      />
-    </>
-  );
-};
+         markerEnd={`url(#insight-arrow-${id})`}
+       />
+       <EdgeLabelRenderer>
+         <div
+           style={{
+             position: 'absolute',
+             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+             fontSize: 11,
+             pointerEvents: 'all',
+           }}
+           className="bg-amber-50/95 px-2 py-1 rounded-md border border-amber-200 text-amber-800 font-medium shadow-sm"
+         >
+           {data?.edge_type || 'derives from'}
+         </div>
+       </EdgeLabelRenderer>
+     </>
+   );
+ };
 
-const ConceptToHypothesisEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+const ConceptToHypothesisEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }: any) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -461,11 +487,24 @@ const ConceptToHypothesisEdge = ({ id, sourceX, sourceY, targetX, targetY, sourc
         }}
         markerEnd={`url(#hypothesis-arrow-${id})`}
       />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            fontSize: 11,
+            pointerEvents: 'all',
+          }}
+          className="bg-emerald-50/95 px-2 py-1 rounded-md border border-emerald-200 text-emerald-800 font-medium shadow-sm"
+        >
+          {data?.edge_type || 'supports'}
+        </div>
+      </EdgeLabelRenderer>
     </>
   );
 };
 
-const NotebookToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+const NotebookToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }: any) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -504,11 +543,24 @@ const NotebookToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourceP
         }}
         markerEnd={`url(#notebook-arrow-${id})`}
       />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            fontSize: 11,
+            pointerEvents: 'all',
+          }}
+          className="bg-orange-50/95 px-2 py-1 rounded-md border border-orange-200 text-orange-800 font-medium shadow-sm"
+        >
+          {data?.edge_type || 'contains'}
+        </div>
+      </EdgeLabelRenderer>
     </>
   );
 };
 
-const NotebookToSourceEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+const NotebookToSourceEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }: any) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -547,11 +599,24 @@ const NotebookToSourceEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePo
         }}
         markerEnd={`url(#notebook-source-arrow-${id})`}
       />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            fontSize: 11,
+            pointerEvents: 'all',
+          }}
+          className="bg-teal-50/95 px-2 py-1 rounded-md border border-teal-200 text-teal-800 font-medium shadow-sm"
+        >
+          {data?.edge_type || 'references'}
+        </div>
+      </EdgeLabelRenderer>
     </>
   );
 };
 
-const SourceToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+const SourceToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }: any) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -590,11 +655,24 @@ const SourceToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePos
         }}
         markerEnd={`url(#source-concept-arrow-${id})`}
       />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            fontSize: 11,
+            pointerEvents: 'all',
+          }}
+          className="bg-sky-50/95 px-2 py-1 rounded-md border border-sky-200 text-sky-800 font-medium shadow-sm"
+        >
+          {data?.edge_type || 'cites'}
+        </div>
+      </EdgeLabelRenderer>
     </>
   );
 };
 
-const ProjectToNotebookEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+const ProjectToNotebookEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }: any) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -632,6 +710,19 @@ const ProjectToNotebookEdge = ({ id, sourceX, sourceY, targetX, targetY, sourceP
         }}
         markerEnd={`url(#project-arrow-${id})`}
       />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            fontSize: 11,
+            pointerEvents: 'all',
+          }}
+          className="bg-indigo-50/95 px-2 py-1 rounded-md border border-indigo-200 text-indigo-800 font-medium shadow-sm"
+        >
+          {data?.edge_type || 'includes'}
+        </div>
+      </EdgeLabelRenderer>
     </>
   );
 };
