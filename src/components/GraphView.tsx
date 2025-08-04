@@ -475,28 +475,47 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     const layoutNodes: Node[] = [];
     let currentY = 50;
     
-    // Level 0: Project Root (top level)
+    // Level 0: Project Root (top level) - use saved hierarchical position if available
     if (projectData) {
+      // Check if we have a project node with saved position
+      const projectNode = nodeData.find(node => node.is_project_root);
+      const position = projectNode 
+        ? { 
+            x: projectNode.hierarchical_position_x || 400, 
+            y: projectNode.hierarchical_position_y || currentY 
+          }
+        : { x: 400, y: currentY };
+      
       layoutNodes.push({
-        id: `project-${projectData.id}`,
+        id: projectNode ? projectNode.id : `project-${projectData.id}`,
         type: 'hypothesis',
-        position: { x: 400, y: currentY },
+        position,
         data: {
-          nodeId: `project-${projectData.id}`,
+          nodeId: projectNode ? projectNode.id : `project-${projectData.id}`,
           title: projectData.title,
           content: projectData.hypothesis || projectData.research_focus || 'Project research focus',
-          project_id: projectData.id
+          project_id: projectData.id,
+          is_project_root: true
         }
       });
       currentY += 150;
     }
     
-    // Level 1: Notebooks (top level)
+    // Level 1: Notebooks - use saved hierarchical positions if available
     notebookData.forEach((notebook, index) => {
+      // Look for saved position from a notebook node
+      const notebookNode = nodeData.find(node => node.notebook_id === notebook.id);
+      const position = notebookNode 
+        ? { 
+            x: notebookNode.hierarchical_position_x || (200 + (index * 350)), 
+            y: notebookNode.hierarchical_position_y || currentY 
+          }
+        : { x: 200 + (index * 350), y: currentY };
+      
       layoutNodes.push({
         id: `notebook-${notebook.id}`,
         type: 'notebook',
-        position: { x: 200 + (index * 350), y: currentY },
+        position,
         data: {
           title: notebook.title,
           briefing: notebook.briefing,
@@ -508,15 +527,24 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
 
     currentY += 200;
 
-    // Level 2: Sources (connected to notebooks)
+    // Level 2: Sources (connected to notebooks) - use saved hierarchical positions
     resourceData.forEach((resource, index) => {
       const notebookIndex = notebookData.findIndex(n => n.id === resource.notebook_id);
-      const xPos = notebookIndex >= 0 ? 200 + (notebookIndex * 350) + (index % 2) * 150 : 200 + (index * 200);
+      const defaultXPos = notebookIndex >= 0 ? 200 + (notebookIndex * 350) + (index % 2) * 150 : 200 + (index * 200);
+      
+      // Look for saved position from a source node
+      const sourceNode = nodeData.find(node => node.source_id === resource.id);
+      const position = sourceNode 
+        ? { 
+            x: sourceNode.hierarchical_position_x || defaultXPos, 
+            y: sourceNode.hierarchical_position_y || currentY 
+          }
+        : { x: defaultXPos, y: currentY };
       
       layoutNodes.push({
         id: `source-${resource.id}`,
         type: 'source',
-        position: { x: xPos, y: currentY },
+        position,
         data: {
           title: resource.title,
           file_type: resource.file_type,
@@ -529,10 +557,13 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
 
     currentY += 200;
 
-    // Level 3: Concepts (connected to sources)
+    // Level 3: Concepts and other nodes - use saved hierarchical positions
     nodeData.forEach((node, index) => {
-      let xPos = 400 + (index * 200);
-      let yPos = currentY;
+      // Skip project root node as it's already added above
+      if (node.is_project_root) return;
+      
+      let defaultXPos = 400 + (index * 200);
+      let defaultYPos = currentY;
 
       // Try to position near related sources
       if (node.concept_source && typeof node.concept_source === 'object') {
@@ -541,23 +572,29 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
         if (firstSource?.resource_id) {
           const sourceNode = layoutNodes.find(n => n.id === `source-${firstSource.resource_id}`);
           if (sourceNode) {
-            xPos = sourceNode.position.x + (index % 3 - 1) * 100;
-            yPos = currentY + Math.floor(index / 3) * 120;
+            defaultXPos = sourceNode.position.x + (index % 3 - 1) * 100;
+            defaultYPos = currentY + Math.floor(index / 3) * 120;
           }
         }
       }
 
+      const position = {
+        x: node.hierarchical_position_x || defaultXPos,
+        y: node.hierarchical_position_y || defaultYPos
+      };
+
       layoutNodes.push({
         id: node.id,
         type: node.node_type,
-        position: { x: xPos, y: yPos },
+        position,
         data: {
           nodeId: node.id, // Add explicit nodeId for multi-select
           title: node.title,
           content: node.content,
           confidence_score: node.confidence_score,
           concept_source: node.concept_source,
-          extraction_method: node.extraction_method
+          extraction_method: node.extraction_method,
+          is_project_root: node.is_project_root
         }
       });
     });
@@ -568,12 +605,44 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
   const getSpatialLayout = (nodes: any[], notebookData: any[], resourceData: any[], nodeData: any[], projectData: any) => {
     const layoutNodes: Node[] = [];
     
-    // Add notebooks with saved positions or default
+    // Add project root first if it exists
+    if (projectData) {
+      const projectNode = nodeData.find(node => node.is_project_root);
+      const position = projectNode 
+        ? { 
+            x: projectNode.spatial_position_x || 400, 
+            y: projectNode.spatial_position_y || 50 
+          }
+        : { x: 400, y: 50 };
+      
+      layoutNodes.push({
+        id: projectNode ? projectNode.id : `project-${projectData.id}`,
+        type: 'hypothesis',
+        position,
+        data: {
+          nodeId: projectNode ? projectNode.id : `project-${projectData.id}`,
+          title: projectData.title,
+          content: projectData.hypothesis || projectData.research_focus || 'Project research focus',
+          project_id: projectData.id,
+          is_project_root: true
+        }
+      });
+    }
+    
+    // Add notebooks with saved spatial positions or default
     notebookData.forEach((notebook, index) => {
+      const notebookNode = nodeData.find(node => node.notebook_id === notebook.id);
+      const position = notebookNode 
+        ? { 
+            x: notebookNode.spatial_position_x || (100 + (index * 200)), 
+            y: notebookNode.spatial_position_y || (100 + (index * 200)) 
+          }
+        : { x: 100 + (index * 200), y: 100 + (index * 200) };
+      
       layoutNodes.push({
         id: `notebook-${notebook.id}`,
         type: 'notebook',
-        position: { x: 100, y: 100 + (index * 200) },
+        position,
         data: {
           title: notebook.title,
           briefing: notebook.briefing,
@@ -583,12 +652,20 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       });
     });
 
-    // Add sources with saved positions or default
+    // Add sources with saved spatial positions or default
     resourceData.forEach((resource, index) => {
+      const sourceNode = nodeData.find(node => node.source_id === resource.id);
+      const position = sourceNode 
+        ? { 
+            x: sourceNode.spatial_position_x || (300 + (index * 150)), 
+            y: sourceNode.spatial_position_y || (100 + (index * 150)) 
+          }
+        : { x: 300 + (index * 150), y: 100 + (index * 150) };
+      
       layoutNodes.push({
         id: `source-${resource.id}`,
         type: 'source',
-        position: { x: 300, y: 100 + (index * 150) },
+        position,
         data: {
           title: resource.title,
           file_type: resource.file_type,
@@ -599,22 +676,18 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       });
     });
 
-    // Add concepts with saved positions based on layout mode
-    nodeData.forEach(node => {
-      const isProjectRoot = node.is_project_root;
-      let position;
+    // Add concepts and other nodes with saved spatial positions
+    nodeData.forEach((node, index) => {
+      // Skip project root node as it's already added above
+      if (node.is_project_root) return;
       
-      if (layoutMode === 'hierarchical') {
-        position = { 
-          x: node.hierarchical_position_x || (isProjectRoot ? 400 : (400 + (nodeData.indexOf(node) % 5) * 200)), 
-          y: node.hierarchical_position_y || (isProjectRoot ? 50 : (300 + Math.floor(nodeData.indexOf(node) / 5) * 150))
-        };
-      } else {
-        position = { 
-          x: node.spatial_position_x || (isProjectRoot ? 400 : (100 + (nodeData.indexOf(node) % 6) * 180)), 
-          y: node.spatial_position_y || (isProjectRoot ? 50 : (100 + Math.floor(nodeData.indexOf(node) / 6) * 180))
-        };
-      }
+      const defaultXPos = 100 + (index % 6) * 180;
+      const defaultYPos = 100 + Math.floor(index / 6) * 180;
+      
+      const position = { 
+        x: node.spatial_position_x || defaultXPos, 
+        y: node.spatial_position_y || defaultYPos
+      };
       
       layoutNodes.push({
         id: node.id,
@@ -702,6 +775,26 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
         },
         data: { edge_type: edge.edge_type, annotation: edge.annotation }
       }));
+
+      // Add hierarchical connections between project and notebooks
+      if (projectData && layoutMode === 'hierarchical') {
+        const projectNodeId = nodeData.find(node => node.is_project_root)?.id || `project-${projectData.id}`;
+        (notebookData || []).forEach(notebook => {
+          flowEdges.push({
+            id: `project-notebook-${projectData.id}-${notebook.id}`,
+            source: projectNodeId,
+            target: `notebook-${notebook.id}`,
+            type: 'smoothstep',
+            label: 'includes',
+            labelStyle: { fontSize: 10, fontWeight: 400 },
+            style: { 
+              stroke: '#8b5cf6',
+              strokeWidth: 2,
+            },
+            data: { edge_type: 'includes', annotation: 'Project includes notebook' }
+          });
+        });
+      }
 
       // Add hierarchical connections between notebooks and sources
       (resourceData || []).forEach(resource => {
@@ -1229,7 +1322,6 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
             style: { strokeWidth: 2, stroke: '#10b981' }
           }}
         >
-          <Controls />
           <MiniMap 
             nodeColor={(node) => {
               const colors = {
@@ -1247,10 +1339,20 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
             maskColor="hsl(var(--muted) / 0.3)"
             style={{ 
               backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))'
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '8px'
             }}
+            className="!absolute !bottom-4 !left-4 !w-32 !h-24 !shadow-lg"
             pannable
             zoomable
+          />
+          <Controls 
+            style={{
+              background: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '8px'
+            }}
+            className="!absolute !bottom-4 !right-4 !shadow-lg"
           />
           <Background gap={20} size={1} color="hsl(var(--border))" />
         </ReactFlow>
