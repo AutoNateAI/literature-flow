@@ -805,28 +805,48 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     }
   }, [findPathsToRoot, edges]);
 
-  // Update nodes with highlighting
+  // Update nodes with ultra-dramatic neon highlighting
   const highlightedNodes = useMemo(() => {
     return nodes.map(node => ({
       ...node,
+      className: highlightedPaths.size > 0 
+        ? (highlightedPaths.has(node.id) ? 'path-highlighted' : 'path-not-highlighted')
+        : '',
       style: {
         ...node.style,
-        opacity: highlightedPaths.size > 0 ? (highlightedPaths.has(node.id) ? 1 : 0.3) : 1,
-        filter: highlightedPaths.has(node.id) ? 'drop-shadow(0 0 10px #8B5CF6)' : 'none'
       }
     }));
   }, [nodes, highlightedPaths]);
 
-  // Update edges with highlighting
+  // Update edges with highlighting and direction reversal for path flow
   const highlightedEdges = useMemo(() => {
-    return processedEdges.map(edge => ({
-      ...edge,
-      style: {
-        ...edge.style,
-        opacity: highlightedPaths.size > 0 ? (highlightedPaths.has(edge.id) ? 1 : 0.2) : 1,
-        strokeWidth: highlightedPaths.has(edge.id) ? 4 : edge.style?.strokeWidth || 2
+    return processedEdges.map(edge => {
+      const isHighlighted = highlightedPaths.has(edge.id);
+      
+      if (isHighlighted) {
+        // For highlighted edges, reverse direction to show upward flow to project
+        return {
+          ...edge,
+          className: 'path-highlighted-edge',
+          source: edge.target, // Reverse the direction
+          target: edge.source,
+          style: {
+            ...edge.style,
+            strokeDasharray: '10,5', // Add dash pattern for flow animation
+          },
+          markerEnd: edge.markerStart, // Flip markers
+          markerStart: edge.markerEnd,
+        };
       }
-    }));
+      
+      return {
+        ...edge,
+        className: highlightedPaths.size > 0 ? 'path-not-highlighted' : '',
+        style: {
+          ...edge.style,
+        }
+      };
+    });
   }, [processedEdges, highlightedPaths]);
 
   // Preserve layout mode and node positions

@@ -224,35 +224,58 @@ All colors MUST be HSL.
     }
   }
 
-  /* Path highlighting for insight tracing */
+  /* Ultra-dramatic neon path highlighting for insight tracing */
   .path-highlighted {
     opacity: 1 !important;
-    filter: brightness(2) saturate(1.5) drop-shadow(0 0 30px currentColor) drop-shadow(0 0 60px currentColor) drop-shadow(0 0 90px currentColor);
-    transform: scale(1.15);
-    transition: all 0.4s ease;
+    filter: brightness(3) saturate(2) contrast(1.5) drop-shadow(0 0 20px #00ff41) drop-shadow(0 0 40px #00ff41) drop-shadow(0 0 80px #00ff41) drop-shadow(0 0 120px #00ff41);
+    transform: scale(1.2);
+    transition: all 0.5s ease;
     z-index: 1000 !important;
-    animation: pathPulse 1.5s ease-in-out infinite;
-    border: 3px solid currentColor !important;
-    box-shadow: 0 0 40px currentColor, inset 0 0 20px rgba(255, 255, 255, 0.2);
+    animation: neonPulse 1s ease-in-out infinite alternate;
+    border: 2px solid #00ff41 !important;
+    box-shadow: 
+      0 0 20px #00ff41, 
+      0 0 40px #00ff41, 
+      0 0 60px #00ff41,
+      inset 0 0 20px rgba(0, 255, 65, 0.3);
+    background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 255, 65, 0.05)) !important;
   }
 
   .path-not-highlighted {
-    opacity: 0.02 !important;
-    filter: grayscale(1) blur(2px) brightness(0.3);
-    transform: scale(0.95);
-    transition: all 0.4s ease;
+    opacity: 0.05 !important;
+    filter: grayscale(1) blur(3px) brightness(0.2);
+    transform: scale(0.9);
+    transition: all 0.5s ease;
   }
 
-  @keyframes pathPulse {
-    0%, 100% { 
-      filter: brightness(2) saturate(1.5) drop-shadow(0 0 30px currentColor) drop-shadow(0 0 60px currentColor) drop-shadow(0 0 90px currentColor);
-      transform: scale(1.15);
-      box-shadow: 0 0 40px currentColor, inset 0 0 20px rgba(255, 255, 255, 0.2);
-    }
-    50% { 
-      filter: brightness(2.5) saturate(2) drop-shadow(0 0 50px currentColor) drop-shadow(0 0 100px currentColor) drop-shadow(0 0 150px currentColor);
+  .path-highlighted-edge {
+    stroke: #00ff41 !important;
+    stroke-width: 6 !important;
+    filter: drop-shadow(0 0 10px #00ff41) drop-shadow(0 0 20px #00ff41);
+    animation: neonFlow 1.5s linear infinite;
+  }
+
+  @keyframes neonPulse {
+    0% { 
+      filter: brightness(3) saturate(2) contrast(1.5) drop-shadow(0 0 20px #00ff41) drop-shadow(0 0 40px #00ff41) drop-shadow(0 0 80px #00ff41);
       transform: scale(1.2);
-      box-shadow: 0 0 80px currentColor, inset 0 0 40px rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41, 0 0 60px #00ff41, inset 0 0 20px rgba(0, 255, 65, 0.3);
+    }
+    100% { 
+      filter: brightness(4) saturate(3) contrast(2) drop-shadow(0 0 30px #00ff41) drop-shadow(0 0 60px #00ff41) drop-shadow(0 0 120px #00ff41);
+      transform: scale(1.25);
+      box-shadow: 0 0 40px #00ff41, 0 0 80px #00ff41, 0 0 120px #00ff41, inset 0 0 40px rgba(0, 255, 65, 0.5);
+    }
+  }
+
+  @keyframes neonFlow {
+    0% {
+      stroke-dashoffset: 20;
+      filter: drop-shadow(0 0 10px #00ff41) drop-shadow(0 0 20px #00ff41);
+    }
+    100% {
+      stroke-dashoffset: 0;
+      filter: drop-shadow(0 0 20px #00ff41) drop-shadow(0 0 40px #00ff41);
     }
   }
 }
