@@ -198,6 +198,7 @@ export type Database = {
           created_at: string
           extraction_method: string | null
           id: string
+          is_project_root: boolean | null
           node_type: string
           notebook_id: string | null
           passage_id: string | null
@@ -217,6 +218,7 @@ export type Database = {
           created_at?: string
           extraction_method?: string | null
           id?: string
+          is_project_root?: boolean | null
           node_type: string
           notebook_id?: string | null
           passage_id?: string | null
@@ -236,6 +238,7 @@ export type Database = {
           created_at?: string
           extraction_method?: string | null
           id?: string
+          is_project_root?: boolean | null
           node_type?: string
           notebook_id?: string | null
           passage_id?: string | null
@@ -519,6 +522,7 @@ export type Database = {
           hypothesis: string | null
           id: string
           paper_type: string
+          research_focus: string | null
           structural_outline: Json | null
           theme: string | null
           title: string
@@ -530,6 +534,7 @@ export type Database = {
           hypothesis?: string | null
           id?: string
           paper_type: string
+          research_focus?: string | null
           structural_outline?: Json | null
           theme?: string | null
           title: string
@@ -541,6 +546,7 @@ export type Database = {
           hypothesis?: string | null
           id?: string
           paper_type?: string
+          research_focus?: string | null
           structural_outline?: Json | null
           theme?: string | null
           title?: string

@@ -38,48 +38,51 @@ const HypothesisNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts,
   setMultiSelectedConcepts: (fn: (prev: string[]) => string[]) => void;
   setSelectedNodeDetail: (data: any) => void;
   setNodeDetailOpen: (open: boolean) => void;
-}) => (
-  <div 
-    className={`px-6 py-4 shadow-lg rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 border-3 border-purple-300 min-w-[200px] max-w-[300px] cursor-pointer hover:shadow-xl transition-shadow ${
-      multiSelectedConcepts.includes(data.id) ? 'ring-4 ring-blue-500 bg-blue-100' : ''
-    }`}
-    onClick={(e) => {
-      if (e.shiftKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Shift+click on hypothesis:', data.id, 'Title:', data.title);
-        setMultiSelectedConcepts(prev => {
-          const isAlreadySelected = prev.includes(data.id);
-          if (isAlreadySelected) {
-            return prev.filter(id => id !== data.id);
-          } else {
-            return [...prev, data.id];
-          }
-        });
-      } else {
-        setSelectedNodeDetail({ ...data, type: 'hypothesis' });
-        setNodeDetailOpen(true);
-      }
-    }}
-  >
-    <Handle type="target" position={Position.Top} className="w-4 h-4" />
-    <div className="text-center">
-      <Target className="h-6 w-6 text-purple-700 mx-auto mb-2" />
-      <div className="font-bold text-lg text-purple-900">{data.title}</div>
-      {data.content && (
-        <div className="text-sm text-purple-700 mt-2 leading-relaxed">
-          {data.content.length > 100 ? `${data.content.substring(0, 100)}...` : data.content}
-        </div>
-      )}
-      <Badge variant="secondary" className="mt-2 bg-purple-200 text-purple-800">
-        Research Focus
-      </Badge>
+}) => {
+  const nodeId = data.nodeId || data.id;
+  return (
+    <div 
+      className={`px-6 py-4 shadow-lg rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 border-3 border-purple-300 min-w-[200px] max-w-[300px] cursor-pointer hover:shadow-xl transition-shadow ${
+        multiSelectedConcepts.includes(nodeId) ? 'ring-4 ring-blue-500 bg-blue-100' : ''
+      }`}
+      onClick={(e) => {
+        if (e.shiftKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Shift+click on hypothesis, node ID:', nodeId);
+          setMultiSelectedConcepts(prev => {
+            const isAlreadySelected = prev.includes(nodeId);
+            if (isAlreadySelected) {
+              return prev.filter(id => id !== nodeId);
+            } else {
+              return [...prev, nodeId];
+            }
+          });
+        } else {
+          setSelectedNodeDetail({ ...data, type: 'hypothesis' });
+          setNodeDetailOpen(true);
+        }
+      }}
+    >
+      <Handle type="target" position={Position.Top} className="w-4 h-4" />
+      <div className="text-center">
+        <Target className="h-6 w-6 text-purple-700 mx-auto mb-2" />
+        <div className="font-bold text-lg text-purple-900">{data.title}</div>
+        {data.content && (
+          <div className="text-sm text-purple-700 mt-2 leading-relaxed">
+            {data.content.length > 100 ? `${data.content.substring(0, 100)}...` : data.content}
+          </div>
+        )}
+        <Badge variant="secondary" className="mt-2 bg-purple-200 text-purple-800">
+          Research Focus
+        </Badge>
+      </div>
+      <Handle type="source" position={Position.Bottom} className="w-4 h-4" />
+      <Handle type="source" position={Position.Left} className="w-4 h-4" />
+      <Handle type="source" position={Position.Right} className="w-4 h-4" />
     </div>
-    <Handle type="source" position={Position.Bottom} className="w-4 h-4" />
-    <Handle type="source" position={Position.Left} className="w-4 h-4" />
-    <Handle type="source" position={Position.Right} className="w-4 h-4" />
-  </div>
-);
+  );
+};
 
 const ConceptNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen }: { 
   data: any; 
@@ -87,65 +90,61 @@ const ConceptNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts, se
   setMultiSelectedConcepts: (fn: (prev: string[]) => string[]) => void;
   setSelectedNodeDetail: (data: any) => void;
   setNodeDetailOpen: (open: boolean) => void;
-}) => (
-  <div 
-    className={`px-4 py-3 shadow-md rounded-lg bg-blue-50 border-2 border-blue-200 min-w-[150px] max-w-[250px] cursor-pointer hover:shadow-lg transition-shadow ${
-      multiSelectedConcepts.includes(data.id) ? 'ring-2 ring-blue-500 bg-blue-100' : ''
-    }`}
-    onClick={(e) => {
-      if (e.shiftKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Shift+click on concept, node ID:', data.nodeId || data.id);
-        console.log('Node data:', data);
-        console.log('Current multiSelectedConcepts:', multiSelectedConcepts);
-        
-        // Use the correct ID property
-        const nodeId = data.nodeId || data.id;
-        if (!nodeId) {
-          console.error('No valid node ID found!', data);
-          return;
-        }
-        
-        setMultiSelectedConcepts(prev => {
-          const isAlreadySelected = prev.includes(nodeId);
-          if (isAlreadySelected) {
-            console.log('Removing from selection:', nodeId);
-            return prev.filter(id => id !== nodeId);
-          } else {
-            console.log('Adding to selection:', nodeId);
-            return [...prev, nodeId];
+}) => {
+  const nodeId = data.nodeId || data.id;
+  return (
+    <div 
+      className={`px-4 py-3 shadow-md rounded-lg bg-blue-50 border-2 border-blue-200 min-w-[150px] max-w-[250px] cursor-pointer hover:shadow-lg transition-shadow ${
+        multiSelectedConcepts.includes(nodeId) ? 'ring-4 ring-blue-500 bg-blue-100' : ''
+      }`}
+      onClick={(e) => {
+        if (e.shiftKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Shift+click on concept, node ID:', nodeId);
+          console.log('Node data:', data);
+          console.log('Current multiSelectedConcepts:', multiSelectedConcepts);
+          
+          setMultiSelectedConcepts(prev => {
+            const isAlreadySelected = prev.includes(nodeId);
+            if (isAlreadySelected) {
+              console.log('Removing from selection:', nodeId);
+              return prev.filter(id => id !== nodeId);
+            } else {
+              console.log('Adding to selection:', nodeId);
+              return [...prev, nodeId];
+            }
+          });
+        } else {
+          // Only open detail if not in multi-select mode
+          if (multiSelectedConcepts.length === 0) {
+            setSelectedNodeDetail({ ...data, type: 'concept' });
+            setNodeDetailOpen(true);
           }
-        });
-      } else {
-        // Only open detail if not in multi-select mode
-        if (multiSelectedConcepts.length === 0) {
-          setSelectedNodeDetail({ ...data, type: 'concept' });
-          setNodeDetailOpen(true);
         }
-      }
-    }}
-  >
-    <Handle type="target" position={Position.Top} />
-    <div className="flex items-start gap-2">
-      <Lightbulb className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-      <div className="flex-1">
-        <div className="font-semibold text-sm text-blue-900">{data.title}</div>
-        {data.content && (
-          <div className="text-xs text-blue-700 mt-1 leading-relaxed">
-            {data.content.length > 80 ? `${data.content.substring(0, 80)}...` : data.content}
-          </div>
-        )}
-        {data.confidence_score && (
-          <Badge variant="outline" className="text-xs mt-2 border-blue-300 text-blue-700">
-            {Math.round(data.confidence_score * 100)}% confidence
-          </Badge>
-        )}
+      }}
+    >
+      <Handle type="target" position={Position.Top} />
+      <div className="flex items-start gap-2">
+        <Lightbulb className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+        <div className="flex-1">
+          <div className="font-semibold text-sm text-blue-900">{data.title}</div>
+          {data.content && (
+            <div className="text-xs text-blue-700 mt-1 leading-relaxed">
+              {data.content.length > 80 ? `${data.content.substring(0, 80)}...` : data.content}
+            </div>
+          )}
+          {data.confidence_score && (
+            <Badge variant="outline" className="text-xs mt-2 border-blue-300 text-blue-700">
+              {Math.round(data.confidence_score * 100)}% confidence
+            </Badge>
+          )}
+        </div>
       </div>
+      <Handle type="source" position={Position.Bottom} />
     </div>
-    <Handle type="source" position={Position.Bottom} />
-  </div>
-);
+  );
+};
 
 const GapNode = ({ data }: { data: any }) => (
   <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-50 border-2 border-yellow-200 min-w-[150px] max-w-[250px]">
@@ -336,13 +335,23 @@ export function GraphView({ projectId }: GraphViewProps) {
   const [selectedConcept, setSelectedConcept] = useState("");
   const [nodeDetailOpen, setNodeDetailOpen] = useState(false);
   const [selectedNodeDetail, setSelectedNodeDetail] = useState<any>(null);
-  const [multiSelectActive, setMultiSelectActive] = useState(false);
-  const [multiSelectedConcepts, setMultiSelectedConcepts] = useState<string[]>([]);
   const [sourceSelectionRows, setSourceSelectionRows] = useState([{ id: 1, notebook: '', source: '', concept: '' }]);
   const { user } = useAuth();
 
+  // Fixed multi-select state and behavior
+  const [multiSelectedConcepts, setMultiSelectedConcepts] = useState<string[]>([]);
+  const [multiSelectActive, setMultiSelectActive] = useState(false);
+
+  // Effect to track multi-select state
+  useEffect(() => {
+    setMultiSelectActive(multiSelectedConcepts.length > 0);
+  }, [multiSelectedConcepts]);
+
   // Memoize nodeTypes to prevent React Flow warnings
-  const nodeTypes = useMemo(() => createNodeTypes(multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen), [multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen]);
+  const nodeTypes = useMemo(() => 
+    createNodeTypes(multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen), 
+    [multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen]
+  );
 
   // Preserve layout mode and node positions
   useEffect(() => {
@@ -360,8 +369,6 @@ export function GraphView({ projectId }: GraphViewProps) {
   useEffect(() => {
     setMultiSelectActive(multiSelectedConcepts.length > 0);
   }, [multiSelectedConcepts]);
-
-  
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -585,10 +592,10 @@ export function GraphView({ projectId }: GraphViewProps) {
       layoutNodes.push({
         id: node.id,
         type: node.node_type,
-    position: { 
-      x: node.position_x || (400 + (nodeData.indexOf(node) % 5) * 200), 
-      y: node.position_y || (300 + Math.floor(nodeData.indexOf(node) / 5) * 150) 
-    },
+        position: { 
+          x: node.position_x || (400 + (nodeData.indexOf(node) % 5) * 200), 
+          y: node.position_y || (300 + Math.floor(nodeData.indexOf(node) / 5) * 150) 
+        },
         data: {
           nodeId: node.id, // Add explicit nodeId for multi-select
           title: node.title,
@@ -634,10 +641,19 @@ export function GraphView({ projectId }: GraphViewProps) {
 
       if (resourceError) throw resourceError;
 
+      // Load project data (for hierarchical root)
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+
+      if (projectError) throw projectError;
+
       // Apply layout based on mode
       const flowNodes = layoutMode === 'hierarchical' 
-        ? getHierarchicalLayout([], notebookData, resourceData, nodeData, null)
-        : getSpatialLayout([], notebookData, resourceData, nodeData, null);
+        ? getHierarchicalLayout([], notebookData || [], resourceData || [], nodeData || [], projectData)
+        : getSpatialLayout([], notebookData || [], resourceData || [], nodeData || [], projectData);
 
       // Load edges
       const { data: edgeData, error: edgeError } = await supabase
@@ -648,7 +664,7 @@ export function GraphView({ projectId }: GraphViewProps) {
 
       if (edgeError) throw edgeError;
 
-      const flowEdges: Edge[] = edgeData.map(edge => ({
+      const flowEdges: Edge[] = (edgeData || []).map(edge => ({
         id: edge.id,
         source: edge.source_node_id,
         target: edge.target_node_id,
@@ -663,7 +679,7 @@ export function GraphView({ projectId }: GraphViewProps) {
       }));
 
       // Add hierarchical connections between notebooks and sources
-      resourceData.forEach(resource => {
+      (resourceData || []).forEach(resource => {
         if (resource.notebook_id) {
           flowEdges.push({
             id: `notebook-source-${resource.notebook_id}-${resource.id}`,
@@ -682,10 +698,10 @@ export function GraphView({ projectId }: GraphViewProps) {
       });
 
       // Add automatic connections from concepts to their supporting sources
-      nodeData.forEach(node => {
+      (nodeData || []).forEach(node => {
         if (node.concept_source) {
           // Find matching resource by title
-          const matchingResource = resourceData.find(resource => 
+          const matchingResource = (resourceData || []).find(resource => 
             resource.title === node.concept_source || 
             resource.title.includes(node.concept_source) ||
             node.concept_source.includes(resource.title)
@@ -1258,17 +1274,17 @@ export function GraphView({ projectId }: GraphViewProps) {
       </Dialog>
 
       {/* Multi-select Add Insight Button */}
-      {multiSelectedConcepts.length > 0 && (
+      {multiSelectActive && (
         <div className="fixed bottom-4 right-4 z-50">
           <Button 
             onClick={() => {
-              setSelectedConcepts(multiSelectedConcepts);
+              setSelectedConcepts([...multiSelectedConcepts]);
               setInsightDialogOpen(true);
-              setMultiSelectedConcepts([]);
             }}
-            className="shadow-lg"
+            className="flex items-center gap-2 shadow-lg bg-blue-600 hover:bg-blue-700"
+            size="lg"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Brain className="h-5 w-5" />
             Add Insight ({multiSelectedConcepts.length} concepts)
           </Button>
         </div>
