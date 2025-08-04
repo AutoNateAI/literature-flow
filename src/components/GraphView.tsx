@@ -1560,7 +1560,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
 
   return (
     <div className="h-full relative">
-      {/* Header & Stats */}
+      {/* Header */}
       <Card>
         <CardHeader>
           <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
@@ -1571,9 +1571,136 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
             Visual representation of your research insights extracted from NotebookLM analysis
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+      </Card>
+
+      {/* React Flow Graph - Now above controls */}
+      <div className={`${isMobile ? 'h-96' : 'h-[60vh]'} border rounded-lg bg-background relative mt-4`}>
+        <ReactFlow
+          nodes={highlightedNodes}
+          edges={highlightedEdges}
+          onNodesChange={onNodesChangeWithSave}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={handleNodeClick}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          fitView
+          minZoom={isMobile ? 0.1 : 0.01}
+          maxZoom={isMobile ? 2 : 4}
+          style={{ backgroundColor: 'hsl(var(--background))' }}
+          connectionLineStyle={{ stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+          defaultEdgeOptions={{ 
+            type: 'smoothstep',
+            style: { strokeWidth: 2, stroke: '#10b981' }
+          }}
+        >
+          <Controls showZoom showFitView showInteractive />
+          {!isMobile && (
+            <MiniMap 
+              nodeColor={(node) => {
+                const colors = {
+                  hypothesis: '#8b5cf6',
+                  concept: '#3b82f6',
+                  gap: '#f59e0b',
+                  discrepancy: '#ef4444',
+                  publication: '#10b981',
+                  notebook: '#f97316',
+                  source: '#14b8a6',
+                  insight: '#6366f1'
+                };
+                return colors[node.type as keyof typeof colors] || '#6b7280';
+              }}
+              maskColor="hsl(var(--muted) / 0.3)"
+              style={{ 
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))'
+              }}
+              pannable
+              zoomable
+            />
+          )}
+          <Background gap={20} size={1} color="hsl(var(--border))" />
+        </ReactFlow>
+
+        {/* Path Analysis Modal */}
+        {showPathModal && (
+          <div className={`absolute ${isMobile ? 'top-2 right-2 w-72' : 'top-4 right-4 w-80'} bg-card border border-border rounded-lg shadow-lg z-10 max-h-96 overflow-hidden`}>
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-foreground">Insight Paths Analysis</h3>
+                <button
+                  onClick={() => {
+                    setShowPathModal(false);
+                    setSelectedInsights(new Set());
+                    setHighlightedPaths(new Set());
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {selectedInsights.size} insight{selectedInsights.size !== 1 ? 's' : ''} selected
+              </p>
+            </div>
+            
+            <div className="overflow-y-auto max-h-80">
+              {Array.from(selectedInsights).map(insightId => {
+                const insightNode = nodes.find(n => n.id === insightId);
+                const paths = findPathsToRoot(insightId);
+                
+                return (
+                  <div key={insightId} className="p-4 border-b border-border/50">
+                    <div className="font-medium text-sm text-foreground mb-2">
+                      💡 {insightNode?.data.title || insightNode?.data.content || 'Insight'}
+                    </div>
+                    
+                    {paths.map((path, pathIndex) => (
+                      <div key={pathIndex} className="ml-4 mb-2">
+                        <div className="text-xs text-muted-foreground mb-1">
+                          Path {pathIndex + 1} ({path.length} nodes):
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {path.reverse().map((nodeId, nodeIndex) => {
+                            const node = nodes.find(n => n.id === nodeId);
+                            const nodeTypeEmoji = {
+                              project: '📁',
+                              notebook: '📓', 
+                              concept: '🔗',
+                              insight: '💡'
+                            }[node?.type] || '📄';
+                            
+                            return (
+                              <div key={nodeId} className="flex items-center">
+                                <div className="text-xs bg-muted rounded px-2 py-1">
+                                  {nodeTypeEmoji} {node?.data.title || node?.data.content || 'Node'}
+                                </div>
+                                {nodeIndex < path.length - 1 && (
+                                  <div className="text-muted-foreground mx-1">→</div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="p-3 bg-muted/50 text-xs text-muted-foreground">
+              Hold Ctrl and click insight nodes to trace paths to root
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Controls Section - Now below the graph */}
+      <Card className="mt-4">
+        <CardContent className="space-y-4 pt-6">
           {/* Layout Toggle & Add Insight Button */}
-          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'}`}>
+          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-center items-center'}`}>
             <div className={`flex gap-2 ${isMobile ? 'justify-center' : ''}`}>
               <Button
                 variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
@@ -1919,128 +2046,6 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
         </CardContent>
       </Card>
 
-      {/* React Flow Graph */}
-      <div className={`${isMobile ? 'h-96' : 'h-full'} border rounded-lg bg-background relative`}>
-        <ReactFlow
-          nodes={highlightedNodes}
-          edges={highlightedEdges}
-          onNodesChange={onNodesChangeWithSave}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onNodeClick={handleNodeClick}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          fitView
-          minZoom={isMobile ? 0.1 : 0.01}
-          maxZoom={isMobile ? 2 : 4}
-          style={{ backgroundColor: 'hsl(var(--background))' }}
-          connectionLineStyle={{ stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
-          defaultEdgeOptions={{ 
-            type: 'smoothstep',
-            style: { strokeWidth: 2, stroke: '#10b981' }
-          }}
-        >
-          <Controls showZoom showFitView showInteractive />
-          {!isMobile && (
-            <MiniMap 
-              nodeColor={(node) => {
-                const colors = {
-                  hypothesis: '#8b5cf6',
-                  concept: '#3b82f6',
-                  gap: '#f59e0b',
-                  discrepancy: '#ef4444',
-                  publication: '#10b981',
-                  notebook: '#f97316',
-                  source: '#14b8a6',
-                  insight: '#6366f1'
-                };
-                return colors[node.type as keyof typeof colors] || '#6b7280';
-              }}
-              maskColor="hsl(var(--muted) / 0.3)"
-              style={{ 
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))'
-              }}
-              pannable
-              zoomable
-            />
-          )}
-          <Background gap={20} size={1} color="hsl(var(--border))" />
-        </ReactFlow>
-
-        {/* Path Analysis Modal */}
-        {showPathModal && (
-          <div className={`absolute ${isMobile ? 'top-2 right-2 w-72' : 'top-4 right-4 w-80'} bg-card border border-border rounded-lg shadow-lg z-10 max-h-96 overflow-hidden`}>
-            <div className="p-4 border-b border-border">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-foreground">Insight Paths Analysis</h3>
-                <button
-                  onClick={() => {
-                    setShowPathModal(false);
-                    setSelectedInsights(new Set());
-                    setHighlightedPaths(new Set());
-                  }}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                {selectedInsights.size} insight{selectedInsights.size !== 1 ? 's' : ''} selected
-              </p>
-            </div>
-            
-            <div className="overflow-y-auto max-h-80">
-              {Array.from(selectedInsights).map(insightId => {
-                const insightNode = nodes.find(n => n.id === insightId);
-                const paths = findPathsToRoot(insightId);
-                
-                return (
-                  <div key={insightId} className="p-4 border-b border-border/50">
-                    <div className="font-medium text-sm text-foreground mb-2">
-                      💡 {insightNode?.data.title || insightNode?.data.content || 'Insight'}
-                    </div>
-                    
-                    {paths.map((path, pathIndex) => (
-                      <div key={pathIndex} className="ml-4 mb-2">
-                        <div className="text-xs text-muted-foreground mb-1">
-                          Path {pathIndex + 1} ({path.length} nodes):
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {path.reverse().map((nodeId, nodeIndex) => {
-                            const node = nodes.find(n => n.id === nodeId);
-                            const nodeTypeEmoji = {
-                              project: '📁',
-                              notebook: '📓', 
-                              concept: '🔗',
-                              insight: '💡'
-                            }[node?.type] || '📄';
-                            
-                            return (
-                              <div key={nodeId} className="flex items-center">
-                                <div className="text-xs bg-muted rounded px-2 py-1">
-                                  {nodeTypeEmoji} {node?.data.title || node?.data.content || 'Node'}
-                                </div>
-                                {nodeIndex < path.length - 1 && (
-                                  <div className="text-muted-foreground mx-1">→</div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-            
-            <div className="p-3 bg-muted/50 text-xs text-muted-foreground">
-              Hold Ctrl and click insight nodes to trace paths to root
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Connection Dialog */}
       <Dialog open={edgeDialogOpen} onOpenChange={setEdgeDialogOpen}>
