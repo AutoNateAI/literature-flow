@@ -8,6 +8,8 @@ import {
   Background,
   Controls,
   MiniMap,
+  addEdge,
+  Connection,
 } from '@xyflow/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,286 +27,220 @@ import {
 } from 'lucide-react';
 import '@xyflow/react/dist/style.css';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface GraphViewProps {
   projectId?: string;
   onGraphControlsChange?: (controls: any) => void;
 }
 
-const initialNodes: Node[] = [
-  // Research Focus (Center)
-  {
-    id: 'research-focus',
-    position: { x: 400, y: 200 },
-    data: { 
-      label: 'AI in Education Research',
-      type: 'Research Focus',
-      icon: Target 
-    },
-    type: 'default',
-    style: { 
-      backgroundColor: 'hsl(270 95% 90%)', 
-      border: '3px solid hsl(270 95% 60%)',
-      borderRadius: '12px',
-      padding: '16px',
-      fontSize: '14px',
-      fontWeight: '600',
+// Node type mapping for styling
+const getNodeStyle = (nodeType: string, isHighlighted: boolean = false) => {
+  const baseStyle = {
+    borderRadius: '8px',
+    padding: '12px',
+    fontSize: '12px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    border: isHighlighted ? '3px solid hsl(var(--primary))' : '2px solid',
+    boxShadow: isHighlighted ? '0 0 20px hsl(var(--primary) / 0.3)' : 'none',
+  };
+
+  const typeStyles = {
+    project: {
+      backgroundColor: 'hsl(270 95% 90%)',
+      borderColor: 'hsl(270 95% 60%)',
       color: 'hsl(270 95% 20%)',
       width: '180px',
-      height: '80px'
+      height: '80px',
     },
-  },
-  // Key Concepts
-  {
-    id: 'concept-1',
-    position: { x: 100, y: 50 },
-    data: { 
-      label: 'Machine Learning Algorithms',
-      type: 'Concept',
-      icon: Lightbulb 
-    },
-    type: 'default',
-    style: { 
-      backgroundColor: 'hsl(210 95% 90%)', 
-      border: '2px solid hsl(210 95% 60%)',
-      borderRadius: '8px',
-      padding: '12px',
-      fontSize: '12px',
+    concept: {
+      backgroundColor: 'hsl(210 95% 90%)',
+      borderColor: 'hsl(210 95% 60%)',
       color: 'hsl(210 95% 20%)',
       width: '160px',
-      height: '60px'
+      height: '70px',
     },
-  },
-  {
-    id: 'concept-2',
-    position: { x: 700, y: 50 },
-    data: { 
-      label: 'Personalized Learning',
-      type: 'Concept',
-      icon: Lightbulb 
+    notebook: {
+      backgroundColor: 'hsl(25 70% 90%)',
+      borderColor: 'hsl(25 70% 60%)',
+      color: 'hsl(25 70% 20%)',
+      width: '150px',
+      height: '60px',
     },
-    type: 'default',
-    style: { 
-      backgroundColor: 'hsl(210 95% 90%)', 
-      border: '2px solid hsl(210 95% 60%)',
-      borderRadius: '8px',
-      padding: '12px',
-      fontSize: '12px',
-      color: 'hsl(210 95% 20%)',
-      width: '160px',
-      height: '60px'
+    source: {
+      backgroundColor: 'hsl(160 50% 90%)',
+      borderColor: 'hsl(160 50% 60%)',
+      color: 'hsl(160 50% 20%)',
+      width: '140px',
+      height: '60px',
     },
-  },
-  {
-    id: 'concept-3',
-    position: { x: 50, y: 350 },
-    data: { 
-      label: 'Learning Analytics',
-      type: 'Concept',
-      icon: Lightbulb 
+    insight: {
+      backgroundColor: 'hsl(250 60% 90%)',
+      borderColor: 'hsl(250 60% 60%)',
+      color: 'hsl(250 60% 20%)',
+      width: '170px',
+      height: '70px',
     },
-    type: 'default',
-    style: { 
-      backgroundColor: 'hsl(210 95% 90%)', 
-      border: '2px solid hsl(210 95% 60%)',
-      borderRadius: '8px',
-      padding: '12px',
-      fontSize: '12px',
-      color: 'hsl(210 95% 20%)',
-      width: '160px',
-      height: '60px'
-    },
-  },
-  // Research Gaps
-  {
-    id: 'gap-1',
-    position: { x: 300, y: 50 },
-    data: { 
-      label: 'Implementation Challenges',
-      type: 'Research Gap',
-      icon: AlertTriangle 
-    },
-    type: 'default',
-    style: { 
-      backgroundColor: 'hsl(45 95% 85%)', 
-      border: '2px solid hsl(45 95% 50%)',
-      borderRadius: '8px',
-      padding: '12px',
-      fontSize: '12px',
+    gap: {
+      backgroundColor: 'hsl(45 95% 85%)',
+      borderColor: 'hsl(45 95% 50%)',
       color: 'hsl(45 95% 20%)',
       width: '160px',
-      height: '60px'
+      height: '60px',
     },
-  },
-  // Publications/Sources
-  {
-    id: 'source-1',
-    position: { x: 600, y: 350 },
-    data: { 
-      label: 'Chen et al. (2023)',
-      type: 'Publication',
-      icon: BookOpen 
-    },
-    type: 'default',
-    style: { 
-      backgroundColor: 'hsl(120 40% 85%)', 
-      border: '2px solid hsl(120 40% 50%)',
-      borderRadius: '8px',
-      padding: '12px',
-      fontSize: '12px',
-      color: 'hsl(120 40% 20%)',
-      width: '140px',
-      height: '50px'
-    },
-  },
-  {
-    id: 'source-2',
-    position: { x: 750, y: 300 },
-    data: { 
-      label: 'Williams (2024)',
-      type: 'Publication',
-      icon: BookOpen 
-    },
-    type: 'default',
-    style: { 
-      backgroundColor: 'hsl(120 40% 85%)', 
-      border: '2px solid hsl(120 40% 50%)',
-      borderRadius: '8px',
-      padding: '12px',
-      fontSize: '12px',
-      color: 'hsl(120 40% 20%)',
-      width: '140px',
-      height: '50px'
-    },
-  },
-  // Insights
-  {
-    id: 'insight-1',
-    position: { x: 250, y: 350 },
-    data: { 
-      label: 'Cross-disciplinary Approach Needed',
-      type: 'Insight',
-      icon: Brain 
-    },
-    type: 'default',
-    style: { 
-      backgroundColor: 'hsl(250 60% 85%)', 
-      border: '2px solid hsl(250 60% 50%)',
-      borderRadius: '8px',
-      padding: '12px',
-      fontSize: '12px',
-      color: 'hsl(250 60% 20%)',
-      width: '180px',
-      height: '60px'
-    },
-  },
-  // Notebooks
-  {
-    id: 'notebook-1',
-    position: { x: 500, y: 50 },
-    data: { 
-      label: 'Literature Review Notes',
-      type: 'Notebook',
-      icon: BookOpen 
-    },
-    type: 'default',
-    style: { 
-      backgroundColor: 'hsl(25 70% 85%)', 
-      border: '2px solid hsl(25 70% 50%)',
-      borderRadius: '8px',
-      padding: '12px',
-      fontSize: '12px',
-      color: 'hsl(25 70% 20%)',
-      width: '160px',
-      height: '60px'
-    },
-  },
-  // Discrepancy
-  {
-    id: 'discrepancy-1',
-    position: { x: 450, y: 350 },
-    data: { 
-      label: 'Conflicting Results on Effectiveness',
-      type: 'Discrepancy',
-      icon: AlertTriangle 
-    },
-    type: 'default',
-    style: { 
-      backgroundColor: 'hsl(0 70% 85%)', 
-      border: '2px solid hsl(0 70% 50%)',
-      borderRadius: '8px',
-      padding: '12px',
-      fontSize: '12px',
+    discrepancy: {
+      backgroundColor: 'hsl(0 70% 85%)',
+      borderColor: 'hsl(0 70% 50%)',
       color: 'hsl(0 70% 20%)',
-      width: '180px',
-      height: '60px'
+      width: '170px',
+      height: '70px',
     },
-  },
-];
+  };
 
-const initialEdges: Edge[] = [
-  // Research Focus connections
-  { id: 'e1', source: 'research-focus', target: 'concept-1', style: { stroke: 'hsl(210 95% 60%)', strokeWidth: 2 } },
-  { id: 'e2', source: 'research-focus', target: 'concept-2', style: { stroke: 'hsl(210 95% 60%)', strokeWidth: 2 } },
-  { id: 'e3', source: 'research-focus', target: 'concept-3', style: { stroke: 'hsl(210 95% 60%)', strokeWidth: 2 } },
-  
-  // Gap connections
-  { id: 'e4', source: 'concept-1', target: 'gap-1', style: { stroke: 'hsl(45 95% 50%)', strokeWidth: 2, strokeDasharray: '5,5' } },
-  { id: 'e5', source: 'concept-2', target: 'gap-1', style: { stroke: 'hsl(45 95% 50%)', strokeWidth: 2, strokeDasharray: '5,5' } },
-  
-  // Source connections
-  { id: 'e6', source: 'concept-2', target: 'source-1', style: { stroke: 'hsl(120 40% 50%)', strokeWidth: 2 } },
-  { id: 'e7', source: 'concept-2', target: 'source-2', style: { stroke: 'hsl(120 40% 50%)', strokeWidth: 2 } },
-  { id: 'e8', source: 'source-1', target: 'discrepancy-1', style: { stroke: 'hsl(0 70% 50%)', strokeWidth: 2 } },
-  { id: 'e9', source: 'source-2', target: 'discrepancy-1', style: { stroke: 'hsl(0 70% 50%)', strokeWidth: 2 } },
-  
-  // Insight connections
-  { id: 'e10', source: 'concept-3', target: 'insight-1', style: { stroke: 'hsl(250 60% 50%)', strokeWidth: 2 } },
-  { id: 'e11', source: 'gap-1', target: 'insight-1', style: { stroke: 'hsl(250 60% 50%)', strokeWidth: 2 } },
-  
-  // Notebook connections
-  { id: 'e12', source: 'notebook-1', target: 'research-focus', style: { stroke: 'hsl(25 70% 50%)', strokeWidth: 2 } },
-  { id: 'e13', source: 'notebook-1', target: 'gap-1', style: { stroke: 'hsl(25 70% 50%)', strokeWidth: 2 } },
-];
+  return { ...baseStyle, ...(typeStyles[nodeType as keyof typeof typeStyles] || typeStyles.concept) };
+};
 
 export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControlsChange }) => {
   const isMobile = useIsMobile();
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const { user } = useAuth();
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [layoutMode, setLayoutMode] = useState<'hierarchical' | 'spatial'>('spatial');
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const nodeStats = {
-    concept: 3,
-    hypothesis: 1,
-    insight: 1,
-    notebook: 1,
-    source: 2,
-    gaps: 1,
-    discrepancies: 1,
-  };
+  // Load graph data from database
+  const loadGraphData = useCallback(async () => {
+    if (!projectId) {
+      setIsLoading(false);
+      return;
+    }
 
-  const applyHierarchicalLayout = useCallback(() => {
-    const hierarchicalNodes = nodes.map((node) => {
-      let newPosition = { x: 0, y: 0 };
+    try {
+      setIsLoading(true);
       
-      // Define hierarchy levels and positions
-      if (node.id === 'research-focus') {
-        newPosition = { x: 400, y: 100 }; // Top center
-      } else if (node.data.type === 'Concept') {
-        const conceptIndex = ['concept-1', 'concept-2', 'concept-3'].indexOf(node.id);
-        newPosition = { x: 200 + (conceptIndex * 200), y: 200 };
-      } else if (node.data.type === 'Research Gap') {
-        newPosition = { x: 400, y: 300 };
-      } else if (node.data.type === 'Notebook') {
-        newPosition = { x: 100, y: 50 };
-      } else if (node.data.type === 'Publication') {
-        const sourceIndex = ['source-1', 'source-2'].indexOf(node.id);
-        newPosition = { x: 300 + (sourceIndex * 200), y: 400 };
-      } else if (node.data.type === 'Insight') {
-        newPosition = { x: 200, y: 450 };
-      } else if (node.data.type === 'Discrepancy') {
-        newPosition = { x: 600, y: 450 };
+      // Load nodes
+      const { data: graphNodes, error: nodesError } = await supabase
+        .from('graph_nodes')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (nodesError) throw nodesError;
+
+      // Load edges
+      const { data: graphEdges, error: edgesError } = await supabase
+        .from('graph_edges')
+        .select('*')
+        .eq('project_id', projectId);
+
+      if (edgesError) throw edgesError;
+
+      // Transform database nodes to ReactFlow format
+      const flowNodes: Node[] = (graphNodes || []).map((node) => ({
+        id: node.id,
+        position: layoutMode === 'spatial' 
+          ? { x: node.spatial_position_x || 0, y: node.spatial_position_y || 0 }
+          : { x: node.hierarchical_position_x || 0, y: node.hierarchical_position_y || 0 },
+        data: { 
+          label: node.title,
+          content: node.content,
+          type: node.node_type,
+          nodeData: node
+        },
+        type: 'default',
+        style: getNodeStyle(node.node_type, selectedNode === node.id),
+      }));
+
+      // Transform database edges to ReactFlow format
+      const flowEdges: Edge[] = (graphEdges || []).map((edge) => ({
+        id: edge.id,
+        source: edge.source_node_id,
+        target: edge.target_node_id,
+        type: 'default',
+        style: {
+          stroke: 'hsl(var(--muted-foreground))',
+          strokeWidth: 2,
+        },
+        data: {
+          edgeType: edge.edge_type,
+          annotation: edge.annotation,
+          strength: edge.strength,
+        }
+      }));
+
+      setNodes(flowNodes);
+      setEdges(flowEdges);
+    } catch (error) {
+      console.error('Error loading graph data:', error);
+      toast.error('Failed to load graph data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId, layoutMode, selectedNode, setNodes, setEdges]);
+
+  // Load data when component mounts or projectId changes
+  useEffect(() => {
+    loadGraphData();
+  }, [loadGraphData]);
+
+  // Handle node click
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    setSelectedNode(selectedNode === node.id ? null : node.id);
+    
+    // Update node styles to show selection
+    setNodes((nodes) => 
+      nodes.map((n) => ({
+        ...n,
+        style: getNodeStyle(n.data.type, n.id === node.id ? selectedNode !== node.id : false),
+      }))
+    );
+  }, [selectedNode, setNodes]);
+
+  // Handle edge connections
+  const onConnect = useCallback(
+    async (params: Edge | Connection) => {
+      if (!projectId || !user) return;
+
+      try {
+        // Add edge to database
+        const { error } = await supabase
+          .from('graph_edges')
+          .insert({
+            project_id: projectId,
+            user_id: user.id,
+            source_node_id: params.source,
+            target_node_id: params.target,
+            edge_type: 'connection',
+            strength: 1.0,
+          });
+
+        if (error) throw error;
+
+        // Add edge to local state
+        setEdges((eds) => addEdge(params, eds));
+        toast.success('Connection created');
+      } catch (error) {
+        console.error('Error creating edge:', error);
+        toast.error('Failed to create connection');
       }
+    },
+    [projectId, user, setEdges]
+  );
+
+  // Layout functions
+  const applyHierarchicalLayout = useCallback(async () => {
+    if (!projectId) return;
+
+    const hierarchicalNodes = nodes.map((node, index) => {
+      const { nodeData } = node.data;
+      const newPosition = { 
+        x: nodeData.hierarchical_position_x || (index * 200 + 100), 
+        y: nodeData.hierarchical_position_y || (Math.floor(index / 4) * 150 + 100) 
+      };
       
       return {
         ...node,
@@ -313,34 +249,17 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
     });
     
     setNodes(hierarchicalNodes);
-  }, [nodes, setNodes]);
+  }, [nodes, setNodes, projectId]);
 
-  const applySpatialLayout = useCallback(() => {
+  const applySpatialLayout = useCallback(async () => {
+    if (!projectId) return;
+
     const spatialNodes = nodes.map((node) => {
-      let newPosition = { x: 0, y: 0 };
-      
-      // Restore original spatial positions
-      if (node.id === 'research-focus') {
-        newPosition = { x: 400, y: 200 };
-      } else if (node.id === 'concept-1') {
-        newPosition = { x: 100, y: 50 };
-      } else if (node.id === 'concept-2') {
-        newPosition = { x: 700, y: 50 };
-      } else if (node.id === 'concept-3') {
-        newPosition = { x: 50, y: 350 };
-      } else if (node.id === 'gap-1') {
-        newPosition = { x: 300, y: 50 };
-      } else if (node.id === 'source-1') {
-        newPosition = { x: 600, y: 350 };
-      } else if (node.id === 'source-2') {
-        newPosition = { x: 750, y: 300 };
-      } else if (node.id === 'insight-1') {
-        newPosition = { x: 250, y: 350 };
-      } else if (node.id === 'notebook-1') {
-        newPosition = { x: 500, y: 50 };
-      } else if (node.id === 'discrepancy-1') {
-        newPosition = { x: 450, y: 350 };
-      }
+      const { nodeData } = node.data;
+      const newPosition = { 
+        x: nodeData.spatial_position_x || 0, 
+        y: nodeData.spatial_position_y || 0 
+      };
       
       return {
         ...node,
@@ -349,7 +268,7 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
     });
     
     setNodes(spatialNodes);
-  }, [nodes, setNodes]);
+  }, [nodes, setNodes, projectId]);
 
   const handleLayoutChange = useCallback((mode: 'hierarchical' | 'spatial') => {
     setLayoutMode(mode);
@@ -360,6 +279,21 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
     }
   }, [applyHierarchicalLayout, applySpatialLayout]);
 
+  // Calculate node statistics
+  const nodeStats = nodes.reduce((acc, node) => {
+    const type = node.data.type;
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-muted-foreground">Loading graph data...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col">
       {/* React Flow Graph */}
@@ -369,6 +303,8 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={onNodeClick}
           fitView
           attributionPosition="bottom-left"
           defaultViewport={{ x: 0, y: 0, zoom: isMobile ? 0.6 : 0.8 }}
@@ -415,10 +351,11 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
         </Button>
         <Button
           size="sm"
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+          onClick={loadGraphData}
+          className="flex items-center gap-2"
         >
           <Plus className="h-4 w-4" />
-          Add Insight
+          Refresh
         </Button>
       </div>
 
@@ -433,31 +370,13 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
             <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
               <Target className="h-2 w-2 text-white" />
             </div>
-            <span className="text-xs">Research Focus</span>
+            <span className="text-xs">Project</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
               <Lightbulb className="h-2 w-2 text-white" />
             </div>
             <span className="text-xs">Concept</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
-              <AlertTriangle className="h-2 w-2 text-white" />
-            </div>
-            <span className="text-xs">Research Gap</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-              <AlertTriangle className="h-2 w-2 text-white" />
-            </div>
-            <span className="text-xs">Discrepancy</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-              <BookOpen className="h-2 w-2 text-white" />
-            </div>
-            <span className="text-xs">Publication</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
@@ -482,16 +401,11 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
 
       {/* Node Statistics */}
       <div className="mt-4 flex flex-wrap gap-2 justify-center">
-        {nodeStats.concept > 0 && (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-            {nodeStats.concept} Concept{nodeStats.concept > 1 ? 's' : ''}
+        {Object.entries(nodeStats).map(([type, count]) => (
+          <Badge key={type} variant="secondary" className="text-xs">
+            {String(count)} {type}{(count as number) > 1 ? 's' : ''}
           </Badge>
-        )}
-        {nodeStats.hypothesis > 0 && (
-          <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
-            {nodeStats.hypothesis} Research Question{nodeStats.hypothesis > 1 ? 's' : ''}
-          </Badge>
-        )}
+        ))}
         <Badge variant="outline" className="text-xs">
           {edges.length} Connection{edges.length !== 1 ? 's' : ''}
         </Badge>
