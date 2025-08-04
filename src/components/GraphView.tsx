@@ -285,7 +285,11 @@ const InsightNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: {
 }) => (
   <div 
     className="px-4 py-3 shadow-lg rounded-lg bg-gradient-to-br from-indigo-100 to-indigo-200 border-3 border-indigo-300 min-w-[180px] max-w-[280px] cursor-pointer hover:shadow-xl transition-shadow"
-    onClick={() => {
+    onClick={(e) => {
+      if (e.ctrlKey) {
+        // Don't handle Ctrl+click here, let it bubble up to the main handleNodeClick
+        return;
+      }
       setSelectedNodeDetail({ ...data, type: 'insight' });
       setNodeDetailOpen(true);
     }}
@@ -696,6 +700,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     if (sourceType === 'concept' && targetType === 'insight') return 'conceptToInsight';
     if (sourceType === 'concept' && targetType === 'hypothesis') return 'conceptToHypothesis';
     if (sourceType === 'notebook' && targetType === 'concept') return 'notebookToConcept';
+    if (sourceType === 'notebook' && targetType === 'source') return 'notebookToSource';
+    if (sourceType === 'source' && targetType === 'concept') return 'sourceToConcept';
     if (sourceType === 'project' && targetType === 'notebook') return 'projectToNotebook';
     
     return 'default';
