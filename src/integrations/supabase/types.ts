@@ -197,6 +197,8 @@ export type Database = {
           content: string | null
           created_at: string
           extraction_method: string | null
+          file_size: string | null
+          file_type: string | null
           hierarchical_position_x: number | null
           hierarchical_position_y: number | null
           id: string
@@ -207,7 +209,9 @@ export type Database = {
           position_x: number | null
           position_y: number | null
           project_id: string
+          resource_id: string | null
           size: string | null
+          source_url: string | null
           spatial_position_x: number | null
           spatial_position_y: number | null
           title: string
@@ -221,6 +225,8 @@ export type Database = {
           content?: string | null
           created_at?: string
           extraction_method?: string | null
+          file_size?: string | null
+          file_type?: string | null
           hierarchical_position_x?: number | null
           hierarchical_position_y?: number | null
           id?: string
@@ -231,7 +237,9 @@ export type Database = {
           position_x?: number | null
           position_y?: number | null
           project_id: string
+          resource_id?: string | null
           size?: string | null
+          source_url?: string | null
           spatial_position_x?: number | null
           spatial_position_y?: number | null
           title: string
@@ -245,6 +253,8 @@ export type Database = {
           content?: string | null
           created_at?: string
           extraction_method?: string | null
+          file_size?: string | null
+          file_type?: string | null
           hierarchical_position_x?: number | null
           hierarchical_position_y?: number | null
           id?: string
@@ -255,7 +265,9 @@ export type Database = {
           position_x?: number | null
           position_y?: number | null
           project_id?: string
+          resource_id?: string | null
           size?: string | null
+          source_url?: string | null
           spatial_position_x?: number | null
           spatial_position_y?: number | null
           title?: string
