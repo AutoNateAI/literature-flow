@@ -241,7 +241,8 @@ const NotebookNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: {
   </div>
 );
 
-const SourceNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: { 
+const SourceNode = ({ id, data, setSelectedNodeDetail, setNodeDetailOpen }: { 
+  id: string;
   data: any; 
   setSelectedNodeDetail: (data: any) => void;
   setNodeDetailOpen: (open: boolean) => void;
@@ -249,7 +250,11 @@ const SourceNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: {
   <div 
     className="px-4 py-3 shadow-md rounded-lg bg-teal-50 border-2 border-teal-200 min-w-[150px] max-w-[250px] cursor-pointer hover:shadow-lg transition-shadow"
     onClick={() => {
-      setSelectedNodeDetail({ ...data, type: 'source' });
+      setSelectedNodeDetail({ 
+        ...data, 
+        id: id,
+        type: 'source'
+      });
       setNodeDetailOpen(true);
     }}
   >
@@ -315,7 +320,7 @@ const createNodeTypes = (
   discrepancy: DiscrepancyNode,
   publication: PublicationNode,
   notebook: (props: any) => NotebookNode({ ...props, setSelectedNodeDetail, setNodeDetailOpen }),
-  source: (props: any) => SourceNode({ ...props, setSelectedNodeDetail, setNodeDetailOpen }),
+  source: (props: any) => SourceNode({ ...props, id: props.id, setSelectedNodeDetail, setNodeDetailOpen }),
   insight: (props: any) => InsightNode({ ...props, setSelectedNodeDetail, setNodeDetailOpen }),
 });
 
@@ -1466,25 +1471,20 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
               {/* Source Details */}
               {selectedNodeDetail.type === 'source' && (
                 <div className="space-y-3">
-                  {/* Debug info */}
-                  <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                    Debug: ID={selectedNodeDetail.id}, Type={selectedNodeDetail.type}
-                  </div>
-                  
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">File Type</Label>
-                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_type || selectedNodeDetail.data?.file_type || 'Not specified'}</p>
+                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_type || 'Not specified'}</p>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">File Size</Label>
-                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_size || selectedNodeDetail.data?.file_size || 'Not specified'}</p>
+                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_size || 'Not specified'}</p>
                     </div>
                   </div>
-                  {(selectedNodeDetail.source_url || selectedNodeDetail.data?.source_url) && (
+                  {selectedNodeDetail.source_url && (
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Source URL</Label>
-                      <p className="text-xs bg-muted p-2 rounded font-mono break-all">{selectedNodeDetail.source_url || selectedNodeDetail.data?.source_url}</p>
+                      <p className="text-xs bg-muted p-2 rounded font-mono break-all">{selectedNodeDetail.source_url}</p>
                     </div>
                   )}
                   
@@ -1492,11 +1492,6 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Connected Concepts</Label>
                     <div className="space-y-1">
-                      {/* Debug edges */}
-                      <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                        Debug: Found {edges.length} total edges, checking for node ID: {selectedNodeDetail.id}
-                      </div>
-                      
                       {edges.filter(e => {
                         const nodeId = selectedNodeDetail.id;
                         const isConnected = e.source === nodeId || e.target === nodeId;
@@ -1529,22 +1524,6 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                       )}
                     </div>
                   </div>
-                  
-                  {/* Resource Details */}
-                  {selectedNodeDetail.type === 'source' && (
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">File Type</Label>
-                          <p className="text-xs bg-muted p-2 rounded">{selectedNodeDetail.file_type || 'Unknown'}</p>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">File Size</Label>
-                          <p className="text-xs bg-muted p-2 rounded">{selectedNodeDetail.file_size || 'Unknown'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
