@@ -71,7 +71,7 @@ export function AppSidebar({ currentView, onNavigate, graphControls, isMobile = 
                     }`}
                   >
                     <item.icon className="w-5 h-5 shrink-0" />
-                    {!collapsed && <span className="font-medium">{item.title}</span>}
+                    <span className={`font-medium ${collapsed && !isMobile ? 'sr-only' : ''}`}>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
