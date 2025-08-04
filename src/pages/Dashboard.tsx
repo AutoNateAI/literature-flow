@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardContent } from "@/components/DashboardContent";
 import { PromptLibrary } from "@/components/PromptLibrary";
@@ -10,8 +10,6 @@ import { ProjectManager } from "@/components/ProjectManager";
 import { NotebookUpload } from "@/components/NotebookUpload";
 import { GraphView } from "@/components/GraphView";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
 
 export type DashboardView = 'dashboard' | 'prompts' | 'workflow' | 'new-project' | 'manage-projects' | 'graph-view';
 
@@ -22,17 +20,6 @@ const Dashboard = () => {
   const [graphControls, setGraphControls] = useState<any>(null);
   const mainRef = useRef<HTMLElement>(null);
   const isMobile = useIsMobile();
-  const [isTabletOrMobile, setIsTabletOrMobile] = useState(false);
-
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsTabletOrMobile(window.innerWidth <= 1024);
-    };
-    
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
 
   const handleNavigate = (view: DashboardView) => {
     setCurrentView(view);
@@ -84,29 +71,9 @@ const Dashboard = () => {
           graphControls={graphControls}
           isMobile={isMobile}
         />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Mobile Header with Sidebar Trigger */}
-          {(isMobile || isTabletOrMobile) && (
-            <header className="flex items-center gap-3 p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <SidebarTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Toggle Sidebar</span>
-                </Button>
-              </SidebarTrigger>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">LR</span>
-                </div>
-                <h1 className="font-semibold text-lg">Lit Review AI</h1>
-              </div>
-            </header>
-          )}
-          
-          <main ref={mainRef} className={`flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-6'}`}>
-            {renderContent()}
-          </main>
-        </div>
+        <main ref={mainRef} className={`flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-6'}`}>
+          {renderContent()}
+        </main>
       </div>
     </SidebarProvider>
   );
