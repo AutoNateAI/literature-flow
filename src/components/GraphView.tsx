@@ -489,8 +489,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       const projectNode = nodeData.find(node => node.is_project_root);
       const position = projectNode 
         ? { 
-            x: projectNode.hierarchical_position_x || 400, 
-            y: projectNode.hierarchical_position_y || currentY 
+            x: projectNode.hierarchical_position_x ?? 400, 
+            y: projectNode.hierarchical_position_y ?? currentY 
           }
         : { x: 400, y: currentY };
       
@@ -509,21 +509,12 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       currentY += 150;
     }
     
-    // Level 1: Notebooks - use saved hierarchical positions if available
+    // Level 1: Notebooks - use default positions (they're not in graph_nodes table)
     notebookData.forEach((notebook, index) => {
-      // Look for saved position from a notebook node
-      const notebookNode = nodeData.find(node => node.notebook_id === notebook.id);
-      const position = notebookNode 
-        ? { 
-            x: notebookNode.hierarchical_position_x || (200 + (index * 350)), 
-            y: notebookNode.hierarchical_position_y || currentY 
-          }
-        : { x: 200 + (index * 350), y: currentY };
-      
       layoutNodes.push({
         id: `notebook-${notebook.id}`,
         type: 'notebook',
-        position,
+        position: { x: 200 + (index * 350), y: currentY },
         data: {
           title: notebook.title,
           briefing: notebook.briefing,
@@ -535,24 +526,15 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
 
     currentY += 200;
 
-    // Level 2: Sources (connected to notebooks) - use saved hierarchical positions
+    // Level 2: Sources - use default positions (they're not in graph_nodes table)
     resourceData.forEach((resource, index) => {
       const notebookIndex = notebookData.findIndex(n => n.id === resource.notebook_id);
-      const defaultXPos = notebookIndex >= 0 ? 200 + (notebookIndex * 350) + (index % 2) * 150 : 200 + (index * 200);
-      
-      // Look for saved position from a source node
-      const sourceNode = nodeData.find(node => node.source_id === resource.id);
-      const position = sourceNode 
-        ? { 
-            x: sourceNode.hierarchical_position_x || defaultXPos, 
-            y: sourceNode.hierarchical_position_y || currentY 
-          }
-        : { x: defaultXPos, y: currentY };
+      const xPos = notebookIndex >= 0 ? 200 + (notebookIndex * 350) + (index % 2) * 150 : 200 + (index * 200);
       
       layoutNodes.push({
         id: `source-${resource.id}`,
         type: 'source',
-        position,
+        position: { x: xPos, y: currentY },
         data: {
           title: resource.title,
           file_type: resource.file_type,
@@ -587,8 +569,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       }
 
       const position = {
-        x: node.hierarchical_position_x || defaultXPos,
-        y: node.hierarchical_position_y || defaultYPos
+        x: node.hierarchical_position_x ?? defaultXPos,
+        y: node.hierarchical_position_y ?? defaultYPos
       };
 
       layoutNodes.push({
@@ -618,8 +600,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       const projectNode = nodeData.find(node => node.is_project_root);
       const position = projectNode 
         ? { 
-            x: projectNode.spatial_position_x || 400, 
-            y: projectNode.spatial_position_y || 50 
+            x: projectNode.spatial_position_x ?? 400, 
+            y: projectNode.spatial_position_y ?? 50 
           }
         : { x: 400, y: 50 };
       
@@ -637,20 +619,12 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       });
     }
     
-    // Add notebooks with saved spatial positions or default
+    // Add notebooks with default spatial positions (they're not in graph_nodes table)
     notebookData.forEach((notebook, index) => {
-      const notebookNode = nodeData.find(node => node.notebook_id === notebook.id);
-      const position = notebookNode 
-        ? { 
-            x: notebookNode.spatial_position_x || (100 + (index * 200)), 
-            y: notebookNode.spatial_position_y || (100 + (index * 200)) 
-          }
-        : { x: 100 + (index * 200), y: 100 + (index * 200) };
-      
       layoutNodes.push({
         id: `notebook-${notebook.id}`,
         type: 'notebook',
-        position,
+        position: { x: 100 + (index * 200), y: 100 + (index * 200) },
         data: {
           title: notebook.title,
           briefing: notebook.briefing,
@@ -660,20 +634,12 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       });
     });
 
-    // Add sources with saved spatial positions or default
+    // Add sources with default spatial positions (they're not in graph_nodes table)
     resourceData.forEach((resource, index) => {
-      const sourceNode = nodeData.find(node => node.source_id === resource.id);
-      const position = sourceNode 
-        ? { 
-            x: sourceNode.spatial_position_x || (300 + (index * 150)), 
-            y: sourceNode.spatial_position_y || (100 + (index * 150)) 
-          }
-        : { x: 300 + (index * 150), y: 100 + (index * 150) };
-      
       layoutNodes.push({
         id: `source-${resource.id}`,
         type: 'source',
-        position,
+        position: { x: 300 + (index * 150), y: 100 + (index * 150) },
         data: {
           title: resource.title,
           file_type: resource.file_type,
@@ -693,8 +659,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       const defaultYPos = 100 + Math.floor(index / 6) * 180;
       
       const position = { 
-        x: node.spatial_position_x || defaultXPos, 
-        y: node.spatial_position_y || defaultYPos
+        x: node.spatial_position_x ?? defaultXPos, 
+        y: node.spatial_position_y ?? defaultYPos
       };
       
       layoutNodes.push({
