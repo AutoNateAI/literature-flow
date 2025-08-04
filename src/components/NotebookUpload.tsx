@@ -317,31 +317,31 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 bg-muted/50 p-1 rounded-lg">
           <TabsTrigger 
             value="workflow" 
-            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground"
+            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:bg-muted/30 data-[state=inactive]:text-muted-foreground"
           >
             Analysis Workflow
           </TabsTrigger>
           <TabsTrigger 
             value="notebooks" 
-            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground"
+            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:bg-muted/30 data-[state=inactive]:text-muted-foreground"
           >
             Notebooks
           </TabsTrigger>
           <TabsTrigger 
             value="extract" 
-            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground"
+            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:bg-muted/30 data-[state=inactive]:text-muted-foreground"
           >
             Extract Concepts
           </TabsTrigger>
           <TabsTrigger 
             value="resources" 
-            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground"
+            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:bg-muted/30 data-[state=inactive]:text-muted-foreground"
           >
             Insights
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="notebooks" className="space-y-4 md:space-y-6">
+        <TabsContent value="notebooks" className="space-y-4 md:space-y-6 mt-6 md:mt-4">
           {/* Header with Create Button */}
           <Card>
             <CardHeader className="p-4 md:p-6">
@@ -577,18 +577,18 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
         )}
       </TabsContent>
 
-      <TabsContent value="workflow">
+      <TabsContent value="workflow" className="mt-6 md:mt-4">
         <WorkflowBuilder workflowId={projectId} />
       </TabsContent>
 
-      <TabsContent value="extract">
+      <TabsContent value="extract" className="mt-6 md:mt-4">
         <ConceptExtractor 
           projectId={projectId} 
           notebookId={notebooks[0]?.id}
         />
       </TabsContent>
 
-      <TabsContent value="resources" className="space-y-6">
+      <TabsContent value="resources" className="space-y-6 mt-6 md:mt-4">
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
