@@ -782,7 +782,11 @@ export function GraphView({ projectId }: GraphViewProps) {
   };
 
   const createInsight = async () => {
-    if (!user || !insightTitle || selectedConcepts.length === 0) return;
+    if (!user || !insightTitle) return;
+    
+    // Use multi-selected concepts if available, otherwise use regular selected concepts
+    const conceptsToConnect = multiSelectedConcepts.length > 0 ? multiSelectedConcepts : selectedConcepts;
+    if (conceptsToConnect.length === 0) return;
 
     try {
       const { data: insight, error } = await supabase
@@ -802,7 +806,7 @@ export function GraphView({ projectId }: GraphViewProps) {
       if (error) throw error;
 
       // Create connections from selected concepts to the insight
-      const edgePromises = selectedConcepts.map(conceptId =>
+      const edgePromises = conceptsToConnect.map(conceptId =>
         supabase.from('graph_edges').insert({
           project_id: projectId,
           user_id: user.id,
@@ -841,11 +845,14 @@ export function GraphView({ projectId }: GraphViewProps) {
     }
   };
 
-  const updateSourceSelectionRow = (id: number, field: string, value: string) => {
-    setSourceSelectionRows(sourceSelectionRows.map(row => 
-      row.id === id ? { ...row, [field]: value } : row
-    ));
+  const updateSourceSelectionRow = (id: number, field: 'notebook' | 'source' | 'concept', value: string) => {
+    setSourceSelectionRows(rows => 
+      rows.map(row => 
+        row.id === id ? { ...row, [field]: value } : row
+      )
+    );
   };
+
 
   const handleMultiSelectInsight = () => {
     setSelectedConcepts([...multiSelectedConcepts]);
@@ -1161,9 +1168,8 @@ export function GraphView({ projectId }: GraphViewProps) {
         <div className="fixed bottom-4 right-4 z-50">
           <Button 
             onClick={() => {
-              setSelectedConcepts(multiSelectedConcepts);
+              // Don't clear multi-select here, let the dialog handle it
               setInsightDialogOpen(true);
-              setMultiSelectedConcepts([]);
             }}
             className="shadow-lg"
           >
@@ -1172,6 +1178,190 @@ export function GraphView({ projectId }: GraphViewProps) {
           </Button>
         </div>
       )}
+
+      {/* Insight Creation Dialog */}
+      <Dialog open={insightDialogOpen} onOpenChange={setInsightDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Insight</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="insight-title">Insight Title</Label>
+              <Input
+                id="insight-title"
+                value={insightTitle}
+                onChange={(e) => setInsightTitle(e.target.value)}
+                placeholder="Enter insight title..."
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="insight-details">Insight Details</Label>
+              <Textarea
+                id="insight-details"
+                value={insightDetails}
+                onChange={(e) => setInsightDetails(e.target.value)}
+                placeholder="Describe your insight..."
+                rows={4}
+              />
+            </div>
+
+            {multiSelectedConcepts.length > 0 ? (
+              <div>
+                <Label className="text-sm font-medium">Selected Concepts ({multiSelectedConcepts.length})</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {multiSelectedConcepts.map(conceptId => {
+                    const node = nodes.find(n => n.data.nodeId === conceptId);
+                    return (
+                      <Badge key={conceptId} variant="secondary">
+                        {node?.data.title || conceptId}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Label className="text-sm font-medium">Connect to Concepts</Label>
+                {sourceSelectionRows.map((row, index) => (
+                  <div key={row.id} className="grid grid-cols-4 gap-2 p-3 border rounded">
+                    {/* Notebook Selection */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Notebook</Label>
+                      <Select 
+                        value={row.notebook} 
+                        onValueChange={(value) => updateSourceSelectionRow(row.id, 'notebook', value)}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border z-50 max-h-48 overflow-y-auto">
+                          {nodes.filter(n => n.type === 'notebook').map(notebook => (
+                            <SelectItem 
+                              key={notebook.id} 
+                              value={notebook.id}
+                              className="bg-background hover:bg-accent focus:bg-accent"
+                            >
+                              {notebook.data.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Source Selection */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Source</Label>
+                      <Select 
+                        value={row.source} 
+                        onValueChange={(value) => updateSourceSelectionRow(row.id, 'source', value)}
+                        disabled={!row.notebook}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border z-50 max-h-48 overflow-y-auto">
+                          {nodes.filter(n => 
+                            n.type === 'source' && 
+                            (!row.notebook || n.data.notebook_id === row.notebook.replace('notebook-', ''))
+                          ).map(source => (
+                            <SelectItem 
+                              key={source.id} 
+                              value={source.id}
+                              className="bg-background hover:bg-accent focus:bg-accent"
+                            >
+                              {source.data.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Concept Selection */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Concept</Label>
+                      <Select 
+                        value={row.concept} 
+                        onValueChange={(value) => {
+                          updateSourceSelectionRow(row.id, 'concept', value);
+                          if (value && !selectedConcepts.includes(value)) {
+                            setSelectedConcepts([...selectedConcepts, value]);
+                          }
+                        }}
+                        disabled={!row.source}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border z-50 max-h-48 overflow-y-auto">
+                          {getConceptNodes().filter(node => 
+                            !row.source || 
+                            (node.data.concept_source && 
+                             nodes.find(n => n.id === row.source)?.data.title &&
+                             (node.data.concept_source.includes(nodes.find(n => n.id === row.source)?.data.title) ||
+                              nodes.find(n => n.id === row.source)?.data.title.includes(node.data.concept_source)))
+                          ).map(concept => (
+                            <SelectItem 
+                              key={concept.id} 
+                              value={concept.id}
+                              className="bg-background hover:bg-accent focus:bg-accent"
+                            >
+                              {concept.data.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Remove Row Button */}
+                    <div className="flex items-end">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => removeSourceSelectionRow(row.id)}
+                        disabled={sourceSelectionRows.length === 1}
+                        className="h-8 w-8 p-0"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={addSourceSelectionRow}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Another Concept
+                </Button>
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => {
+                setInsightDialogOpen(false);
+                setInsightTitle("");
+                setInsightDetails("");
+                setSelectedConcepts([]);
+                setMultiSelectedConcepts([]);
+                setSourceSelectionRows([{ id: 1, notebook: '', source: '', concept: '' }]);
+              }}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={createInsight}
+                disabled={!insightTitle || (selectedConcepts.length === 0 && multiSelectedConcepts.length === 0)}
+              >
+                Create Insight
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Node Detail Modal */}
       <Dialog open={nodeDetailOpen} onOpenChange={setNodeDetailOpen}>
