@@ -506,7 +506,7 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
               onSelectWorkflow(lastWorkflowId);
               onNavigate('workflow');
             } else {
-              onNavigate('manage-workflows');
+              onNavigate('manage-projects');
             }
           }}
         >
@@ -517,7 +517,7 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
           </CardContent>
         </Card>
         
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:shadow-lg transition-all" onClick={() => onNavigate('manage-workflows')}>
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:shadow-lg transition-all" onClick={() => onNavigate('manage-projects')}>
           <CardContent className="p-6 text-center">
             <Target className="h-8 w-8 mx-auto mb-4" />
             <h3 className="font-semibold text-lg mb-2">View Workflows</h3>

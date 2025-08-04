@@ -10,11 +10,9 @@ interface AppSidebarProps {
 const menuItems = [
   { id: 'dashboard' as DashboardView, title: "Dashboard", icon: Home },
   { id: 'new-project' as DashboardView, title: "New Project", icon: Plus },
-  { id: 'manage-projects' as DashboardView, title: "Manage Projects", icon: FileText },
-  { id: 'workflow' as DashboardView, title: "Current Project", icon: Workflow },
-  { id: 'upload-data' as DashboardView, title: "Upload Data", icon: Upload },
+  { id: 'manage-projects' as DashboardView, title: "Projects", icon: FileText },
+  { id: 'workflow' as DashboardView, title: "Research Workflow", icon: Workflow },
   { id: 'graph-view' as DashboardView, title: "Literature Map", icon: GitBranch },
-  { id: 'notebook-manager' as DashboardView, title: "Notebook Manager", icon: BookOpen },
   { id: 'prompts' as DashboardView, title: "Prompt Library", icon: Lightbulb },
 ];
 
