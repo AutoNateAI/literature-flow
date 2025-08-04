@@ -760,6 +760,77 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
         data: { edge_type: edge.edge_type, annotation: edge.annotation }
       }));
 
+      // Add hierarchical connections between project and notebooks
+      if (projectData) {
+        const projectRootNode = nodeData.find(node => node.is_project_root);
+        const projectNodeId = projectRootNode?.id || `project-${projectData.id}`;
+        
+        nodeData.filter(node => node.node_type === 'notebook').forEach(notebook => {
+          flowEdges.push({
+            id: `project-notebook-${projectData.id}-${notebook.id}`,
+            source: projectNodeId,
+            target: notebook.id,
+            type: 'smoothstep',
+            label: 'includes',
+            labelStyle: { fontSize: 10, fontWeight: 400 },
+            style: { 
+              stroke: '#8b5cf6',
+              strokeWidth: 2,
+            },
+            data: { edge_type: 'includes', annotation: 'Project includes notebook' }
+          });
+        });
+      }
+
+      // Add hierarchical connections between notebooks and sources
+      nodeData.filter(node => node.node_type === 'source').forEach(source => {
+        if (source.notebook_id) {
+          // Find the notebook node with matching notebook_id
+          const notebookNode = nodeData.find(n => n.node_type === 'notebook' && n.notebook_id === source.notebook_id);
+          if (notebookNode) {
+            flowEdges.push({
+              id: `notebook-source-${notebookNode.id}-${source.id}`,
+              source: notebookNode.id,
+              target: source.id,
+              type: 'smoothstep',
+              label: 'contains',
+              labelStyle: { fontSize: 10, fontWeight: 400 },
+              style: { 
+                stroke: '#f97316',
+                strokeWidth: 2,
+              },
+              data: { edge_type: 'contains', annotation: 'Notebook contains source' }
+            });
+          }
+        }
+      });
+
+      // Add automatic connections from concepts to their supporting sources
+      nodeData.filter(node => ['concept', 'hypothesis'].includes(node.node_type)).forEach(concept => {
+        if (concept.notebook_id) {
+          // Find source nodes from the same notebook
+          const relatedSources = nodeData.filter(n => 
+            n.node_type === 'source' && n.notebook_id === concept.notebook_id
+          );
+          
+          relatedSources.forEach(source => {
+            flowEdges.push({
+              id: `source-concept-${source.id}-${concept.id}`,
+              source: source.id,
+              target: concept.id,
+              type: 'smoothstep',
+              label: 'cites',
+              labelStyle: { fontSize: 10, fontWeight: 400 },
+              style: { 
+                stroke: '#14b8a6',
+                strokeWidth: 2,
+              },
+              data: { edge_type: 'cites', annotation: 'Source supports concept' }
+            });
+          });
+        }
+      });
+
       setNodes(flowNodes);
       setEdges(flowEdges);
     } catch (error) {
@@ -771,8 +842,10 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
   const getHierarchicalLayoutFromNodes = (nodeData: any[], projectData: any) => {
     const layoutNodes: Node[] = [];
     
-    // Add project root node if exists
+    // Always add project root node (create synthetic one if no graph node exists)
     const projectRootNode = nodeData.find(node => node.is_project_root);
+    const projectNodeId = projectRootNode?.id || `project-${projectData.id}`;
+    
     if (projectRootNode) {
       layoutNodes.push({
         id: projectRootNode.id,
@@ -781,6 +854,20 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
           x: projectRootNode.hierarchical_position_x ?? 400, 
           y: projectRootNode.hierarchical_position_y ?? 50 
         },
+        data: {
+          title: projectData.title,
+          hypothesis: projectData.hypothesis,
+          paper_type: projectData.paper_type,
+          theme: projectData.theme,
+          research_focus: projectData.research_focus
+        }
+      });
+    } else {
+      // Create synthetic project node if none exists in database
+      layoutNodes.push({
+        id: `project-${projectData.id}`,
+        type: 'project',
+        position: { x: 400, y: 50 },
         data: {
           title: projectData.title,
           hypothesis: projectData.hypothesis,
@@ -828,8 +915,10 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
   const getSpatialLayoutFromNodes = (nodeData: any[], projectData: any) => {
     const layoutNodes: Node[] = [];
     
-    // Add project root node if exists
+    // Always add project root node (create synthetic one if no graph node exists)
     const projectRootNode = nodeData.find(node => node.is_project_root);
+    const projectNodeId = projectRootNode?.id || `project-${projectData.id}`;
+    
     if (projectRootNode) {
       layoutNodes.push({
         id: projectRootNode.id,
@@ -838,6 +927,20 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
           x: projectRootNode.spatial_position_x ?? 400, 
           y: projectRootNode.spatial_position_y ?? 50 
         },
+        data: {
+          title: projectData.title,
+          hypothesis: projectData.hypothesis,
+          paper_type: projectData.paper_type,
+          theme: projectData.theme,
+          research_focus: projectData.research_focus
+        }
+      });
+    } else {
+      // Create synthetic project node if none exists in database
+      layoutNodes.push({
+        id: `project-${projectData.id}`,
+        type: 'project',
+        position: { x: 400, y: 50 },
         data: {
           title: projectData.title,
           hypothesis: projectData.hypothesis,
