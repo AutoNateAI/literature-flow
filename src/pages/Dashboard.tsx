@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardContent } from "@/components/DashboardContent";
 import { PromptLibrary } from "@/components/PromptLibrary";
@@ -69,25 +69,23 @@ const Dashboard = () => {
   };
 
   return (
-    <SidebarProvider defaultOpen={!isMobile}>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar 
-          currentView={currentView} 
-          onNavigate={handleNavigate} 
-          graphControls={graphControls}
-          isMobile={isMobile}
-        />
-        <main ref={mainRef} className={`flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-6'}`}>
-          {/* Mobile hamburger menu trigger */}
-          {isMobile && (
-            <div className="mb-4">
-              <SidebarTrigger className="mb-2" />
-            </div>
-          )}
-          {renderContent()}
-        </main>
-      </div>
-    </SidebarProvider>
+    <div className="min-h-screen flex w-full">
+      <AppSidebar 
+        currentView={currentView} 
+        onNavigate={handleNavigate} 
+        graphControls={graphControls}
+        isMobile={isMobile}
+      />
+      <main ref={mainRef} className={`flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-6'}`}>
+        {/* Mobile hamburger menu trigger */}
+        {isMobile && (
+          <div className="mb-4">
+            <SidebarTrigger className="mb-2" />
+          </div>
+        )}
+        {renderContent()}
+      </main>
+    </div>
   );
 };
 
