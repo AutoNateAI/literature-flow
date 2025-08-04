@@ -285,4 +285,27 @@ All colors MUST be HSL.
       box-shadow: 0 0 80px currentColor, inset 0 0 40px rgba(255, 255, 255, 0.4);
     }
   }
+
+  /* Hide scrollbars on mobile while keeping scroll functionality */
+  @media (max-width: 1024px) {
+    * {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
+    }
+    
+    *::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+  }
+
+  /* Mobile-optimized styles */
+  @media (max-width: 768px) {
+    .glass-card {
+      @apply p-3;
+    }
+    
+    .glass-input {
+      @apply text-base; /* Prevent zoom on iOS */
+    }
+  }
 }

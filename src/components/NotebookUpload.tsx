@@ -312,42 +312,43 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
   };
 
   return (
-    <Tabs defaultValue="workflow" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="workflow">Analysis Workflow</TabsTrigger>
-        <TabsTrigger value="notebooks">Notebooks</TabsTrigger>
-        <TabsTrigger value="extract">Extract Concepts</TabsTrigger>
-        <TabsTrigger value="resources">Insights</TabsTrigger>
-      </TabsList>
+    <div className="space-y-4 md:space-y-6">
+      <Tabs defaultValue="workflow" className="space-y-4 md:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
+          <TabsTrigger value="workflow" className="text-xs md:text-sm">Analysis Workflow</TabsTrigger>
+          <TabsTrigger value="notebooks" className="text-xs md:text-sm">Notebooks</TabsTrigger>
+          <TabsTrigger value="extract" className="text-xs md:text-sm">Extract Concepts</TabsTrigger>
+          <TabsTrigger value="resources" className="text-xs md:text-sm">Insights</TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="notebooks" className="space-y-6">
-        {/* Header with Create Button */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  NotebookLM Integration
-                </CardTitle>
-                <CardDescription>
+        <TabsContent value="notebooks" className="space-y-4 md:space-y-6">
+          {/* Header with Create Button */}
+          <Card>
+            <CardHeader className="p-4 md:p-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-0">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                    <BookOpen className="h-4 w-4 md:h-5 md:w-5" />
+                    NotebookLM Integration
+                  </CardTitle>
+                  <CardDescription className="text-sm md:text-base mt-1">
                   Manage your NotebookLM notebooks and their sources for this project
                 </CardDescription>
-              </div>
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={openCreateModal} className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Create Notebook
-                  </Button>
+                </div>
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={openCreateModal} className="flex items-center gap-2 w-full md:w-auto">
+                      <Plus className="h-4 w-4" />
+                      <span className="text-sm">Create Notebook</span>
+                    </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh]">
-                  <div className="max-h-[70vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingNotebook ? "Edit Notebook" : "Create New Notebook"}
-                      </DialogTitle>
-                      <DialogDescription>
+                  <DialogContent className="max-w-2xl max-h-[90vh] mx-4 md:mx-auto">
+                    <div className="max-h-[75vh] overflow-y-auto px-1">
+                      <DialogHeader className="pb-4">
+                        <DialogTitle className="text-lg md:text-xl">
+                          {editingNotebook ? "Edit Notebook" : "Create New Notebook"}
+                        </DialogTitle>
+                        <DialogDescription className="text-sm md:text-base">
                         {editingNotebook ? "Update your notebook details and sources" : "Set up a new NotebookLM notebook with sources"}
                       </DialogDescription>
                     </DialogHeader>
@@ -410,7 +411,7 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
                                 </Button>
                               )}
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <div>
                                 <Label>Title *</Label>
                                 <Input
@@ -483,15 +484,15 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
 
         {/* Notebooks List */}
         {notebooks.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {notebooks.map((notebook) => (
-              <Card key={notebook.id} className="p-4 cursor-pointer hover:shadow-md transition-shadow">
+              <Card key={notebook.id} className="p-3 md:p-4 cursor-pointer hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between">
                   <div 
                     className="flex-1"
                     onClick={() => openEditModal(notebook)}
                   >
-                    <h4 className="font-semibold text-lg">{notebook.title}</h4>
+                    <h4 className="font-semibold text-base md:text-lg">{notebook.title}</h4>
                     {notebook.briefing && (
                       <p className="text-sm text-muted-foreground mt-1 mb-3">{notebook.briefing}</p>
                     )}
@@ -629,5 +630,6 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
         </div>
       </TabsContent>
     </Tabs>
+    </div>
   );
 }
