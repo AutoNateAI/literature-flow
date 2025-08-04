@@ -1,4 +1,4 @@
-import { Book, Lightbulb, Workflow, Home, Plus, FileText } from "lucide-react";
+import { Book, Lightbulb, Workflow, Home, Plus, FileText, Upload, GitBranch, BookOpen } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { DashboardView } from "@/pages/Dashboard";
 
@@ -12,6 +12,9 @@ const menuItems = [
   { id: 'new-project' as DashboardView, title: "New Project", icon: Plus },
   { id: 'manage-projects' as DashboardView, title: "Manage Projects", icon: FileText },
   { id: 'workflow' as DashboardView, title: "Current Project", icon: Workflow },
+  { id: 'upload-data' as DashboardView, title: "Upload Data", icon: Upload },
+  { id: 'graph-view' as DashboardView, title: "Literature Map", icon: GitBranch },
+  { id: 'notebook-manager' as DashboardView, title: "Notebook Manager", icon: BookOpen },
   { id: 'prompts' as DashboardView, title: "Prompt Library", icon: Lightbulb },
 ];
 

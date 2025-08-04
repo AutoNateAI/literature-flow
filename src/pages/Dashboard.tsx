@@ -7,8 +7,11 @@ import { WorkflowBuilder } from "@/components/WorkflowBuilder";
 import { WorkflowManager } from "@/components/WorkflowManager";
 import { EntryModule } from "@/components/EntryModule";
 import { ProjectManager } from "@/components/ProjectManager";
+import { NotebookUpload } from "@/components/NotebookUpload";
+import { GraphView } from "@/components/GraphView";
+import { NotebookManager } from "@/components/NotebookManager";
 
-export type DashboardView = 'dashboard' | 'prompts' | 'workflow' | 'manage-workflows' | 'new-project' | 'manage-projects';
+export type DashboardView = 'dashboard' | 'prompts' | 'workflow' | 'manage-workflows' | 'new-project' | 'manage-projects' | 'upload-data' | 'graph-view' | 'notebook-manager';
 
 const Dashboard = () => {
   const [currentView, setCurrentView] = useState<DashboardView>('dashboard');
@@ -53,6 +56,15 @@ const Dashboard = () => {
           }}
           onCreateNew={() => setCurrentView('new-project')}
         />;
+      case 'upload-data':
+        return selectedWorkflowId ? <NotebookUpload projectId={selectedWorkflowId} /> : 
+               <div className="text-center p-8">Please select a project first</div>;
+      case 'graph-view':
+        return selectedWorkflowId ? <GraphView projectId={selectedWorkflowId} /> : 
+               <div className="text-center p-8">Please select a project first</div>;
+      case 'notebook-manager':
+        return selectedWorkflowId ? <NotebookManager projectId={selectedWorkflowId} /> : 
+               <div className="text-center p-8">Please select a project first</div>;
       default:
         return <DashboardContent key={refreshTrigger} onNavigate={handleNavigate} onSelectWorkflow={setSelectedWorkflowId} />;
     }
