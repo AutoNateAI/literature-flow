@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit, GripVertical, Minimize2, Maximize2, RotateCcw, Move3D } from "lucide-react";
+import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit, GripVertical, Minimize2, Maximize2, RotateCcw, Move3D, Settings, X } from "lucide-react";
 
 interface GraphViewProps {
   projectId: string;
@@ -345,6 +345,7 @@ export function GraphView({ projectId }: GraphViewProps) {
   const [controlsPosition, setControlsPosition] = useState({ x: 20, y: 20 });
   const [controlsSize, setControlsSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [isControlsMinimized, setIsControlsMinimized] = useState(false);
+  const [isControlsVisible, setIsControlsVisible] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
@@ -979,8 +980,19 @@ export function GraphView({ projectId }: GraphViewProps) {
               size="sm"
               onClick={() => setIsControlsMinimized(!isControlsMinimized)}
               className="h-6 w-6 p-0"
+              title="Minimize/Maximize"
             >
               {isControlsMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+            </Button>
+            {/* Hide Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsControlsVisible(false)}
+              className="h-6 w-6 p-0"
+              title="Hide Controls"
+            >
+              <X className="h-3 w-3" />
             </Button>
           </div>
         </div>
@@ -1115,8 +1127,21 @@ export function GraphView({ projectId }: GraphViewProps) {
 
   return (
     <div className="h-full space-y-4 relative">
+      {/* Show/Hide Toggle Button */}
+      {!isControlsVisible && (
+        <Button
+          onClick={() => setIsControlsVisible(true)}
+          className="fixed top-4 left-4 z-50"
+          size="sm"
+          variant="outline"
+        >
+          <Settings className="h-4 w-4" />
+          Show Controls
+        </Button>
+      )}
+      
       {/* Floating Controls */}
-      <FloatingControls />
+      {isControlsVisible && <FloatingControls />}
       {/* React Flow Graph */}
 
       {/* React Flow Graph */}
