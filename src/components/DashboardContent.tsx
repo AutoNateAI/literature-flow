@@ -134,6 +134,17 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
         console.error('Error fetching user interactions:', interactionsError);
       }
 
+      // Get notebook data for metadata lookup
+      const { data: notebooks, error: notebooksError } = await supabase
+        .from('notebooks')
+        .select('id, title, project_id')
+        .eq('user_id', user.id)
+        .limit(100);
+
+      if (notebooksError) {
+        console.error('Error fetching notebooks:', notebooksError);
+      }
+
       // Get prompts and templates for metadata lookup
       const [promptsResult, templatesResult] = await Promise.all([
         supabase.from('prompts').select('id, title, category').limit(100),
@@ -143,6 +154,7 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
       // Create maps for quick lookup
       const promptsMap = new Map();
       const templatesMap = new Map();
+      const notebooksMap = new Map();
       
       promptsResult.data?.forEach(prompt => {
         promptsMap.set(prompt.id, { title: prompt.title, category: prompt.category });
@@ -150,6 +162,10 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
       
       templatesResult.data?.forEach(template => {
         templatesMap.set(template.id, { title: template.title, category: template.category });
+      });
+
+      notebooks?.forEach(notebook => {
+        notebooksMap.set(notebook.id, { title: notebook.title, projectId: notebook.project_id });
       });
 
       // Get workflow activities (for workflow task completion)
@@ -230,6 +246,16 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
               metadata = {
                 title: templateInfo.title,
                 category: templateInfo.category
+              };
+            }
+          }
+          // For notebook activities
+          else if (interaction.item_type === 'notebook' && interaction.item_id) {
+            const notebookInfo = notebooksMap.get(interaction.item_id);
+            if (notebookInfo) {
+              metadata = {
+                title: notebookInfo.title,
+                category: 'NotebookLM'
               };
             }
           }

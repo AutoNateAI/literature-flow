@@ -199,6 +199,16 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
 
         if (error) throw error;
         notebookId = notebook.id;
+
+        // Track notebook creation
+        await supabase
+          .from('user_interactions')
+          .insert({
+            user_id: user.id,
+            item_id: notebookId,
+            item_type: 'notebook',
+            interaction_type: 'created'
+          });
       }
 
       // Clear existing resources if editing
@@ -266,10 +276,10 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
   };
 
   return (
-    <Tabs defaultValue="notebooks" className="space-y-6">
+    <Tabs defaultValue="workflow" className="space-y-6">
       <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="notebooks">Notebooks</TabsTrigger>
         <TabsTrigger value="workflow">Analysis Workflow</TabsTrigger>
+        <TabsTrigger value="notebooks">Notebooks</TabsTrigger>
         <TabsTrigger value="extract">Extract Concepts</TabsTrigger>
         <TabsTrigger value="resources">Manage Resources</TabsTrigger>
       </TabsList>
@@ -397,7 +407,7 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select type" />
                                   </SelectTrigger>
-                                  <SelectContent>
+                                  <SelectContent className="bg-background border shadow-md">
                                     {SOURCE_TYPES.map((type) => (
                                       <SelectItem key={type} value={type}>
                                         {type}
