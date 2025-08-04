@@ -853,8 +853,10 @@ export function GraphView({ projectId }: GraphViewProps) {
   };
 
   useEffect(() => {
-    loadGraphData();
-  }, [projectId, user, layoutMode]);
+    if (projectData !== undefined) { // Wait for project data to load (or be confirmed as null)
+      loadGraphData();
+    }
+  }, [projectId, user, layoutMode, projectData]);
 
   const getNodeStats = () => {
     const stats = nodes.reduce((acc, node) => {
