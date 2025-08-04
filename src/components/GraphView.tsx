@@ -1229,21 +1229,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
             style: { strokeWidth: 2, stroke: '#10b981' }
           }}
         >
-          <Controls 
-            style={{ 
-              position: 'absolute',
-              bottom: '20px',
-              right: '20px',
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              padding: '4px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-            }}
-            showZoom={true}
-            showFitView={true}
-            showInteractive={false}
-          />
+          <Controls />
           <MiniMap 
             nodeColor={(node) => {
               const colors = {
@@ -1260,15 +1246,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
             }}
             maskColor="hsl(var(--muted) / 0.3)"
             style={{ 
-              position: 'absolute',
-              bottom: '20px',
-              left: '20px',
-              width: '120px',
-              height: '80px',
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))'
             }}
             pannable
             zoomable
