@@ -281,7 +281,7 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
         <TabsTrigger value="workflow">Analysis Workflow</TabsTrigger>
         <TabsTrigger value="notebooks">Notebooks</TabsTrigger>
         <TabsTrigger value="extract">Extract Concepts</TabsTrigger>
-        <TabsTrigger value="resources">Manage Resources</TabsTrigger>
+        <TabsTrigger value="resources">Insights</TabsTrigger>
       </TabsList>
 
       <TabsContent value="notebooks" className="space-y-6">
@@ -521,20 +521,32 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
         />
       </TabsContent>
 
-      <TabsContent value="resources">
-        {notebooks[0] ? (
-          <ResourceManager 
-            notebookId={notebooks[0].id} 
-            projectId={projectId}
-          />
-        ) : (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <Target className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-muted-foreground">Create a notebook first to manage resources</p>
-            </CardContent>
-          </Card>
-        )}
+      <TabsContent value="resources" className="space-y-6">
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold">Research Insights</h3>
+              <p className="text-sm text-muted-foreground">Insights derived from literature map analysis</p>
+            </div>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Insight
+            </Button>
+          </div>
+          {notebooks[0] ? (
+            <ResourceManager 
+              notebookId={notebooks[0].id} 
+              projectId={projectId}
+            />
+          ) : (
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <Target className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-muted-foreground">Create a notebook first to manage resources</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </TabsContent>
     </Tabs>
   );
