@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit, Folder } from "lucide-react";
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, MarkerType } from '@xyflow/react';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface GraphViewProps {
   projectId: string;
@@ -662,6 +663,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
   const [layoutMode, setLayoutMode] = useState<'hierarchical' | 'spatial'>('hierarchical');
   const [insightDialogOpen, setInsightDialogOpen] = useState(false);
   const [insightTitle, setInsightTitle] = useState("");
+  const isMobile = useIsMobile();
   const [insightDetails, setInsightDetails] = useState("");
   const [selectedConcepts, setSelectedConcepts] = useState<string[]>([]);
   const [selectedNotebook, setSelectedNotebook] = useState("");
@@ -817,16 +819,25 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     }));
   }, [nodes, highlightedPaths]);
 
-  // Update edges with highlighting
+  // Update edges with highlighting and reverse direction for highlighted paths
   const highlightedEdges = useMemo(() => {
-    return processedEdges.map(edge => ({
-      ...edge,
-      className: highlightedPaths.has(edge.id) ? 'neo-path-edge' : '',
-      style: {
-        ...edge.style,
-        opacity: highlightedPaths.size > 0 ? (highlightedPaths.has(edge.id) ? 1 : 0.2) : 1,
-      }
-    }));
+    return processedEdges.map(edge => {
+      const isHighlighted = highlightedPaths.has(edge.id);
+      return {
+        ...edge,
+        // Reverse source and target for highlighted edges to show flow back to root
+        source: isHighlighted ? edge.target : edge.source,
+        target: isHighlighted ? edge.source : edge.target,
+        sourceHandle: isHighlighted ? edge.targetHandle : edge.sourceHandle,
+        targetHandle: isHighlighted ? edge.sourceHandle : edge.targetHandle,
+        markerEnd: isHighlighted ? { type: 'arrowclosed' } : edge.markerEnd,
+        className: isHighlighted ? 'neo-path-edge' : '',
+        style: {
+          ...edge.style,
+          opacity: highlightedPaths.size > 0 ? (isHighlighted ? 1 : 0.2) : 1,
+        }
+      };
+    });
   }, [processedEdges, highlightedPaths]);
 
   // Preserve layout mode and node positions
@@ -1552,35 +1563,35 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       {/* Header & Stats */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Network className="h-5 w-5" />
+          <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
+            <Network className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
             Research Literature Map
           </CardTitle>
-          <CardDescription>
+          <CardDescription className={isMobile ? 'text-sm' : ''}>
             Visual representation of your research insights extracted from NotebookLM analysis
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Layout Toggle & Add Insight Button */}
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2">
+          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'}`}>
+            <div className={`flex gap-2 ${isMobile ? 'justify-center' : ''}`}>
               <Button
                 variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
-                size="sm"
+                size={isMobile ? 'sm' : 'sm'}
                 onClick={() => setLayoutMode('hierarchical')}
                 className="flex items-center gap-2"
               >
                 <GitBranch className="h-4 w-4" />
-                Hierarchical
+                {!isMobile && 'Hierarchical'}
               </Button>
               <Button
                 variant={layoutMode === 'spatial' ? 'default' : 'outline'}
-                size="sm"
+                size={isMobile ? 'sm' : 'sm'}
                 onClick={() => setLayoutMode('spatial')}
                 className="flex items-center gap-2"
               >
                 <LayoutGrid className="h-4 w-4" />
-                Spatial
+                {!isMobile && 'Spatial'}
               </Button>
             </div>
             <Dialog open={insightDialogOpen} onOpenChange={setInsightDialogOpen}>
@@ -1909,7 +1920,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       </Card>
 
       {/* React Flow Graph */}
-      <div className="h-full border rounded-lg bg-background relative">
+      <div className={`${isMobile ? 'h-96' : 'h-full'} border rounded-lg bg-background relative`}>
         <ReactFlow
           nodes={highlightedNodes}
           edges={highlightedEdges}
@@ -1920,8 +1931,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
-          minZoom={0.01}
-          maxZoom={4}
+          minZoom={isMobile ? 0.1 : 0.01}
+          maxZoom={isMobile ? 2 : 4}
           style={{ backgroundColor: 'hsl(var(--background))' }}
           connectionLineStyle={{ stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
           defaultEdgeOptions={{ 
@@ -1930,34 +1941,36 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
           }}
         >
           <Controls showZoom showFitView showInteractive />
-          <MiniMap 
-            nodeColor={(node) => {
-              const colors = {
-                hypothesis: '#8b5cf6',
-                concept: '#3b82f6',
-                gap: '#f59e0b',
-                discrepancy: '#ef4444',
-                publication: '#10b981',
-                notebook: '#f97316',
-                source: '#14b8a6',
-                insight: '#6366f1'
-              };
-              return colors[node.type as keyof typeof colors] || '#6b7280';
-            }}
-            maskColor="hsl(var(--muted) / 0.3)"
-            style={{ 
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))'
-            }}
-            pannable
-            zoomable
-          />
+          {!isMobile && (
+            <MiniMap 
+              nodeColor={(node) => {
+                const colors = {
+                  hypothesis: '#8b5cf6',
+                  concept: '#3b82f6',
+                  gap: '#f59e0b',
+                  discrepancy: '#ef4444',
+                  publication: '#10b981',
+                  notebook: '#f97316',
+                  source: '#14b8a6',
+                  insight: '#6366f1'
+                };
+                return colors[node.type as keyof typeof colors] || '#6b7280';
+              }}
+              maskColor="hsl(var(--muted) / 0.3)"
+              style={{ 
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))'
+              }}
+              pannable
+              zoomable
+            />
+          )}
           <Background gap={20} size={1} color="hsl(var(--border))" />
         </ReactFlow>
 
         {/* Path Analysis Modal */}
         {showPathModal && (
-          <div className="absolute top-4 right-4 w-80 bg-card border border-border rounded-lg shadow-lg z-10 max-h-96 overflow-hidden">
+          <div className={`absolute ${isMobile ? 'top-2 right-2 w-72' : 'top-4 right-4 w-80'} bg-card border border-border rounded-lg shadow-lg z-10 max-h-96 overflow-hidden`}>
             <div className="p-4 border-b border-border">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-foreground">Insight Paths Analysis</h3>

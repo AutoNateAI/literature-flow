@@ -7,6 +7,7 @@ import { DashboardView } from "@/pages/Dashboard";
 interface AppSidebarProps {
   currentView: DashboardView;
   onNavigate: (view: DashboardView) => void;
+  isMobile?: boolean;
   graphControls?: {
     layoutMode: 'hierarchical' | 'spatial';
     onLayoutChange: (mode: 'hierarchical' | 'spatial') => void;
@@ -32,13 +33,16 @@ const menuItems = [
   { id: 'prompts' as DashboardView, title: "Prompt Library", icon: Lightbulb },
 ];
 
-export function AppSidebar({ currentView, onNavigate, graphControls }: AppSidebarProps) {
+export function AppSidebar({ currentView, onNavigate, graphControls, isMobile = false }: AppSidebarProps) {
   const { state } = useSidebar();
-  const collapsed = state === "collapsed";
+  const collapsed = state === "collapsed" || isMobile;
 
   return (
-    <Sidebar className="glass-card border-r-0 flex flex-col" collapsible="icon">
-      <SidebarContent className="p-4 flex flex-col h-full overflow-hidden">
+    <Sidebar 
+      className="glass-card border-r-0 flex flex-col" 
+      collapsible={isMobile ? "offcanvas" : "icon"}
+    >
+      <SidebarContent className={`${isMobile ? 'p-2' : 'p-4'} flex flex-col h-full overflow-hidden`}>
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">

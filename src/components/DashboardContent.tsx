@@ -10,6 +10,7 @@ import { WorkflowManager } from "@/components/WorkflowManager";
 import { WorkflowBuilder } from "@/components/WorkflowBuilder";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Helper function to convert step IDs to readable names
 const getStepDisplayName = (stepId: string) => {
@@ -49,6 +50,7 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
   const [weeklyTasksCompleted, setWeeklyTasksCompleted] = useState(0);
   const [weeklyTaskDetails, setWeeklyTaskDetails] = useState<any[]>([]);
   const { user, signOut } = useAuth();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchUserProfile();
@@ -416,28 +418,28 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
   return (
     <div className="min-h-screen text-foreground space-y-8">
       {/* Header with user info and sign out */}
-      <div className="flex items-center justify-between">
+      <div className={`flex ${isMobile ? 'flex-col gap-4' : 'items-center justify-between'}`}>
         <div>
-          <h1 className="text-4xl font-bold mb-2">
+          <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold mb-2`}>
             Welcome back, {userProfile?.display_name || 'Researcher'}!
           </h1>
-          <p className="text-xl text-muted-foreground">
+          <p className={`${isMobile ? 'text-base' : 'text-xl'} text-muted-foreground`}>
             Continue your literature review mastery journey
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-            <Target className="w-6 h-6 text-white" />
+          <div className={`${isMobile ? 'w-8 h-8' : 'w-12 h-12'} rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center`}>
+            <Target className={`${isMobile ? 'w-4 h-4' : 'w-6 h-6'} text-white`} />
           </div>
-          <Button variant="outline" onClick={() => signOut()}>
+          <Button variant="outline" size={isMobile ? 'sm' : 'default'} onClick={() => signOut()}>
             <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
+            {!isMobile && 'Sign Out'}
           </Button>
         </div>
       </div>
 
       {/* Progress Stats */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'md:grid-cols-3'}`}>
         <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-200/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Workflow Progress</CardTitle>
@@ -549,7 +551,7 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'md:grid-cols-3'}`}>
         <Card 
           className="bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:shadow-lg transition-all" 
           onClick={() => {

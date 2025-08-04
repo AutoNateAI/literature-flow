@@ -9,6 +9,7 @@ import { EntryModule } from "@/components/EntryModule";
 import { ProjectManager } from "@/components/ProjectManager";
 import { NotebookUpload } from "@/components/NotebookUpload";
 import { GraphView } from "@/components/GraphView";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export type DashboardView = 'dashboard' | 'prompts' | 'workflow' | 'new-project' | 'manage-projects' | 'graph-view';
 
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [graphControls, setGraphControls] = useState<any>(null);
   const mainRef = useRef<HTMLElement>(null);
+  const isMobile = useIsMobile();
 
   const handleNavigate = (view: DashboardView) => {
     setCurrentView(view);
@@ -61,10 +63,15 @@ const Dashboard = () => {
   };
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="min-h-screen flex w-full">
-        <AppSidebar currentView={currentView} onNavigate={handleNavigate} graphControls={graphControls} />
-        <main ref={mainRef} className="flex-1 p-6 overflow-auto">
+        <AppSidebar 
+          currentView={currentView} 
+          onNavigate={handleNavigate} 
+          graphControls={graphControls}
+          isMobile={isMobile}
+        />
+        <main ref={mainRef} className={`flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-6'}`}>
           {renderContent()}
         </main>
       </div>
