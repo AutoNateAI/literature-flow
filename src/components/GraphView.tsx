@@ -339,6 +339,7 @@ export function GraphView({ projectId }: GraphViewProps) {
   const [multiSelectActive, setMultiSelectActive] = useState(false);
   const [multiSelectedConcepts, setMultiSelectedConcepts] = useState<string[]>([]);
   const [sourceSelectionRows, setSourceSelectionRows] = useState([{ id: 1, notebook: '', source: '', concept: '' }]);
+  const [projectData, setProjectData] = useState<any>(null);
   const { user } = useAuth();
 
   // Memoize nodeTypes to prevent React Flow warnings
@@ -360,6 +361,27 @@ export function GraphView({ projectId }: GraphViewProps) {
   useEffect(() => {
     setMultiSelectActive(multiSelectedConcepts.length > 0);
   }, [multiSelectedConcepts]);
+
+  // Load project data
+  useEffect(() => {
+    const loadProjectData = async () => {
+      if (!user) return;
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', projectId)
+          .eq('user_id', user.id)
+          .single();
+        if (!error && data) {
+          setProjectData(data);
+        }
+      } catch (error) {
+        console.error('Error loading project data:', error);
+      }
+    };
+    loadProjectData();
+  }, [projectId, user]);
 
   
 
@@ -549,6 +571,21 @@ export function GraphView({ projectId }: GraphViewProps) {
   const getSpatialLayout = (nodes: any[], notebookData: any[], resourceData: any[], nodeData: any[], projectData: any) => {
     const layoutNodes: Node[] = [];
     
+    // Add project root node if it exists
+    if (projectData) {
+      layoutNodes.push({
+        id: `project-${projectData.id}`,
+        type: 'hypothesis',
+        position: { x: 50, y: 50 },
+        data: {
+          nodeId: `project-${projectData.id}`,
+          title: projectData.title,
+          content: projectData.hypothesis || projectData.research_focus || 'Project research focus',
+          project_id: projectData.id
+        }
+      });
+    }
+    
     // Add notebooks with saved positions or default
     notebookData.forEach((notebook, index) => {
       layoutNodes.push({
@@ -634,10 +671,10 @@ export function GraphView({ projectId }: GraphViewProps) {
 
       if (resourceError) throw resourceError;
 
-      // Apply layout based on mode
+      // Apply layout based on mode using loaded project data
       const flowNodes = layoutMode === 'hierarchical' 
-        ? getHierarchicalLayout([], notebookData, resourceData, nodeData, null)
-        : getSpatialLayout([], notebookData, resourceData, nodeData, null);
+        ? getHierarchicalLayout([], notebookData, resourceData, nodeData, projectData)
+        : getSpatialLayout([], notebookData, resourceData, nodeData, projectData);
 
       // Load edges
       const { data: edgeData, error: edgeError } = await supabase
@@ -661,6 +698,25 @@ export function GraphView({ projectId }: GraphViewProps) {
         },
         data: { edge_type: edge.edge_type, annotation: edge.annotation }
       }));
+
+      // Add hierarchical connections between project and notebooks
+      if (projectData) {
+        notebookData.forEach(notebook => {
+          flowEdges.push({
+            id: `project-notebook-${projectData.id}-${notebook.id}`,
+            source: `project-${projectData.id}`,
+            target: `notebook-${notebook.id}`,
+            type: 'smoothstep',
+            label: 'guides',
+            labelStyle: { fontSize: 10, fontWeight: 400 },
+            style: { 
+              stroke: '#8b5cf6',
+              strokeWidth: 3,
+            },
+            data: { edge_type: 'guides', annotation: 'Project guides research' }
+          });
+        });
+      }
 
       // Add hierarchical connections between notebooks and sources
       resourceData.forEach(resource => {

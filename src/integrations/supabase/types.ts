@@ -219,7 +219,7 @@ export type Database = {
           extraction_method?: string | null
           id?: string
           is_project_root?: boolean | null
-          node_type: string
+          node_type?: string
           notebook_id?: string | null
           passage_id?: string | null
           position_x?: number | null
