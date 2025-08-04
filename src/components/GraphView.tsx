@@ -138,12 +138,56 @@ const PublicationNode = ({ data }: { data: any }) => (
   </div>
 );
 
+const NotebookNode = ({ data }: { data: any }) => (
+  <div className="px-4 py-3 shadow-md rounded-lg bg-orange-50 border-2 border-orange-200 min-w-[150px] max-w-[250px]">
+    <Handle type="target" position={Position.Top} />
+    <div className="flex items-start gap-2">
+      <BookOpen className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+      <div className="flex-1">
+        <div className="font-semibold text-sm text-orange-900">{data.title}</div>
+        {data.briefing && (
+          <div className="text-xs text-orange-700 mt-1 leading-relaxed">
+            {data.briefing.length > 80 ? `${data.briefing.substring(0, 80)}...` : data.briefing}
+          </div>
+        )}
+        <Badge variant="outline" className="text-xs mt-2 border-orange-300 text-orange-700">
+          Notebook
+        </Badge>
+      </div>
+    </div>
+    <Handle type="source" position={Position.Bottom} />
+  </div>
+);
+
+const SourceNode = ({ data }: { data: any }) => (
+  <div className="px-4 py-3 shadow-md rounded-lg bg-teal-50 border-2 border-teal-200 min-w-[150px] max-w-[250px]">
+    <Handle type="target" position={Position.Top} />
+    <div className="flex items-start gap-2">
+      <Link className="h-4 w-4 text-teal-600 mt-0.5 flex-shrink-0" />
+      <div className="flex-1">
+        <div className="font-semibold text-sm text-teal-900">{data.title}</div>
+        {data.file_type && (
+          <div className="text-xs text-teal-700 mt-1">
+            {data.file_type} {data.file_size && `• ${data.file_size}`}
+          </div>
+        )}
+        <Badge variant="outline" className="text-xs mt-2 border-teal-300 text-teal-700">
+          Source
+        </Badge>
+      </div>
+    </div>
+    <Handle type="source" position={Position.Bottom} />
+  </div>
+);
+
 const nodeTypes = {
   hypothesis: HypothesisNode,
   concept: ConceptNode,
   gap: GapNode,
   discrepancy: DiscrepancyNode,
   publication: PublicationNode,
+  notebook: NotebookNode,
+  source: SourceNode,
 };
 
 export function GraphView({ projectId }: GraphViewProps) {
@@ -232,19 +276,71 @@ export function GraphView({ projectId }: GraphViewProps) {
 
       if (nodeError) throw nodeError;
 
+      // Load notebooks for this project
+      const { data: notebookData, error: notebookError } = await supabase
+        .from('notebooks')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('user_id', user.id);
+
+      if (notebookError) throw notebookError;
+
+      // Load notebook resources for this project
+      const { data: resourceData, error: resourceError } = await supabase
+        .from('notebook_resources')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('user_id', user.id);
+
+      if (resourceError) throw resourceError;
+
       // Convert to React Flow nodes
-      const flowNodes: Node[] = nodeData.map(node => ({
-        id: node.id,
-        type: node.node_type,
-        position: { x: node.position_x || 400, y: node.position_y || 300 },
-        data: {
-          title: node.title,
-          content: node.content,
-          confidence_score: node.confidence_score,
-          concept_source: node.concept_source,
-          extraction_method: node.extraction_method
-        }
-      }));
+      const flowNodes: Node[] = [];
+      
+      // Add concept nodes
+      nodeData.forEach(node => {
+        flowNodes.push({
+          id: node.id,
+          type: node.node_type,
+          position: { x: node.position_x || 400, y: node.position_y || 300 },
+          data: {
+            title: node.title,
+            content: node.content,
+            confidence_score: node.confidence_score,
+            concept_source: node.concept_source,
+            extraction_method: node.extraction_method
+          }
+        });
+      });
+
+      // Add notebook nodes
+      notebookData.forEach((notebook, index) => {
+        flowNodes.push({
+          id: `notebook-${notebook.id}`,
+          type: 'notebook',
+          position: { x: 100, y: 100 + (index * 200) },
+          data: {
+            title: notebook.title,
+            briefing: notebook.briefing,
+            upload_count: notebook.upload_count
+          }
+        });
+      });
+
+      // Add source nodes  
+      resourceData.forEach((resource, index) => {
+        flowNodes.push({
+          id: `source-${resource.id}`,
+          type: 'source',
+          position: { x: 300, y: 100 + (index * 150) },
+          data: {
+            title: resource.title,
+            file_type: resource.file_type,
+            file_size: resource.file_size,
+            source_url: resource.source_url
+          }
+        });
+      });
 
       // Load edges
       const { data: edgeData, error: edgeError } = await supabase
@@ -268,6 +364,50 @@ export function GraphView({ projectId }: GraphViewProps) {
         },
         data: { edge_type: edge.edge_type, annotation: edge.annotation }
       }));
+
+      // Add automatic connections from concepts to their supporting sources
+      nodeData.forEach(node => {
+        if (node.concept_source && typeof node.concept_source === 'object') {
+          const sources = Array.isArray(node.concept_source) ? node.concept_source : [node.concept_source];
+          sources.forEach((source: any, index: number) => {
+            // Connect to notebook
+            if (source.notebook_id) {
+              flowEdges.push({
+                id: `concept-notebook-${node.id}-${source.notebook_id}-${index}`,
+                source: `notebook-${source.notebook_id}`,
+                target: node.id,
+                type: 'smoothstep',
+                label: 'supports',
+                labelStyle: { fontSize: 10, fontWeight: 400 },
+                style: { 
+                  stroke: '#f59e0b',
+                  strokeWidth: 1,
+                  strokeDasharray: '5,5'
+                },
+                data: { edge_type: 'supports', annotation: 'Notebook source' }
+              });
+            }
+            
+            // Connect to resource
+            if (source.resource_id) {
+              flowEdges.push({
+                id: `concept-resource-${node.id}-${source.resource_id}-${index}`,
+                source: `source-${source.resource_id}`,
+                target: node.id,
+                type: 'smoothstep',
+                label: 'cites',
+                labelStyle: { fontSize: 10, fontWeight: 400 },
+                style: { 
+                  stroke: '#14b8a6',
+                  strokeWidth: 1,
+                  strokeDasharray: '5,5'
+                },
+                data: { edge_type: 'cites', annotation: 'Resource citation' }
+              });
+            }
+          });
+        }
+      });
 
       setNodes(flowNodes);
       setEdges(flowEdges);
@@ -331,6 +471,16 @@ export function GraphView({ projectId }: GraphViewProps) {
                 {nodeStats.publication} Key Publication{nodeStats.publication > 1 ? 's' : ''}
               </Badge>
             )}
+            {nodeStats.notebook && (
+              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                {nodeStats.notebook} Notebook{nodeStats.notebook > 1 ? 's' : ''}
+              </Badge>
+            )}
+            {nodeStats.source && (
+              <Badge variant="secondary" className="bg-teal-100 text-teal-800">
+                {nodeStats.source} Source{nodeStats.source > 1 ? 's' : ''}
+              </Badge>
+            )}
             <Badge variant="outline">
               {edges.length} Connection{edges.length !== 1 ? 's' : ''}
             </Badge>
@@ -370,7 +520,9 @@ export function GraphView({ projectId }: GraphViewProps) {
                 concept: '#3b82f6',
                 gap: '#f59e0b',
                 discrepancy: '#ef4444',
-                publication: '#10b981'
+                publication: '#10b981',
+                notebook: '#f97316',
+                source: '#14b8a6'
               };
               return colors[node.type as keyof typeof colors] || '#6b7280';
             }}
@@ -394,7 +546,7 @@ export function GraphView({ projectId }: GraphViewProps) {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border border-border">
                   <SelectItem value="supports">Supports</SelectItem>
                   <SelectItem value="contradicts">Contradicts</SelectItem>
                   <SelectItem value="relates_to">Relates To</SelectItem>
