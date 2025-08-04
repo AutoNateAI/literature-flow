@@ -1466,20 +1466,25 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
               {/* Source Details */}
               {selectedNodeDetail.type === 'source' && (
                 <div className="space-y-3">
+                  {/* Debug info */}
+                  <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+                    Debug: ID={selectedNodeDetail.id}, Type={selectedNodeDetail.type}
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">File Type</Label>
-                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_type || 'Unknown'}</p>
+                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_type || selectedNodeDetail.data?.file_type || 'Not specified'}</p>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">File Size</Label>
-                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_size || 'Unknown'}</p>
+                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_size || selectedNodeDetail.data?.file_size || 'Not specified'}</p>
                     </div>
                   </div>
-                  {selectedNodeDetail.source_url && (
+                  {(selectedNodeDetail.source_url || selectedNodeDetail.data?.source_url) && (
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Source URL</Label>
-                      <p className="text-xs bg-muted p-2 rounded font-mono break-all">{selectedNodeDetail.source_url}</p>
+                      <p className="text-xs bg-muted p-2 rounded font-mono break-all">{selectedNodeDetail.source_url || selectedNodeDetail.data?.source_url}</p>
                     </div>
                   )}
                   
@@ -1487,14 +1492,19 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Connected Concepts</Label>
                     <div className="space-y-1">
-                      {edges.filter(e => 
-                        (e.source === selectedNodeDetail.id || e.target === selectedNodeDetail.id) &&
-                        ['concept', 'hypothesis', 'gap', 'discrepancy', 'publication', 'insight'].includes(
-                          e.source === selectedNodeDetail.id ? 
-                            nodes.find(n => n.id === e.target)?.type || '' : 
-                            nodes.find(n => n.id === e.source)?.type || ''
-                        )
-                      ).map(edge => {
+                      {/* Debug edges */}
+                      <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+                        Debug: Found {edges.length} total edges, checking for node ID: {selectedNodeDetail.id}
+                      </div>
+                      
+                      {edges.filter(e => {
+                        const nodeId = selectedNodeDetail.id;
+                        const isConnected = e.source === nodeId || e.target === nodeId;
+                        const otherNodeId = e.source === nodeId ? e.target : e.source;
+                        const otherNode = nodes.find(n => n.id === otherNodeId);
+                        const isValidType = otherNode && ['concept', 'hypothesis', 'gap', 'discrepancy', 'publication', 'insight'].includes(otherNode.type || '');
+                        return isConnected && isValidType;
+                      }).map(edge => {
                         const otherNodeId = edge.source === selectedNodeDetail.id ? edge.target : edge.source;
                         const otherNode = nodes.find(n => n.id === otherNodeId);
                         return otherNode ? (
@@ -1504,14 +1514,15 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                           </div>
                         ) : null;
                       })}
-                      {edges.filter(e => 
-                        (e.source === selectedNodeDetail.id || e.target === selectedNodeDetail.id) &&
-                        ['concept', 'hypothesis', 'gap', 'discrepancy', 'publication', 'insight'].includes(
-                          e.source === selectedNodeDetail.id ? 
-                            nodes.find(n => n.id === e.target)?.type || '' : 
-                            nodes.find(n => n.id === e.source)?.type || ''
-                        )
-                      ).length === 0 && (
+                      
+                      {edges.filter(e => {
+                        const nodeId = selectedNodeDetail.id;
+                        const isConnected = e.source === nodeId || e.target === nodeId;
+                        const otherNodeId = e.source === nodeId ? e.target : e.source;
+                        const otherNode = nodes.find(n => n.id === otherNodeId);
+                        const isValidType = otherNode && ['concept', 'hypothesis', 'gap', 'discrepancy', 'publication', 'insight'].includes(otherNode.type || '');
+                        return isConnected && isValidType;
+                      }).length === 0 && (
                         <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
                           No connected concepts found
                         </div>
