@@ -1552,8 +1552,9 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                     </div>
                   </div>
                   
-                  {/* Find connected source node */}
+                  {/* Find connected source node or show concept_source */}
                   {(() => {
+                    // First try to find connected source node through edges
                     const connectedSourceEdge = edges.find(e => {
                       const nodeId = selectedNodeDetail.id;
                       const isConnected = e.source === nodeId || e.target === nodeId;
@@ -1562,19 +1563,40 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                       return isConnected && otherNode?.type === 'source';
                     });
                     
-                    const sourceNode = connectedSourceEdge ? nodes.find(n => 
-                      n.id === (connectedSourceEdge.source === selectedNodeDetail.id ? connectedSourceEdge.target : connectedSourceEdge.source)
-                    ) : null;
+                    if (connectedSourceEdge) {
+                      const sourceNode = nodes.find(n => 
+                        n.id === (connectedSourceEdge.source === selectedNodeDetail.id ? connectedSourceEdge.target : connectedSourceEdge.source)
+                      );
+                      return sourceNode ? (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Source</Label>
+                          <p className="text-sm bg-muted p-2 rounded">{sourceNode.data.title}</p>
+                        </div>
+                      ) : null;
+                    }
                     
-                    return sourceNode ? (
+                    // If no edge connection, look for source nodes from the same notebook
+                    if (selectedNodeDetail.notebook_id) {
+                      const relatedSourceNode = nodes.find(n => 
+                        n.type === 'source' && 
+                        n.data.notebook_id === selectedNodeDetail.notebook_id
+                      );
+                      
+                      if (relatedSourceNode) {
+                        return (
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">Source</Label>
+                            <p className="text-sm bg-muted p-2 rounded">{relatedSourceNode.data.title}</p>
+                          </div>
+                        );
+                      }
+                    }
+                    
+                    // Fallback to concept_source if no source node found
+                    return selectedNodeDetail.concept_source ? (
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Source</Label>
-                        <p className="text-sm bg-muted p-2 rounded">{sourceNode.data.title}</p>
-                      </div>
-                    ) : selectedNodeDetail.concept_source ? (
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Source</Label>
-                        <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.concept_source}</p>
+                        <p className="text-sm bg-muted p-2 rounded text-xs">{selectedNodeDetail.concept_source}</p>
                       </div>
                     ) : null;
                   })()}
