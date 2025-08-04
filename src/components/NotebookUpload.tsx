@@ -314,11 +314,31 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
   return (
     <div className="space-y-4 md:space-y-6">
       <Tabs defaultValue="workflow" className="space-y-4 md:space-y-6">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1">
-          <TabsTrigger value="workflow" className="text-xs md:text-sm">Analysis Workflow</TabsTrigger>
-          <TabsTrigger value="notebooks" className="text-xs md:text-sm">Notebooks</TabsTrigger>
-          <TabsTrigger value="extract" className="text-xs md:text-sm">Extract Concepts</TabsTrigger>
-          <TabsTrigger value="resources" className="text-xs md:text-sm">Insights</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 bg-muted/50 p-1 rounded-lg">
+          <TabsTrigger 
+            value="workflow" 
+            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground"
+          >
+            Analysis Workflow
+          </TabsTrigger>
+          <TabsTrigger 
+            value="notebooks" 
+            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground"
+          >
+            Notebooks
+          </TabsTrigger>
+          <TabsTrigger 
+            value="extract" 
+            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground"
+          >
+            Extract Concepts
+          </TabsTrigger>
+          <TabsTrigger 
+            value="resources" 
+            className="text-xs md:text-sm px-2 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground"
+          >
+            Insights
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="notebooks" className="space-y-4 md:space-y-6">
@@ -484,19 +504,19 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
 
         {/* Notebooks List */}
         {notebooks.length > 0 ? (
-          <div className="space-y-3 md:space-y-4">
+          <div className="space-y-2 md:space-y-4">
             {notebooks.map((notebook) => (
-              <Card key={notebook.id} className="p-3 md:p-4 cursor-pointer hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between">
+              <Card key={notebook.id} className="p-3 md:p-4 cursor-pointer hover:shadow-md transition-shadow border border-border/50">
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
                   <div 
-                    className="flex-1"
+                    className="flex-1 space-y-2"
                     onClick={() => openEditModal(notebook)}
                   >
                     <h4 className="font-semibold text-base md:text-lg">{notebook.title}</h4>
                     {notebook.briefing && (
-                      <p className="text-sm text-muted-foreground mt-1 mb-3">{notebook.briefing}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{notebook.briefing}</p>
                     )}
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <FileText className="h-3 w-3" />
                         {notebook.upload_count} sources
@@ -504,22 +524,30 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
                       <span>Created {new Date(notebook.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-2 w-full md:w-auto">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => openEditModal(notebook)}
+                      className="w-full md:w-auto justify-start md:justify-center"
                     >
-                      <Edit3 className="h-4 w-4" />
+                      <Edit3 className="h-4 w-4 mr-2 md:mr-0" />
+                      <span className="md:hidden">Edit Notebook</span>
                     </Button>
                     {notebook.notebook_url && (
                       <Button
                         variant="default"
                         size="sm"
                         asChild
+                        className="w-full md:w-auto"
                       >
-                        <a href={notebook.notebook_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4 mr-1" />
+                        <a 
+                          href={notebook.notebook_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2 md:mr-1" />
                           Open NotebookLM
                         </a>
                       </Button>
@@ -528,8 +556,10 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => deleteNotebook(notebook.id)}
+                      className="w-full md:w-auto justify-start md:justify-center text-destructive hover:text-destructive"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4 mr-2 md:mr-0" />
+                      <span className="md:hidden">Delete</span>
                     </Button>
                   </div>
                 </div>
@@ -537,11 +567,11 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
             ))}
           </div>
         ) : (
-          <Card>
+          <Card className="border border-border/50">
             <CardContent className="pt-6 text-center">
-              <BookOpen className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-              <h3 className="font-medium mb-2">No notebooks yet</h3>
-              <p className="text-muted-foreground mb-4">Create your first NotebookLM integration to get started</p>
+              <BookOpen className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 text-muted-foreground" />
+              <h3 className="font-medium mb-2 text-sm md:text-base">No notebooks yet</h3>
+              <p className="text-muted-foreground mb-4 text-xs md:text-sm px-4">Create your first NotebookLM integration to get started</p>
             </CardContent>
           </Card>
         )}
