@@ -134,7 +134,7 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
         console.error('Error fetching user interactions:', interactionsError);
       }
 
-      // Get notebook data for metadata lookup
+      // Get notebook and concept data for metadata lookup
       const { data: notebooks, error: notebooksError } = await supabase
         .from('notebooks')
         .select('id, title, project_id')
@@ -143,6 +143,16 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
 
       if (notebooksError) {
         console.error('Error fetching notebooks:', notebooksError);
+      }
+
+      const { data: concepts, error: conceptsError } = await supabase
+        .from('graph_nodes')
+        .select('id, title, node_type, project_id')
+        .eq('user_id', user.id)
+        .limit(100);
+
+      if (conceptsError) {
+        console.error('Error fetching concepts:', conceptsError);
       }
 
       // Get prompts and templates for metadata lookup
@@ -155,6 +165,7 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
       const promptsMap = new Map();
       const templatesMap = new Map();
       const notebooksMap = new Map();
+      const conceptsMap = new Map();
       
       promptsResult.data?.forEach(prompt => {
         promptsMap.set(prompt.id, { title: prompt.title, category: prompt.category });
@@ -166,6 +177,10 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
 
       notebooks?.forEach(notebook => {
         notebooksMap.set(notebook.id, { title: notebook.title, projectId: notebook.project_id });
+      });
+
+      concepts?.forEach(concept => {
+        conceptsMap.set(concept.id, { title: concept.title, type: concept.node_type, projectId: concept.project_id });
       });
 
       // Get workflow activities (for workflow task completion)
@@ -256,6 +271,16 @@ export const DashboardContent = ({ onNavigate, onSelectWorkflow }: DashboardCont
               metadata = {
                 title: notebookInfo.title,
                 category: 'NotebookLM'
+              };
+            }
+          }
+          // For concept activities
+          else if (interaction.item_type === 'concept' && interaction.item_id) {
+            const conceptInfo = conceptsMap.get(interaction.item_id);
+            if (conceptInfo) {
+              metadata = {
+                title: conceptInfo.title,
+                category: `${conceptInfo.type.charAt(0).toUpperCase() + conceptInfo.type.slice(1)} Concept`
               };
             }
           }

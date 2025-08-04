@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Lightbulb, AlertTriangle, BookOpen, Target } from "lucide-react";
+import { Plus, Lightbulb, AlertTriangle, BookOpen, Target, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -16,11 +16,16 @@ interface ConceptExtractorProps {
   notebookId?: string;
 }
 
+interface ConceptSource {
+  notebookId: string;
+  sourceId: string;
+}
+
 interface ConceptForm {
   title: string;
   content: string;
   nodeType: string;
-  conceptSource: string;
+  sources: ConceptSource[];
   confidenceScore: number;
 }
 
@@ -37,14 +42,72 @@ export function ConceptExtractor({ projectId, notebookId }: ConceptExtractorProp
     title: "",
     content: "",
     nodeType: "",
-    conceptSource: "",
+    sources: [{ notebookId: "", sourceId: "" }],
     confidenceScore: 1.0
   });
   const [isCreating, setIsCreating] = useState(false);
+  const [notebooks, setNotebooks] = useState<any[]>([]);
+  const [notebookResources, setNotebookResources] = useState<any[]>([]);
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      fetchNotebooks();
+      fetchNotebookResources();
+    }
+  }, [user, projectId]);
+
+  const fetchNotebooks = async () => {
+    const { data, error } = await supabase
+      .from('notebooks')
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('user_id', user?.id);
+
+    if (!error && data) {
+      setNotebooks(data);
+    }
+  };
+
+  const fetchNotebookResources = async () => {
+    const { data, error } = await supabase
+      .from('notebook_resources')
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('user_id', user?.id);
+
+    if (!error && data) {
+      setNotebookResources(data);
+    }
+  };
 
   const updateForm = (field: keyof ConceptForm, value: string | number) => {
     setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updateSource = (index: number, field: keyof ConceptSource, value: string) => {
+    setForm(prev => ({
+      ...prev,
+      sources: prev.sources.map((source, i) => 
+        i === index ? { ...source, [field]: value } : source
+      )
+    }));
+  };
+
+  const addSource = () => {
+    setForm(prev => ({
+      ...prev,
+      sources: [...prev.sources, { notebookId: "", sourceId: "" }]
+    }));
+  };
+
+  const removeSource = (index: number) => {
+    if (form.sources.length > 1) {
+      setForm(prev => ({
+        ...prev,
+        sources: prev.sources.filter((_, i) => i !== index)
+      }));
+    }
   };
 
   const createConcept = async () => {
@@ -62,7 +125,17 @@ export function ConceptExtractor({ projectId, notebookId }: ConceptExtractorProp
       const positionX = 400 + Math.cos(angle) * radius;
       const positionY = 300 + Math.sin(angle) * radius;
 
-      const { error } = await supabase
+      // Create sources metadata string
+      const sourcesData = form.sources
+        .filter(source => source.notebookId && source.sourceId)
+        .map(source => {
+          const notebook = notebooks.find(n => n.id === source.notebookId);
+          const resource = notebookResources.find(r => r.id === source.sourceId);
+          return `${notebook?.title || 'Unknown Notebook'} - ${resource?.title || 'Unknown Source'}`;
+        })
+        .join('; ');
+
+      const { data: concept, error } = await supabase
         .from('graph_nodes')
         .insert({
           project_id: projectId,
@@ -70,24 +143,36 @@ export function ConceptExtractor({ projectId, notebookId }: ConceptExtractorProp
           node_type: form.nodeType,
           title: form.title,
           content: form.content,
-          concept_source: form.conceptSource,
+          concept_source: sourcesData,
           extraction_method: 'notebooklm',
           confidence_score: form.confidenceScore,
-          notebook_id: notebookId,
+          notebook_id: form.sources[0]?.notebookId || notebookId,
           position_x: positionX,
           position_y: positionY,
           size: form.nodeType === 'hypothesis' ? 'large' : 'medium',
           color: getNodeColor(form.nodeType)
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Track concept creation
+      await supabase
+        .from('user_interactions')
+        .insert({
+          user_id: user.id,
+          item_id: concept.id,
+          item_type: 'concept',
+          interaction_type: 'created'
+        });
 
       // Reset form
       setForm({
         title: "",
         content: "",
         nodeType: "",
-        conceptSource: "",
+        sources: [{ notebookId: "", sourceId: "" }],
         confidenceScore: 1.0
       });
 
@@ -132,7 +217,7 @@ export function ConceptExtractor({ projectId, notebookId }: ConceptExtractorProp
             <SelectTrigger>
               <SelectValue placeholder="Select the type of concept you're adding" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-background border shadow-md">
               {nodeTypes.map((type) => {
                 const Icon = type.icon;
                 return (
@@ -177,16 +262,69 @@ export function ConceptExtractor({ projectId, notebookId }: ConceptExtractorProp
           />
         </div>
 
-        {/* Source */}
-        <div className="space-y-2">
-          <Label htmlFor="concept-source">Source Information</Label>
-          <Textarea
-            id="concept-source"
-            value={form.conceptSource}
-            onChange={(e) => updateForm("conceptSource", e.target.value)}
-            placeholder="Which sources/papers did this come from? (as reported by NotebookLM)"
-            rows={3}
-          />
+        {/* Sources */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label>Supporting Sources</Label>
+            <Button type="button" variant="outline" size="sm" onClick={addSource}>
+              <Plus className="h-4 w-4 mr-1" />
+              Add Source
+            </Button>
+          </div>
+          
+          {form.sources.map((source, index) => (
+            <div key={index} className="flex gap-2 items-center">
+              <div className="flex-1">
+                <Select 
+                  value={source.notebookId} 
+                  onValueChange={(value) => updateSource(index, "notebookId", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select notebook" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-md">
+                    {notebooks.map((notebook) => (
+                      <SelectItem key={notebook.id} value={notebook.id}>
+                        {notebook.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex-1">
+                <Select 
+                  value={source.sourceId} 
+                  onValueChange={(value) => updateSource(index, "sourceId", value)}
+                  disabled={!source.notebookId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select source" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-md">
+                    {notebookResources
+                      .filter(resource => resource.notebook_id === source.notebookId)
+                      .map((resource) => (
+                        <SelectItem key={resource.id} value={resource.id}>
+                          {resource.title}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {form.sources.length > 1 && (
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => removeSource(index)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* Confidence Score */}
@@ -199,7 +337,7 @@ export function ConceptExtractor({ projectId, notebookId }: ConceptExtractorProp
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-background border shadow-md">
               <SelectItem value="1.0">High Confidence (1.0)</SelectItem>
               <SelectItem value="0.8">Good Confidence (0.8)</SelectItem>
               <SelectItem value="0.6">Medium Confidence (0.6)</SelectItem>

@@ -305,15 +305,16 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
                     Create Notebook
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingNotebook ? "Edit Notebook" : "Create New Notebook"}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {editingNotebook ? "Update your notebook details and sources" : "Set up a new NotebookLM notebook with sources"}
-                    </DialogDescription>
-                  </DialogHeader>
+                <DialogContent className="max-w-2xl max-h-[80vh]">
+                  <div className="max-h-[70vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingNotebook ? "Edit Notebook" : "Create New Notebook"}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {editingNotebook ? "Update your notebook details and sources" : "Set up a new NotebookLM notebook with sources"}
+                      </DialogDescription>
+                    </DialogHeader>
                   
                   <div className="space-y-4">
                     {/* Notebook Details */}
@@ -436,6 +437,7 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
                         {isCreating ? "Saving..." : editingNotebook ? "Update Notebook" : "Create Notebook"}
                       </Button>
                     </div>
+                  </div>
                   </div>
                 </DialogContent>
               </Dialog>
