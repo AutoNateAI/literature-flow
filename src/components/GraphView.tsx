@@ -1471,24 +1471,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
               {/* Source Details */}
               {selectedNodeDetail.type === 'source' && (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">File Type</Label>
-                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_type || 'Not specified'}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">File Size</Label>
-                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_size || 'Not specified'}</p>
-                    </div>
-                  </div>
-                  {selectedNodeDetail.source_url && (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Source URL</Label>
-                      <p className="text-xs bg-muted p-2 rounded font-mono break-all">{selectedNodeDetail.source_url}</p>
-                    </div>
-                  )}
-                  
-                  {/* Connected Concepts */}
+                  {/* Connected Concepts - First Row */}
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Connected Concepts</Label>
                     <div className="space-y-1">
@@ -1503,9 +1486,9 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                         const otherNodeId = edge.source === selectedNodeDetail.id ? edge.target : edge.source;
                         const otherNode = nodes.find(n => n.id === otherNodeId);
                         return otherNode ? (
-                          <div key={edge.id} className="text-xs bg-blue-50 p-2 rounded border border-blue-200">
-                            <div className="font-medium">{otherNode.data.title}</div>
-                            <div className="text-muted-foreground">Type: {otherNode.type} | Relation: {edge.data?.edge_type || 'connected'}</div>
+                          <div key={edge.id} className="text-xs bg-primary/10 text-primary-foreground border border-primary/20 p-2 rounded">
+                            <div className="font-medium text-foreground">{otherNode.data.title}</div>
+                            <div className="text-muted-foreground">Type: {otherNode.type} | Relation: {edge.data?.edge_type || 'cites'}</div>
                           </div>
                         ) : null;
                       })}
@@ -1524,6 +1507,25 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                       )}
                     </div>
                   </div>
+
+                  {/* File Details - Second Row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">File Type</Label>
+                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_type || 'Not specified'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">File Size</Label>
+                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_size || 'Not specified'}</p>
+                    </div>
+                  </div>
+                  
+                  {selectedNodeDetail.source_url && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Source URL</Label>
+                      <p className="text-xs bg-muted p-2 rounded font-mono break-all">{selectedNodeDetail.source_url}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
