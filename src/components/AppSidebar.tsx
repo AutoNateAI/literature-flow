@@ -37,8 +37,8 @@ export function AppSidebar({ currentView, onNavigate, graphControls }: AppSideba
   const collapsed = state === "collapsed";
 
   return (
-    <Sidebar className="glass-card border-r-0" collapsible="icon">
-      <SidebarContent className="p-4">
+    <Sidebar className="glass-card border-r-0 flex flex-col" collapsible="icon">
+      <SidebarContent className="p-4 flex flex-col h-full overflow-hidden">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
@@ -77,10 +77,10 @@ export function AppSidebar({ currentView, onNavigate, graphControls }: AppSideba
 
         {/* Graph Controls - Only shown on Literature Map view */}
         {currentView === 'graph-view' && graphControls && (
-          <SidebarGroup className="mt-6">
+          <SidebarGroup className="mt-6 flex-1 min-h-0">
             <SidebarGroupLabel>Graph Controls</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+            <SidebarGroupContent className="overflow-hidden">
+              <div className="space-y-4 h-full max-h-96 overflow-y-auto pr-2">
                 {/* Layout Toggle & Add Insight Button */}
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-1">

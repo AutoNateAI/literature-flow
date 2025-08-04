@@ -426,7 +426,35 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     [multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen]
   );
 
-  // ... rest of component logic would go here
+  // Load graph data
+  useEffect(() => {
+    if (!user || !projectId) return;
+    
+    const loadGraphData = async () => {
+      try {
+        // Load nodes
+        const { data: nodesData } = await supabase
+          .from('graph_nodes')
+          .select('*')
+          .eq('project_id', projectId)
+          .eq('user_id', user.id);
+          
+        // Load edges
+        const { data: edgesData } = await supabase
+          .from('graph_edges') 
+          .select('*')
+          .eq('project_id', projectId)
+          .eq('user_id', user.id);
+
+        if (nodesData) setNodes(nodesData);
+        if (edgesData) setEdges(edgesData);
+      } catch (error) {
+        console.error('Error loading graph data:', error);
+      }
+    };
+    
+    loadGraphData();
+  }, [user, projectId, setNodes, setEdges]);
   
   const getNodeStats = () => {
     const stats = {
