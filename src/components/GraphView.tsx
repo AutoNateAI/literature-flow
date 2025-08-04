@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit, GripVertical, Minimize2, Maximize2 } from "lucide-react";
+import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit, GripVertical, Minimize2, Maximize2, RotateCcw, Move3D } from "lucide-react";
 
 interface GraphViewProps {
   projectId: string;
@@ -343,6 +343,7 @@ export function GraphView({ projectId }: GraphViewProps) {
   
   // Floating controls state
   const [controlsPosition, setControlsPosition] = useState({ x: 20, y: 20 });
+  const [controlsSize, setControlsSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [isControlsMinimized, setIsControlsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -916,160 +917,201 @@ export function GraphView({ projectId }: GraphViewProps) {
   const nodeStats = getNodeStats();
 
   // Floating Controls Component
-  const FloatingControls = () => (
-    <div
-      className="fixed z-50 bg-background border border-border rounded-lg shadow-lg"
-      style={{
-        left: controlsPosition.x,
-        top: controlsPosition.y,
-        cursor: isDragging ? 'grabbing' : 'default'
-      }}
-    >
-      {/* Drag Handle */}
-      <div
-        className="flex items-center justify-between p-2 bg-muted/50 border-b border-border cursor-grab active:cursor-grabbing"
-        onMouseDown={handleMouseDown}
-      >
-        <div className="flex items-center gap-2">
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Graph Controls</span>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsControlsMinimized(!isControlsMinimized)}
-          className="h-6 w-6 p-0"
-        >
-          {isControlsMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
-        </Button>
-      </div>
+  const FloatingControls = () => {
+    const sizeClasses = {
+      small: 'min-w-[220px]',
+      medium: 'min-w-[280px]',
+      large: 'min-w-[340px]'
+    };
 
-      {!isControlsMinimized && (
-        <div className="p-4 space-y-4 min-w-[280px]">
-          {/* Layout Toggle & Add Insight Button */}
-          <div className="flex justify-between items-center gap-2">
-            <div className="flex gap-1">
+    return (
+      <div
+        className="fixed z-50 bg-background border border-border rounded-lg shadow-lg"
+        style={{
+          left: controlsPosition.x,
+          top: controlsPosition.y,
+          cursor: isDragging ? 'grabbing' : 'default'
+        }}
+      >
+        {/* Drag Handle */}
+        <div
+          className="flex items-center justify-between p-2 bg-muted/50 border-b border-border cursor-grab active:cursor-grabbing"
+          onMouseDown={handleMouseDown}
+        >
+          <div className="flex items-center gap-2">
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Graph Controls</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {/* Size Controls */}
+            <div className="flex items-center border rounded-md">
               <Button
-                variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
+                variant="ghost"
                 size="sm"
-                onClick={() => setLayoutMode('hierarchical')}
-                className="flex items-center gap-1 text-xs"
+                onClick={() => setControlsSize('small')}
+                className={`h-5 w-5 p-0 ${controlsSize === 'small' ? 'bg-muted' : ''}`}
+                title="Small"
               >
-                <GitBranch className="h-3 w-3" />
-                Hierarchical
+                <div className="w-2 h-2 bg-current rounded-full"></div>
               </Button>
               <Button
-                variant={layoutMode === 'spatial' ? 'default' : 'outline'}
+                variant="ghost"
                 size="sm"
-                onClick={() => setLayoutMode('spatial')}
-                className="flex items-center gap-1 text-xs"
+                onClick={() => setControlsSize('medium')}
+                className={`h-5 w-5 p-0 ${controlsSize === 'medium' ? 'bg-muted' : ''}`}
+                title="Medium"
               >
-                <LayoutGrid className="h-3 w-3" />
-                Spatial
+                <div className="w-2.5 h-2.5 bg-current rounded-full"></div>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setControlsSize('large')}
+                className={`h-5 w-5 p-0 ${controlsSize === 'large' ? 'bg-muted' : ''}`}
+                title="Large"
+              >
+                <div className="w-3 h-3 bg-current rounded-full"></div>
               </Button>
             </div>
+            {/* Minimize Button */}
             <Button
-              onClick={() => setInsightDialogOpen(true)}
+              variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-xs"
+              onClick={() => setIsControlsMinimized(!isControlsMinimized)}
+              className="h-6 w-6 p-0"
             >
-              <Plus className="h-3 w-3" />
-              Add Insight
+              {isControlsMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
             </Button>
           </div>
-
-          {/* Node Types Legend */}
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Node Types</h4>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                <span>Research Focus</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span>Concept</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                <span>Research Gap</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <span>Discrepancy</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span>Publication</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                <span>Notebook</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-teal-500"></div>
-                <span>Source</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
-                <span>Insight</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Node Statistics */}
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Statistics</h4>
-            <div className="flex flex-wrap gap-1">
-              {nodeStats.concept && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-                  {nodeStats.concept} Concept{nodeStats.concept > 1 ? 's' : ''}
-                </Badge>
-              )}
-              {nodeStats.hypothesis && (
-                <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
-                  {nodeStats.hypothesis} Research Focus
-                </Badge>
-              )}
-              {nodeStats.gap && (
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
-                  {nodeStats.gap} Gap{nodeStats.gap > 1 ? 's' : ''}
-                </Badge>
-              )}
-              {nodeStats.discrepancy && (
-                <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
-                  {nodeStats.discrepancy} Discrepanc{nodeStats.discrepancy > 1 ? 'ies' : 'y'}
-                </Badge>
-              )}
-              {nodeStats.publication && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                  {nodeStats.publication} Publication{nodeStats.publication > 1 ? 's' : ''}
-                </Badge>
-              )}
-              {nodeStats.notebook && (
-                <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs">
-                  {nodeStats.notebook} Notebook{nodeStats.notebook > 1 ? 's' : ''}
-                </Badge>
-              )}
-              {nodeStats.source && (
-                <Badge variant="secondary" className="bg-teal-100 text-teal-800 text-xs">
-                  {nodeStats.source} Source{nodeStats.source > 1 ? 's' : ''}
-                </Badge>
-              )}
-              {nodeStats.insight && (
-                <Badge variant="secondary" className="bg-indigo-100 text-indigo-800 text-xs">
-                  {nodeStats.insight} Insight{nodeStats.insight > 1 ? 's' : ''}
-                </Badge>
-              )}
-              <Badge variant="outline" className="text-xs">
-                {edges.length} Connection{edges.length !== 1 ? 's' : ''}
-              </Badge>
-            </div>
-          </div>
         </div>
-      )}
-    </div>
-  );
+
+        {!isControlsMinimized && (
+          <div className={`p-4 space-y-4 ${sizeClasses[controlsSize]}`}>
+            {/* Layout Toggle & Add Insight Button */}
+            <div className="flex justify-between items-center gap-2">
+              <div className="flex gap-1">
+                <Button
+                  variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLayoutMode('hierarchical')}
+                  className="flex items-center gap-1 text-xs"
+                >
+                  <GitBranch className="h-3 w-3" />
+                  Hierarchical
+                </Button>
+                <Button
+                  variant={layoutMode === 'spatial' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLayoutMode('spatial')}
+                  className="flex items-center gap-1 text-xs"
+                >
+                  <LayoutGrid className="h-3 w-3" />
+                  Spatial
+                </Button>
+              </div>
+              <Button
+                onClick={() => setInsightDialogOpen(true)}
+                size="sm"
+                className="flex items-center gap-1 text-xs"
+              >
+                <Plus className="h-3 w-3" />
+                Add Insight
+              </Button>
+            </div>
+
+            {/* Node Types Legend */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Node Types</h4>
+              <div className={`grid gap-2 text-xs ${controlsSize === 'small' ? 'grid-cols-1' : controlsSize === 'medium' ? 'grid-cols-2' : 'grid-cols-2'}`}>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                  <span>Research Focus</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <span>Concept</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <span>Research Gap</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <span>Discrepancy</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span>Publication</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                  <span>Notebook</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-teal-500"></div>
+                  <span>Source</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                  <span>Insight</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Node Statistics */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Statistics</h4>
+              <div className="flex flex-wrap gap-1">
+                {nodeStats.concept && (
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                    {nodeStats.concept} Concept{nodeStats.concept > 1 ? 's' : ''}
+                  </Badge>
+                )}
+                {nodeStats.hypothesis && (
+                  <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
+                    {nodeStats.hypothesis} Research Focus
+                  </Badge>
+                )}
+                {nodeStats.gap && (
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
+                    {nodeStats.gap} Gap{nodeStats.gap > 1 ? 's' : ''}
+                  </Badge>
+                )}
+                {nodeStats.discrepancy && (
+                  <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
+                    {nodeStats.discrepancy} Discrepanc{nodeStats.discrepancy > 1 ? 'ies' : 'y'}
+                  </Badge>
+                )}
+                {nodeStats.publication && (
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                    {nodeStats.publication} Publication{nodeStats.publication > 1 ? 's' : ''}
+                  </Badge>
+                )}
+                {nodeStats.notebook && (
+                  <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs">
+                    {nodeStats.notebook} Notebook{nodeStats.notebook > 1 ? 's' : ''}
+                  </Badge>
+                )}
+                {nodeStats.source && (
+                  <Badge variant="secondary" className="bg-teal-100 text-teal-800 text-xs">
+                    {nodeStats.source} Source{nodeStats.source > 1 ? 's' : ''}
+                  </Badge>
+                )}
+                {nodeStats.insight && (
+                  <Badge variant="secondary" className="bg-indigo-100 text-indigo-800 text-xs">
+                    {nodeStats.insight} Insight{nodeStats.insight > 1 ? 's' : ''}
+                  </Badge>
+                )}
+                <Badge variant="outline" className="text-xs">
+                  {edges.length} Connection{edges.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="h-full space-y-4 relative">
@@ -1179,7 +1221,7 @@ export function GraphView({ projectId }: GraphViewProps) {
         </div>
       )}
 
-      {/* Insight Creation Dialog */}
+      {/* Original Insight Creation Dialog */}
       <Dialog open={insightDialogOpen} onOpenChange={setInsightDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -1187,7 +1229,7 @@ export function GraphView({ projectId }: GraphViewProps) {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="insight-title">Insight Title</Label>
+              <Label htmlFor="insight-title">Title</Label>
               <Input
                 id="insight-title"
                 value={insightTitle}
@@ -1195,37 +1237,51 @@ export function GraphView({ projectId }: GraphViewProps) {
                 placeholder="Enter insight title..."
               />
             </div>
-            
             <div>
-              <Label htmlFor="insight-details">Insight Details</Label>
+              <Label htmlFor="insight-details">Details</Label>
               <Textarea
                 id="insight-details"
                 value={insightDetails}
                 onChange={(e) => setInsightDetails(e.target.value)}
                 placeholder="Describe your insight..."
-                rows={4}
+                rows={3}
               />
             </div>
 
-            {multiSelectedConcepts.length > 0 ? (
-              <div>
-                <Label className="text-sm font-medium">Selected Concepts ({multiSelectedConcepts.length})</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {multiSelectedConcepts.map(conceptId => {
-                    const node = nodes.find(n => n.data.nodeId === conceptId);
-                    return (
-                      <Badge key={conceptId} variant="secondary">
-                        {node?.data.title || conceptId}
-                      </Badge>
-                    );
-                  })}
-                </div>
+            {/* Source Selection Rows */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label>Source & Concept Selection</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addSourceSelectionRow}
+                  className="h-8"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Row
+                </Button>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <Label className="text-sm font-medium">Connect to Concepts</Label>
-                {sourceSelectionRows.map((row, index) => (
-                  <div key={row.id} className="grid grid-cols-4 gap-2 p-3 border rounded">
+              
+              {sourceSelectionRows.map((row, index) => (
+                <div key={row.id} className="border rounded-lg p-3 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-sm font-medium">Selection {index + 1}</Label>
+                    {sourceSelectionRows.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeSourceSelectionRow(row.id)}
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                      >
+                        ×
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2">
                     {/* Notebook Selection */}
                     <div>
                       <Label className="text-xs text-muted-foreground">Notebook</Label>
@@ -1313,35 +1369,49 @@ export function GraphView({ projectId }: GraphViewProps) {
                         </SelectContent>
                       </Select>
                     </div>
-
-                    {/* Remove Row Button */}
-                    <div className="flex items-end">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => removeSourceSelectionRow(row.id)}
-                        disabled={sourceSelectionRows.length === 1}
-                        className="h-8 w-8 p-0"
-                      >
-                        ×
-                      </Button>
-                    </div>
                   </div>
-                ))}
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={addSourceSelectionRow}
-                  className="w-full"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Another Concept
-                </Button>
+                </div>
+              ))}
+            </div>
+
+            {/* Selected Concepts Display */}
+            <div>
+              <Label>Selected Concepts ({selectedConcepts.length})</Label>
+              <div className="border rounded-lg p-3 max-h-32 overflow-y-auto bg-muted/5">
+                {selectedConcepts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No concepts selected</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1">
+                    {selectedConcepts.map(conceptId => {
+                      const concept = nodes.find(n => n.id === conceptId);
+                      return concept ? (
+                        <Badge 
+                          key={conceptId} 
+                          variant="secondary" 
+                          className="flex items-center gap-1"
+                        >
+                          {concept.data.title}
+                          <button
+                            onClick={() => setSelectedConcepts(selectedConcepts.filter(id => id !== conceptId))}
+                            className="ml-1 text-xs hover:text-destructive"
+                          >
+                            ×
+                          </button>
+                        </Badge>
+                      ) : null;
+                    })}
+                  </div>
+                )}
               </div>
-            )}
-            
-            <div className="flex justify-end gap-2">
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={createInsight}
+                disabled={!insightTitle || selectedConcepts.length === 0}
+              >
+                Create Insight
+              </Button>
               <Button variant="outline" onClick={() => {
                 setInsightDialogOpen(false);
                 setInsightTitle("");
@@ -1351,12 +1421,6 @@ export function GraphView({ projectId }: GraphViewProps) {
                 setSourceSelectionRows([{ id: 1, notebook: '', source: '', concept: '' }]);
               }}>
                 Cancel
-              </Button>
-              <Button 
-                onClick={createInsight}
-                disabled={!insightTitle || (selectedConcepts.length === 0 && multiSelectedConcepts.length === 0)}
-              >
-                Create Insight
               </Button>
             </div>
           </div>
