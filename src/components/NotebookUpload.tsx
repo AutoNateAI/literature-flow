@@ -313,15 +313,11 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
 
   return (
     <Tabs defaultValue="workflow" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4 h-auto md:h-10 gap-1 md:gap-0 p-1">
-        <TabsTrigger value="workflow" className="text-xs md:text-sm px-2 md:px-3 py-2 md:py-2">
-          <span className="hidden sm:inline">Analysis </span>Workflow
-        </TabsTrigger>
-        <TabsTrigger value="notebooks" className="text-xs md:text-sm px-2 md:px-3 py-2 md:py-2">Notebooks</TabsTrigger>
-        <TabsTrigger value="extract" className="text-xs md:text-sm px-2 md:px-3 py-2 md:py-2">
-          <span className="hidden sm:inline">Extract </span>Concepts
-        </TabsTrigger>
-        <TabsTrigger value="resources" className="text-xs md:text-sm px-2 md:px-3 py-2 md:py-2">Insights</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="workflow">Analysis Workflow</TabsTrigger>
+        <TabsTrigger value="notebooks">Notebooks</TabsTrigger>
+        <TabsTrigger value="extract">Extract Concepts</TabsTrigger>
+        <TabsTrigger value="resources">Insights</TabsTrigger>
       </TabsList>
 
       <TabsContent value="notebooks" className="space-y-6">
@@ -345,8 +341,8 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
                     Create Notebook
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] w-[95vw] md:w-full">
-                  <div className="max-h-[75vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl max-h-[80vh]">
+                  <div className="max-h-[70vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>
                         {editingNotebook ? "Edit Notebook" : "Create New Notebook"}
@@ -414,7 +410,7 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
                                 </Button>
                               )}
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-3">
                               <div>
                                 <Label>Title *</Label>
                                 <Input
@@ -448,7 +444,7 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select type" />
                                   </SelectTrigger>
-                                  <SelectContent className="bg-background border shadow-md z-50">
+                                  <SelectContent className="bg-background border shadow-md">
                                     {SOURCE_TYPES.map((type) => (
                                       <SelectItem key={type} value={type}>
                                         {type}

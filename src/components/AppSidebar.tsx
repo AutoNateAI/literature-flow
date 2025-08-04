@@ -39,10 +39,10 @@ export function AppSidebar({ currentView, onNavigate, graphControls, isMobile = 
 
   return (
     <Sidebar 
-      className="glass-card border-r-0 flex flex-col bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80" 
+      className="glass-card border-r-0 flex flex-col" 
       collapsible={isMobile ? "offcanvas" : "icon"}
     >
-      <SidebarContent className={`${isMobile ? 'p-2' : 'p-4'} flex flex-col h-full overflow-hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80`}>
+      <SidebarContent className={`${isMobile ? 'p-2' : 'p-4'} flex flex-col h-full overflow-hidden`}>
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
@@ -71,7 +71,7 @@ export function AppSidebar({ currentView, onNavigate, graphControls, isMobile = 
                     }`}
                   >
                     <item.icon className="w-5 h-5 shrink-0" />
-                    <span className={`font-medium ${collapsed && !isMobile ? 'sr-only' : ''}`}>{item.title}</span>
+                    {!collapsed && <span className="font-medium">{item.title}</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
