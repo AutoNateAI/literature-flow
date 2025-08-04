@@ -1572,35 +1572,36 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Layout Toggle & Add Insight Button */}
-          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'}`}>
-            <div className={`flex gap-2 ${isMobile ? 'justify-center' : ''}`}>
-              <Button
-                variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
-                size={isMobile ? 'sm' : 'sm'}
-                onClick={() => setLayoutMode('hierarchical')}
-                className="flex items-center gap-2"
-              >
-                <GitBranch className="h-4 w-4" />
-                {!isMobile && 'Hierarchical'}
-              </Button>
-              <Button
-                variant={layoutMode === 'spatial' ? 'default' : 'outline'}
-                size={isMobile ? 'sm' : 'sm'}
-                onClick={() => setLayoutMode('spatial')}
-                className="flex items-center gap-2"
-              >
-                <LayoutGrid className="h-4 w-4" />
-                {!isMobile && 'Spatial'}
-              </Button>
-            </div>
-            <Dialog open={insightDialogOpen} onOpenChange={setInsightDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Insight
+          {/* Layout Toggle & Add Insight Button - Only show for desktop */}
+          {!isMobile && (
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <Button
+                  variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLayoutMode('hierarchical')}
+                  className="flex items-center gap-2"
+                >
+                  <GitBranch className="h-4 w-4" />
+                  Hierarchical
                 </Button>
-              </DialogTrigger>
+                <Button
+                  variant={layoutMode === 'spatial' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLayoutMode('spatial')}
+                  className="flex items-center gap-2"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  Spatial
+                </Button>
+              </div>
+              <Dialog open={insightDialogOpen} onOpenChange={setInsightDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Insight
+                  </Button>
+                </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Create New Insight</DialogTitle>
@@ -1802,8 +1803,9 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                    </div>
                  </div>
               </DialogContent>
-            </Dialog>
-          </div>
+             </Dialog>
+            </div>
+          )}
 
           {/* Improved Legend */}
           <div className="border rounded-lg p-4 bg-muted/5">
@@ -2335,6 +2337,111 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Mobile Graph Controls - Only shown on mobile */}
+      {isMobile && (
+        <Card className="mt-4">
+          <CardContent className="p-4">
+            <div className="space-y-4">
+              {/* Layout Toggle & Add Insight Button */}
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <Button
+                    variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setLayoutMode('hierarchical')}
+                    className="flex items-center gap-2 flex-1"
+                  >
+                    <GitBranch className="h-4 w-4" />
+                    Hierarchical
+                  </Button>
+                  <Button
+                    variant={layoutMode === 'spatial' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setLayoutMode('spatial')}
+                    className="flex items-center gap-2 flex-1"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    Spatial
+                  </Button>
+                </div>
+                <Button
+                  onClick={() => setInsightDialogOpen(true)}
+                  size="sm"
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Insight
+                </Button>
+              </div>
+
+              {/* Node Types Legend */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Node Types</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                    <span>Research Focus</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span>Concept</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <span>Research Gap</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <span>Discrepancy</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span>Publication</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                    <span>Notebook</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-teal-500"></div>
+                    <span>Source</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                    <span>Insight</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Statistics */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Statistics</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <Badge variant="secondary" className="text-xs justify-center">
+                    {nodeStats.concept || 0} Concepts
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs justify-center">
+                    {nodeStats.hypothesis || 0} Focus
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs justify-center">
+                    {nodeStats.notebook || 0} Notebooks
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs justify-center">
+                    {nodeStats.source || 0} Sources
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs justify-center">
+                    {nodeStats.insight || 0} Insights
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs justify-center">
+                    {edges.length} Connections
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
