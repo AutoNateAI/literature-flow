@@ -225,6 +225,9 @@ export function GraphView({ projectId }: GraphViewProps) {
   const [insightTitle, setInsightTitle] = useState("");
   const [insightDetails, setInsightDetails] = useState("");
   const [selectedConcepts, setSelectedConcepts] = useState<string[]>([]);
+  const [selectedNotebook, setSelectedNotebook] = useState("");
+  const [selectedSource, setSelectedSource] = useState("");
+  const [selectedConcept, setSelectedConcept] = useState("");
   const { user } = useAuth();
 
   const onConnect = useCallback(
@@ -501,45 +504,30 @@ export function GraphView({ projectId }: GraphViewProps) {
 
       // Add automatic connections from concepts to their supporting sources
       nodeData.forEach(node => {
-        if (node.concept_source && typeof node.concept_source === 'object') {
-          const sources = Array.isArray(node.concept_source) ? node.concept_source : [node.concept_source];
-          sources.forEach((source: any, index: number) => {
-            // Connect to notebook (indirect through source)
-            if (source.notebook_id) {
-              flowEdges.push({
-                id: `concept-notebook-${node.id}-${source.notebook_id}-${index}`,
-                source: `notebook-${source.notebook_id}`,
-                target: node.id,
-                type: 'smoothstep',
-                label: 'supports',
-                labelStyle: { fontSize: 10, fontWeight: 400 },
-                style: { 
-                  stroke: '#f59e0b',
-                  strokeWidth: 1,
-                  strokeDasharray: '5,5'
-                },
-                data: { edge_type: 'supports', annotation: 'Notebook source' }
-              });
-            }
-            
-            // Connect to resource (direct)
-            if (source.resource_id) {
-              flowEdges.push({
-                id: `concept-resource-${node.id}-${source.resource_id}-${index}`,
-                source: `source-${source.resource_id}`,
-                target: node.id,
-                type: 'smoothstep',
-                label: 'cites',
-                labelStyle: { fontSize: 10, fontWeight: 400 },
-                style: { 
-                  stroke: '#14b8a6',
-                  strokeWidth: 1,
-                  strokeDasharray: '5,5'
-                },
-                data: { edge_type: 'cites', annotation: 'Resource citation' }
-              });
-            }
-          });
+        if (node.concept_source) {
+          // Find matching resource by title
+          const matchingResource = resourceData.find(resource => 
+            resource.title === node.concept_source || 
+            resource.title.includes(node.concept_source) ||
+            node.concept_source.includes(resource.title)
+          );
+          
+          if (matchingResource) {
+            // Connect source to concept
+            flowEdges.push({
+              id: `source-concept-${matchingResource.id}-${node.id}`,
+              source: `source-${matchingResource.id}`,
+              target: node.id,
+              type: 'smoothstep',
+              label: 'cites',
+              labelStyle: { fontSize: 10, fontWeight: 400 },
+              style: { 
+                stroke: '#14b8a6',
+                strokeWidth: 2,
+              },
+              data: { edge_type: 'cites', annotation: 'Resource citation' }
+            });
+          }
         }
       });
 
@@ -665,59 +653,155 @@ export function GraphView({ projectId }: GraphViewProps) {
                 <DialogHeader>
                   <DialogTitle>Create New Insight</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="insight-title">Title</Label>
-                    <Input
-                      id="insight-title"
-                      value={insightTitle}
-                      onChange={(e) => setInsightTitle(e.target.value)}
-                      placeholder="Enter insight title..."
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="insight-details">Details</Label>
-                    <Textarea
-                      id="insight-details"
-                      value={insightDetails}
-                      onChange={(e) => setInsightDetails(e.target.value)}
-                      placeholder="Describe your insight..."
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <Label>Connected Concepts</Label>
-                    <div className="border rounded-lg p-3 max-h-32 overflow-y-auto">
-                      {getConceptNodes().map(node => (
-                        <label key={node.id} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={selectedConcepts.includes(node.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedConcepts([...selectedConcepts, node.id]);
-                              } else {
-                                setSelectedConcepts(selectedConcepts.filter(id => id !== node.id));
-                              }
-                            }}
-                          />
-                          <span className="text-sm">{node.data.title}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={createInsight}
-                      disabled={!insightTitle || selectedConcepts.length === 0}
-                    >
-                      Create Insight
-                    </Button>
-                    <Button variant="outline" onClick={() => setInsightDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
+                 <div className="space-y-4">
+                   <div>
+                     <Label htmlFor="insight-title">Title</Label>
+                     <Input
+                       id="insight-title"
+                       value={insightTitle}
+                       onChange={(e) => setInsightTitle(e.target.value)}
+                       placeholder="Enter insight title..."
+                     />
+                   </div>
+                   <div>
+                     <Label htmlFor="insight-details">Details</Label>
+                     <Textarea
+                       id="insight-details"
+                       value={insightDetails}
+                       onChange={(e) => setInsightDetails(e.target.value)}
+                       placeholder="Describe your insight..."
+                       rows={3}
+                     />
+                   </div>
+
+                   {/* Hierarchical Concept Selection */}
+                   <div className="space-y-3">
+                     <Label>Select Source & Concept</Label>
+                     <div className="grid grid-cols-3 gap-2">
+                       {/* Notebook Selection */}
+                       <div>
+                         <Label className="text-xs text-muted-foreground">Notebook</Label>
+                         <Select value={selectedNotebook} onValueChange={setSelectedNotebook}>
+                           <SelectTrigger className="h-8">
+                             <SelectValue placeholder="Select..." />
+                           </SelectTrigger>
+                           <SelectContent className="bg-popover border border-border">
+                             {nodes.filter(n => n.type === 'notebook').map(notebook => (
+                               <SelectItem key={notebook.id} value={notebook.id}>
+                                 {notebook.data.title}
+                               </SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
+                       </div>
+
+                       {/* Source Selection */}
+                       <div>
+                         <Label className="text-xs text-muted-foreground">Source</Label>
+                         <Select 
+                           value={selectedSource} 
+                           onValueChange={setSelectedSource}
+                           disabled={!selectedNotebook}
+                         >
+                           <SelectTrigger className="h-8">
+                             <SelectValue placeholder="Select..." />
+                           </SelectTrigger>
+                           <SelectContent className="bg-popover border border-border">
+                             {nodes.filter(n => 
+                               n.type === 'source' && 
+                               (!selectedNotebook || n.data.notebook_id === selectedNotebook.replace('notebook-', ''))
+                             ).map(source => (
+                               <SelectItem key={source.id} value={source.id}>
+                                 {source.data.title}
+                               </SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
+                       </div>
+
+                       {/* Concept Selection */}
+                       <div>
+                         <Label className="text-xs text-muted-foreground">Concept</Label>
+                         <Select 
+                           value={selectedConcept} 
+                           onValueChange={(value) => {
+                             setSelectedConcept(value);
+                             if (value && !selectedConcepts.includes(value)) {
+                               setSelectedConcepts([...selectedConcepts, value]);
+                             }
+                           }}
+                           disabled={!selectedSource}
+                         >
+                           <SelectTrigger className="h-8">
+                             <SelectValue placeholder="Select..." />
+                           </SelectTrigger>
+                           <SelectContent className="bg-popover border border-border">
+                             {getConceptNodes().filter(node => 
+                               !selectedSource || 
+                               (node.data.concept_source && 
+                                nodes.find(n => n.id === selectedSource)?.data.title &&
+                                (node.data.concept_source.includes(nodes.find(n => n.id === selectedSource)?.data.title) ||
+                                 nodes.find(n => n.id === selectedSource)?.data.title.includes(node.data.concept_source)))
+                             ).map(concept => (
+                               <SelectItem key={concept.id} value={concept.id}>
+                                 {concept.data.title}
+                               </SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* Selected Concepts Display */}
+                   <div>
+                     <Label>Selected Concepts ({selectedConcepts.length})</Label>
+                     <div className="border rounded-lg p-3 max-h-32 overflow-y-auto bg-muted/5">
+                       {selectedConcepts.length === 0 ? (
+                         <p className="text-sm text-muted-foreground">No concepts selected</p>
+                       ) : (
+                         <div className="flex flex-wrap gap-1">
+                           {selectedConcepts.map(conceptId => {
+                             const concept = nodes.find(n => n.id === conceptId);
+                             return concept ? (
+                               <Badge 
+                                 key={conceptId} 
+                                 variant="secondary" 
+                                 className="flex items-center gap-1"
+                               >
+                                 {concept.data.title}
+                                 <button
+                                   onClick={() => setSelectedConcepts(selectedConcepts.filter(id => id !== conceptId))}
+                                   className="ml-1 text-xs hover:text-destructive"
+                                 >
+                                   ×
+                                 </button>
+                               </Badge>
+                             ) : null;
+                           })}
+                         </div>
+                       )}
+                     </div>
+                   </div>
+
+                   <div className="flex gap-2">
+                     <Button 
+                       onClick={createInsight}
+                       disabled={!insightTitle || selectedConcepts.length === 0}
+                     >
+                       Create Insight
+                     </Button>
+                     <Button variant="outline" onClick={() => {
+                       setInsightDialogOpen(false);
+                       setSelectedNotebook("");
+                       setSelectedSource("");
+                       setSelectedConcept("");
+                       setSelectedConcepts([]);
+                     }}>
+                       Cancel
+                     </Button>
+                   </div>
+                 </div>
               </DialogContent>
             </Dialog>
           </div>
