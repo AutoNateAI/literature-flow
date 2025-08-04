@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -41,16 +41,21 @@ const HypothesisNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts,
 }) => (
   <div 
     className={`px-6 py-4 shadow-lg rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 border-3 border-purple-300 min-w-[200px] max-w-[300px] cursor-pointer hover:shadow-xl transition-shadow ${
-      multiSelectedConcepts.includes(data.id) ? 'ring-2 ring-blue-500' : ''
+      multiSelectedConcepts.includes(data.id) ? 'ring-4 ring-blue-500 bg-blue-100' : ''
     }`}
     onClick={(e) => {
       if (e.shiftKey) {
+        e.preventDefault();
         e.stopPropagation();
-        if (multiSelectedConcepts.includes(data.id)) {
-          setMultiSelectedConcepts(prev => prev.filter(id => id !== data.id));
-        } else {
-          setMultiSelectedConcepts(prev => [...prev, data.id]);
-        }
+        console.log('Shift+click on hypothesis:', data.id, 'Title:', data.title);
+        setMultiSelectedConcepts(prev => {
+          const isAlreadySelected = prev.includes(data.id);
+          if (isAlreadySelected) {
+            return prev.filter(id => id !== data.id);
+          } else {
+            return [...prev, data.id];
+          }
+        });
       } else {
         setSelectedNodeDetail({ ...data, type: 'hypothesis' });
         setNodeDetailOpen(true);
@@ -91,10 +96,16 @@ const ConceptNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts, se
       if (e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
+        console.log('Shift+click on concept:', data.id, 'Title:', data.title);
+        console.log('Current multiSelectedConcepts:', multiSelectedConcepts);
+        
         setMultiSelectedConcepts(prev => {
-          if (prev.includes(data.id)) {
+          const isAlreadySelected = prev.includes(data.id);
+          if (isAlreadySelected) {
+            console.log('Removing from selection:', data.id);
             return prev.filter(id => id !== data.id);
           } else {
+            console.log('Adding to selection:', data.id);
             return [...prev, data.id];
           }
         });
@@ -322,6 +333,9 @@ export function GraphView({ projectId }: GraphViewProps) {
   const [sourceSelectionRows, setSourceSelectionRows] = useState([{ id: 1, notebook: '', source: '', concept: '' }]);
   const { user } = useAuth();
 
+  // Memoize nodeTypes to prevent React Flow warnings
+  const nodeTypes = useMemo(() => createNodeTypes(multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen), [multiSelectedConcepts]);
+
   // Preserve layout mode and node positions
   useEffect(() => {
     const savedLayoutMode = localStorage.getItem(`layoutMode-${projectId}`);
@@ -339,7 +353,7 @@ export function GraphView({ projectId }: GraphViewProps) {
     setMultiSelectActive(multiSelectedConcepts.length > 0);
   }, [multiSelectedConcepts]);
 
-  const nodeTypes = createNodeTypes(multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen);
+  
 
   const onConnect = useCallback(
     (params: Connection) => {
