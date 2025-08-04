@@ -287,9 +287,10 @@ const InsightNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: {
     className="px-4 py-3 shadow-lg rounded-lg bg-gradient-to-br from-indigo-100 to-indigo-200 border-3 border-indigo-300 min-w-[180px] max-w-[280px] cursor-pointer hover:shadow-xl transition-shadow"
     onClick={(e) => {
       if (e.ctrlKey) {
-        // Don't handle Ctrl+click here, let it bubble up to the main handleNodeClick
+        // For Ctrl+click, don't open modal - let the main handleNodeClick handle path highlighting
         return;
       }
+      // Normal click opens the modal
       setSelectedNodeDetail({ ...data, type: 'insight' });
       setNodeDetailOpen(true);
     }}
