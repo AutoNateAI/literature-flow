@@ -25,15 +25,38 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain } from "lucide-react";
+import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit } from "lucide-react";
 
 interface GraphViewProps {
   projectId: string;
 }
 
 // Enhanced Node Components for Research Graph
-const HypothesisNode = ({ data }: { data: any }) => (
-  <div className="px-6 py-4 shadow-lg rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 border-3 border-purple-300 min-w-[200px] max-w-[300px]">
+const HypothesisNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen }: { 
+  data: any; 
+  multiSelectedConcepts: string[]; 
+  setMultiSelectedConcepts: (fn: (prev: string[]) => string[]) => void;
+  setSelectedNodeDetail: (data: any) => void;
+  setNodeDetailOpen: (open: boolean) => void;
+}) => (
+  <div 
+    className={`px-6 py-4 shadow-lg rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 border-3 border-purple-300 min-w-[200px] max-w-[300px] cursor-pointer hover:shadow-xl transition-shadow ${
+      multiSelectedConcepts.includes(data.id) ? 'ring-2 ring-blue-500' : ''
+    }`}
+    onClick={(e) => {
+      if (e.shiftKey) {
+        e.stopPropagation();
+        if (multiSelectedConcepts.includes(data.id)) {
+          setMultiSelectedConcepts(prev => prev.filter(id => id !== data.id));
+        } else {
+          setMultiSelectedConcepts(prev => [...prev, data.id]);
+        }
+      } else {
+        setSelectedNodeDetail({ ...data, type: 'hypothesis' });
+        setNodeDetailOpen(true);
+      }
+    }}
+  >
     <Handle type="target" position={Position.Top} className="w-4 h-4" />
     <div className="text-center">
       <Target className="h-6 w-6 text-purple-700 mx-auto mb-2" />
@@ -53,8 +76,31 @@ const HypothesisNode = ({ data }: { data: any }) => (
   </div>
 );
 
-const ConceptNode = ({ data }: { data: any }) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-50 border-2 border-blue-200 min-w-[150px] max-w-[250px]">
+const ConceptNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen }: { 
+  data: any; 
+  multiSelectedConcepts: string[]; 
+  setMultiSelectedConcepts: (fn: (prev: string[]) => string[]) => void;
+  setSelectedNodeDetail: (data: any) => void;
+  setNodeDetailOpen: (open: boolean) => void;
+}) => (
+  <div 
+    className={`px-4 py-3 shadow-md rounded-lg bg-blue-50 border-2 border-blue-200 min-w-[150px] max-w-[250px] cursor-pointer hover:shadow-lg transition-shadow ${
+      multiSelectedConcepts.includes(data.id) ? 'ring-2 ring-blue-500' : ''
+    }`}
+    onClick={(e) => {
+      if (e.shiftKey) {
+        e.stopPropagation();
+        if (multiSelectedConcepts.includes(data.id)) {
+          setMultiSelectedConcepts(prev => prev.filter(id => id !== data.id));
+        } else {
+          setMultiSelectedConcepts(prev => [...prev, data.id]);
+        }
+      } else {
+        setSelectedNodeDetail({ ...data, type: 'concept' });
+        setNodeDetailOpen(true);
+      }
+    }}
+  >
     <Handle type="target" position={Position.Top} />
     <div className="flex items-start gap-2">
       <Lightbulb className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -139,8 +185,18 @@ const PublicationNode = ({ data }: { data: any }) => (
   </div>
 );
 
-const NotebookNode = ({ data }: { data: any }) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-orange-50 border-2 border-orange-200 min-w-[150px] max-w-[250px]">
+const NotebookNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: { 
+  data: any; 
+  setSelectedNodeDetail: (data: any) => void;
+  setNodeDetailOpen: (open: boolean) => void;
+}) => (
+  <div 
+    className="px-4 py-3 shadow-md rounded-lg bg-orange-50 border-2 border-orange-200 min-w-[150px] max-w-[250px] cursor-pointer hover:shadow-lg transition-shadow"
+    onClick={() => {
+      setSelectedNodeDetail({ ...data, type: 'notebook' });
+      setNodeDetailOpen(true);
+    }}
+  >
     <Handle type="target" position={Position.Top} />
     <div className="flex items-start gap-2">
       <BookOpen className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
@@ -160,8 +216,18 @@ const NotebookNode = ({ data }: { data: any }) => (
   </div>
 );
 
-const SourceNode = ({ data }: { data: any }) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-teal-50 border-2 border-teal-200 min-w-[150px] max-w-[250px]">
+const SourceNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: { 
+  data: any; 
+  setSelectedNodeDetail: (data: any) => void;
+  setNodeDetailOpen: (open: boolean) => void;
+}) => (
+  <div 
+    className="px-4 py-3 shadow-md rounded-lg bg-teal-50 border-2 border-teal-200 min-w-[150px] max-w-[250px] cursor-pointer hover:shadow-lg transition-shadow"
+    onClick={() => {
+      setSelectedNodeDetail({ ...data, type: 'source' });
+      setNodeDetailOpen(true);
+    }}
+  >
     <Handle type="target" position={Position.Top} />
     <div className="flex items-start gap-2">
       <Link className="h-4 w-4 text-teal-600 mt-0.5 flex-shrink-0" />
@@ -181,8 +247,18 @@ const SourceNode = ({ data }: { data: any }) => (
   </div>
 );
 
-const InsightNode = ({ data }: { data: any }) => (
-  <div className="px-4 py-3 shadow-lg rounded-lg bg-gradient-to-br from-indigo-100 to-indigo-200 border-3 border-indigo-300 min-w-[180px] max-w-[280px]">
+const InsightNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: { 
+  data: any; 
+  setSelectedNodeDetail: (data: any) => void;
+  setNodeDetailOpen: (open: boolean) => void;
+}) => (
+  <div 
+    className="px-4 py-3 shadow-lg rounded-lg bg-gradient-to-br from-indigo-100 to-indigo-200 border-3 border-indigo-300 min-w-[180px] max-w-[280px] cursor-pointer hover:shadow-xl transition-shadow"
+    onClick={() => {
+      setSelectedNodeDetail({ ...data, type: 'insight' });
+      setNodeDetailOpen(true);
+    }}
+  >
     <Handle type="target" position={Position.Top} />
     <div className="flex items-start gap-2">
       <Brain className="h-5 w-5 text-indigo-700 mt-0.5 flex-shrink-0" />
@@ -202,16 +278,21 @@ const InsightNode = ({ data }: { data: any }) => (
   </div>
 );
 
-const nodeTypes = {
-  hypothesis: HypothesisNode,
-  concept: ConceptNode,
+const createNodeTypes = (
+  multiSelectedConcepts: string[],
+  setMultiSelectedConcepts: (fn: (prev: string[]) => string[]) => void,
+  setSelectedNodeDetail: (data: any) => void,
+  setNodeDetailOpen: (open: boolean) => void
+) => ({
+  hypothesis: (props: any) => HypothesisNode({ ...props, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen }),
+  concept: (props: any) => ConceptNode({ ...props, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen }),
   gap: GapNode,
   discrepancy: DiscrepancyNode,
   publication: PublicationNode,
-  notebook: NotebookNode,
-  source: SourceNode,
-  insight: InsightNode,
-};
+  notebook: (props: any) => NotebookNode({ ...props, setSelectedNodeDetail, setNodeDetailOpen }),
+  source: (props: any) => SourceNode({ ...props, setSelectedNodeDetail, setNodeDetailOpen }),
+  insight: (props: any) => InsightNode({ ...props, setSelectedNodeDetail, setNodeDetailOpen }),
+});
 
 export function GraphView({ projectId }: GraphViewProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -228,7 +309,13 @@ export function GraphView({ projectId }: GraphViewProps) {
   const [selectedNotebook, setSelectedNotebook] = useState("");
   const [selectedSource, setSelectedSource] = useState("");
   const [selectedConcept, setSelectedConcept] = useState("");
+  const [nodeDetailOpen, setNodeDetailOpen] = useState(false);
+  const [selectedNodeDetail, setSelectedNodeDetail] = useState<any>(null);
+  const [multiSelectActive, setMultiSelectActive] = useState(false);
+  const [multiSelectedConcepts, setMultiSelectedConcepts] = useState<string[]>([]);
   const { user } = useAuth();
+
+  const nodeTypes = createNodeTypes(multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -685,13 +772,17 @@ export function GraphView({ projectId }: GraphViewProps) {
                            <SelectTrigger className="h-8">
                              <SelectValue placeholder="Select..." />
                            </SelectTrigger>
-                           <SelectContent className="bg-popover border border-border">
-                             {nodes.filter(n => n.type === 'notebook').map(notebook => (
-                               <SelectItem key={notebook.id} value={notebook.id}>
-                                 {notebook.data.title}
-                               </SelectItem>
-                             ))}
-                           </SelectContent>
+                            <SelectContent className="bg-popover border border-border z-50">
+                              {nodes.filter(n => n.type === 'notebook').map(notebook => (
+                                <SelectItem 
+                                  key={notebook.id} 
+                                  value={notebook.id}
+                                  className="bg-popover hover:bg-accent"
+                                >
+                                  {notebook.data.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
                          </Select>
                        </div>
 
@@ -706,16 +797,20 @@ export function GraphView({ projectId }: GraphViewProps) {
                            <SelectTrigger className="h-8">
                              <SelectValue placeholder="Select..." />
                            </SelectTrigger>
-                           <SelectContent className="bg-popover border border-border">
-                             {nodes.filter(n => 
-                               n.type === 'source' && 
-                               (!selectedNotebook || n.data.notebook_id === selectedNotebook.replace('notebook-', ''))
-                             ).map(source => (
-                               <SelectItem key={source.id} value={source.id}>
-                                 {source.data.title}
-                               </SelectItem>
-                             ))}
-                           </SelectContent>
+                            <SelectContent className="bg-popover border border-border z-50">
+                              {nodes.filter(n => 
+                                n.type === 'source' && 
+                                (!selectedNotebook || n.data.notebook_id === selectedNotebook.replace('notebook-', ''))
+                              ).map(source => (
+                                <SelectItem 
+                                  key={source.id} 
+                                  value={source.id}
+                                  className="bg-popover hover:bg-accent"
+                                >
+                                  {source.data.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
                          </Select>
                        </div>
 
@@ -735,19 +830,23 @@ export function GraphView({ projectId }: GraphViewProps) {
                            <SelectTrigger className="h-8">
                              <SelectValue placeholder="Select..." />
                            </SelectTrigger>
-                           <SelectContent className="bg-popover border border-border">
-                             {getConceptNodes().filter(node => 
-                               !selectedSource || 
-                               (node.data.concept_source && 
-                                nodes.find(n => n.id === selectedSource)?.data.title &&
-                                (node.data.concept_source.includes(nodes.find(n => n.id === selectedSource)?.data.title) ||
-                                 nodes.find(n => n.id === selectedSource)?.data.title.includes(node.data.concept_source)))
-                             ).map(concept => (
-                               <SelectItem key={concept.id} value={concept.id}>
-                                 {concept.data.title}
-                               </SelectItem>
-                             ))}
-                           </SelectContent>
+                            <SelectContent className="bg-popover border border-border z-50">
+                              {getConceptNodes().filter(node => 
+                                !selectedSource || 
+                                (node.data.concept_source && 
+                                 nodes.find(n => n.id === selectedSource)?.data.title &&
+                                 (node.data.concept_source.includes(nodes.find(n => n.id === selectedSource)?.data.title) ||
+                                  nodes.find(n => n.id === selectedSource)?.data.title.includes(node.data.concept_source)))
+                              ).map(concept => (
+                                <SelectItem 
+                                  key={concept.id} 
+                                  value={concept.id}
+                                  className="bg-popover hover:bg-accent"
+                                >
+                                  {concept.data.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
                          </Select>
                        </div>
                      </div>
@@ -977,12 +1076,12 @@ export function GraphView({ projectId }: GraphViewProps) {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-popover border border-border">
-                  <SelectItem value="supports">Supports</SelectItem>
-                  <SelectItem value="contradicts">Contradicts</SelectItem>
-                  <SelectItem value="relates_to">Relates To</SelectItem>
-                  <SelectItem value="builds_on">Builds On</SelectItem>
-                  <SelectItem value="questions">Questions</SelectItem>
+                <SelectContent className="bg-popover border border-border z-50">
+                  <SelectItem value="supports" className="bg-popover hover:bg-accent">Supports</SelectItem>
+                  <SelectItem value="contradicts" className="bg-popover hover:bg-accent">Contradicts</SelectItem>
+                  <SelectItem value="relates_to" className="bg-popover hover:bg-accent">Relates To</SelectItem>
+                  <SelectItem value="builds_on" className="bg-popover hover:bg-accent">Builds On</SelectItem>
+                  <SelectItem value="questions" className="bg-popover hover:bg-accent">Questions</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1003,6 +1102,204 @@ export function GraphView({ projectId }: GraphViewProps) {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Multi-select Add Insight Button */}
+      {multiSelectedConcepts.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <Button 
+            onClick={() => {
+              setSelectedConcepts(multiSelectedConcepts);
+              setInsightDialogOpen(true);
+              setMultiSelectedConcepts([]);
+            }}
+            className="shadow-lg"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Insight ({multiSelectedConcepts.length} concepts)
+          </Button>
+        </div>
+      )}
+
+      {/* Node Detail Modal */}
+      <Dialog open={nodeDetailOpen} onOpenChange={setNodeDetailOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedNodeDetail?.type === 'notebook' && <BookOpen className="h-5 w-5 text-orange-600" />}
+              {selectedNodeDetail?.type === 'source' && <Link className="h-5 w-5 text-teal-600" />}
+              {selectedNodeDetail?.type === 'concept' && <Lightbulb className="h-5 w-5 text-blue-600" />}
+              {selectedNodeDetail?.type === 'hypothesis' && <Target className="h-5 w-5 text-purple-600" />}
+              {selectedNodeDetail?.type === 'insight' && <Brain className="h-5 w-5 text-indigo-600" />}
+              {selectedNodeDetail?.title || 'Node Details'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedNodeDetail && (
+            <div className="space-y-4">
+              {/* Notebook Details */}
+              {selectedNodeDetail.type === 'notebook' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Upload Count
+                      </Label>
+                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.upload_count || 0}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <Database className="h-4 w-4" />
+                        Notebook ID
+                      </Label>
+                      <p className="text-xs bg-muted p-2 rounded font-mono">{selectedNodeDetail.notebook_id}</p>
+                    </div>
+                  </div>
+                  {selectedNodeDetail.briefing && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Briefing</Label>
+                      <p className="text-sm bg-muted p-3 rounded leading-relaxed">{selectedNodeDetail.briefing}</p>
+                    </div>
+                  )}
+                  
+                  {/* Connected Sources */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Connected Sources</Label>
+                    <div className="space-y-1">
+                      {nodes.filter(n => n.type === 'source' && n.data.notebook_id === selectedNodeDetail.notebook_id).map(source => (
+                        <div key={source.id} className="text-xs bg-teal-50 p-2 rounded border border-teal-200">
+                          {source.data.title} ({source.data.file_type})
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Source Details */}
+              {selectedNodeDetail.type === 'source' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">File Type</Label>
+                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_type || 'Unknown'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">File Size</Label>
+                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.file_size || 'Unknown'}</p>
+                    </div>
+                  </div>
+                  {selectedNodeDetail.source_url && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Source URL</Label>
+                      <p className="text-xs bg-muted p-2 rounded font-mono break-all">{selectedNodeDetail.source_url}</p>
+                    </div>
+                  )}
+                  
+                  {/* Connected Concepts */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Connected Concepts</Label>
+                    <div className="space-y-1">
+                      {nodes.filter(n => 
+                        ['concept', 'hypothesis', 'gap', 'discrepancy', 'publication'].includes(n.type || '') &&
+                        n.data.concept_source && selectedNodeDetail.title &&
+                        (n.data.concept_source.includes(selectedNodeDetail.title) || selectedNodeDetail.title.includes(n.data.concept_source))
+                      ).map(concept => (
+                        <div key={concept.id} className="text-xs bg-blue-50 p-2 rounded border border-blue-200">
+                          {concept.data.title} ({concept.type})
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Concept Details */}
+              {(selectedNodeDetail.type === 'concept' || selectedNodeDetail.type === 'hypothesis') && (
+                <div className="space-y-3">
+                  {selectedNodeDetail.content && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Content</Label>
+                      <p className="text-sm bg-muted p-3 rounded leading-relaxed">{selectedNodeDetail.content}</p>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedNodeDetail.confidence_score && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Confidence Score</Label>
+                        <p className="text-sm bg-muted p-2 rounded">{Math.round(selectedNodeDetail.confidence_score * 100)}%</p>
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Extraction Method</Label>
+                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.extraction_method || 'manual'}</p>
+                    </div>
+                  </div>
+                  
+                  {selectedNodeDetail.concept_source && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Source</Label>
+                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.concept_source}</p>
+                    </div>
+                  )}
+                  
+                  {/* Network Connections */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Network Connections</Label>
+                    <div className="space-y-1">
+                      {edges.filter(e => e.source === selectedNodeDetail.id || e.target === selectedNodeDetail.id).map(edge => {
+                        const otherNodeId = edge.source === selectedNodeDetail.id ? edge.target : edge.source;
+                        const otherNode = nodes.find(n => n.id === otherNodeId);
+                        const isOutgoing = edge.source === selectedNodeDetail.id;
+                        return (
+                          <div key={edge.id} className="text-xs bg-gray-50 p-2 rounded border">
+                            {isOutgoing ? '→' : '←'} {otherNode?.data.title} ({edge.data?.edge_type})
+                            {edge.label && <span className="text-muted-foreground ml-2">- {edge.label}</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Insight Details */}
+              {selectedNodeDetail.type === 'insight' && (
+                <div className="space-y-3">
+                  {selectedNodeDetail.details && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Details</Label>
+                      <p className="text-sm bg-muted p-3 rounded leading-relaxed">{selectedNodeDetail.details}</p>
+                    </div>
+                  )}
+                  
+                  {/* Contributing Concepts */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Contributing Concepts</Label>
+                    <div className="space-y-1">
+                      {edges.filter(e => e.target === selectedNodeDetail.id).map(edge => {
+                        const sourceNode = nodes.find(n => n.id === edge.source);
+                        return sourceNode ? (
+                          <div key={edge.id} className="text-xs bg-blue-50 p-2 rounded border border-blue-200">
+                            {sourceNode.data.title} ({sourceNode.type})
+                          </div>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => setNodeDetailOpen(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
