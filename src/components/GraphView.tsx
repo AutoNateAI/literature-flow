@@ -821,10 +821,10 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
   const highlightedEdges = useMemo(() => {
     return processedEdges.map(edge => ({
       ...edge,
+      className: highlightedPaths.has(edge.id) ? 'neo-path-edge' : '',
       style: {
         ...edge.style,
         opacity: highlightedPaths.size > 0 ? (highlightedPaths.has(edge.id) ? 1 : 0.2) : 1,
-        strokeWidth: highlightedPaths.has(edge.id) ? 4 : edge.style?.strokeWidth || 2
       }
     }));
   }, [processedEdges, highlightedPaths]);

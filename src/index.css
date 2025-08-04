@@ -224,6 +224,36 @@ All colors MUST be HSL.
     }
   }
 
+  /* Neo-style path highlighting for edges */
+  @keyframes neoGlow {
+    0%, 100% {
+      stroke: hsl(var(--accent));
+      stroke-width: 3;
+      filter: drop-shadow(0 0 8px hsl(var(--accent))) drop-shadow(0 0 16px hsl(var(--accent)));
+    }
+    50% {
+      stroke: hsl(var(--accent-glow));
+      stroke-width: 4;
+      filter: drop-shadow(0 0 12px hsl(var(--accent-glow))) drop-shadow(0 0 24px hsl(var(--accent-glow)));
+    }
+  }
+
+  @keyframes neoDash {
+    0% {
+      stroke-dashoffset: 0;
+    }
+    100% {
+      stroke-dashoffset: -20;
+    }
+  }
+
+  /* Class for highlighted path edges */
+  .neo-path-edge {
+    stroke-dasharray: 8, 4 !important;
+    animation: neoGlow 2s ease-in-out infinite, neoDash 1s linear infinite !important;
+    opacity: 1 !important;
+  }
+
   /* Path highlighting for insight tracing */
   .path-highlighted {
     opacity: 1 !important;
