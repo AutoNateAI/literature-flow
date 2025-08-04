@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { ConceptExtractor } from "@/components/ConceptExtractor";
 import { 
   BookOpen, 
   ExternalLink, 
@@ -19,7 +21,10 @@ import {
   TrendingUp,
   CheckCircle,
   XCircle,
-  Minus
+  Minus,
+  Lightbulb,
+  AlertTriangle,
+  Target
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +69,8 @@ export function NotebookManager({ projectId }: NotebookManagerProps) {
   const [selectedNotebook, setSelectedNotebook] = useState<string | null>(null);
   const [passages, setPassages] = useState<Passage[]>([]);
   const [claims, setClaims] = useState<Claim[]>([]);
+  const [insights, setInsights] = useState<any[]>([]);
+  const [showInsightModal, setShowInsightModal] = useState(false);
   const [editingNotebook, setEditingNotebook] = useState<string | null>(null);
   const [editData, setEditData] = useState({ title: '', briefing: '' });
   const [newPassage, setNewPassage] = useState({
@@ -135,6 +142,38 @@ export function NotebookManager({ projectId }: NotebookManagerProps) {
       setClaims(data || []);
     } catch (error) {
       console.error("Error fetching claims:", error);
+    }
+  };
+
+  const fetchInsights = async () => {
+    if (!user) return;
+
+    try {
+      // Get insights with their connected concepts
+      const { data: insightsData, error: insightsError } = await supabase
+        .from('graph_nodes')
+        .select(`
+          *,
+          source_edges:graph_edges!target_node_id(
+            source_node:graph_nodes!source_node_id(*)
+          )
+        `)
+        .eq('project_id', projectId)
+        .eq('user_id', user.id)
+        .eq('node_type', 'insight')
+        .order('created_at', { ascending: false });
+
+      if (insightsError) throw insightsError;
+
+      // Format the data to include concepts
+      const formattedInsights = (insightsData || []).map(insight => ({
+        ...insight,
+        concepts: insight.source_edges?.map(edge => edge.source_node).filter(Boolean) || []
+      }));
+
+      setInsights(formattedInsights);
+    } catch (error) {
+      console.error("Error fetching insights:", error);
     }
   };
 
@@ -247,6 +286,7 @@ export function NotebookManager({ projectId }: NotebookManagerProps) {
   useEffect(() => {
     fetchNotebooks();
     fetchClaims();
+    fetchInsights();
   }, [projectId, user]);
 
   useEffect(() => {
@@ -564,23 +604,65 @@ export function NotebookManager({ projectId }: NotebookManagerProps) {
             </Card>
           </TabsContent>
 
-          <TabsContent value="insights">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Auto-Generated Insights
-                </CardTitle>
-                <CardDescription>
-                  Summary insights generated from NotebookLM analysis
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-center py-8">
-                  Insights will be automatically generated from your NotebookLM analysis and displayed here.
-                </p>
-              </CardContent>
-            </Card>
+          <TabsContent value="insights" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Project Insights</h3>
+              <Dialog open={showInsightModal} onOpenChange={setShowInsightModal}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Insight
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                  <ConceptExtractor projectId={projectId} />
+                </DialogContent>
+              </Dialog>
+            </div>
+            
+            <div className="space-y-4">
+              {insights.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-muted-foreground text-center py-8">
+                      No insights created yet. Create insights by connecting concepts from your research graph.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                insights.map((insight) => (
+                  <Card key={insight.id}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5" />
+                        {insight.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p>{insight.content}</p>
+                      {insight.concepts && insight.concepts.length > 0 && (
+                        <div>
+                          <Label className="text-sm font-medium">Supporting Concepts:</Label>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {insight.concepts.map((concept) => (
+                              <Badge key={concept.id} variant="secondary" className="flex items-center gap-1">
+                                {concept.node_type === 'concept' && <Lightbulb className="h-3 w-3" />}
+                                {concept.node_type === 'gap' && <AlertTriangle className="h-3 w-3" />}
+                                {concept.node_type === 'hypothesis' && <Target className="h-3 w-3" />}
+                                {concept.title}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div className="text-xs text-muted-foreground">
+                        Created: {new Date(insight.created_at).toLocaleDateString()}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       )}
