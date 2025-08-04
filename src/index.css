@@ -227,27 +227,32 @@ All colors MUST be HSL.
   /* Path highlighting for insight tracing */
   .path-highlighted {
     opacity: 1 !important;
-    filter: brightness(1.4) drop-shadow(0 0 20px currentColor) drop-shadow(0 0 40px currentColor);
-    transform: scale(1.1);
-    transition: all 0.3s ease;
-    z-index: 1000;
-    animation: pathPulse 2s ease-in-out infinite;
+    filter: brightness(2) saturate(1.5) drop-shadow(0 0 30px currentColor) drop-shadow(0 0 60px currentColor) drop-shadow(0 0 90px currentColor);
+    transform: scale(1.15);
+    transition: all 0.4s ease;
+    z-index: 1000 !important;
+    animation: pathPulse 1.5s ease-in-out infinite;
+    border: 3px solid currentColor !important;
+    box-shadow: 0 0 40px currentColor, inset 0 0 20px rgba(255, 255, 255, 0.2);
   }
 
   .path-not-highlighted {
-    opacity: 0.08 !important;
-    filter: grayscale(1) blur(1px);
-    transition: all 0.3s ease;
+    opacity: 0.02 !important;
+    filter: grayscale(1) blur(2px) brightness(0.3);
+    transform: scale(0.95);
+    transition: all 0.4s ease;
   }
 
   @keyframes pathPulse {
     0%, 100% { 
-      filter: brightness(1.4) drop-shadow(0 0 20px currentColor) drop-shadow(0 0 40px currentColor);
-      transform: scale(1.1);
+      filter: brightness(2) saturate(1.5) drop-shadow(0 0 30px currentColor) drop-shadow(0 0 60px currentColor) drop-shadow(0 0 90px currentColor);
+      transform: scale(1.15);
+      box-shadow: 0 0 40px currentColor, inset 0 0 20px rgba(255, 255, 255, 0.2);
     }
     50% { 
-      filter: brightness(1.6) drop-shadow(0 0 30px currentColor) drop-shadow(0 0 60px currentColor);
-      transform: scale(1.12);
+      filter: brightness(2.5) saturate(2) drop-shadow(0 0 50px currentColor) drop-shadow(0 0 100px currentColor) drop-shadow(0 0 150px currentColor);
+      transform: scale(1.2);
+      box-shadow: 0 0 80px currentColor, inset 0 0 40px rgba(255, 255, 255, 0.4);
     }
   }
 }
