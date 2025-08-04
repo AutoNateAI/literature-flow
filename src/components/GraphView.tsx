@@ -828,7 +828,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
   const nodeStats = getNodeStats();
 
   return (
-    <div className="h-full space-y-4">
+    <div className="h-full relative">
       {/* Header & Stats */}
       <Card>
         <CardHeader>
@@ -1189,7 +1189,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       </Card>
 
       {/* React Flow Graph */}
-      <div className="h-[700px] border rounded-lg bg-background">
+      <div className="h-full border rounded-lg bg-background">
         <ReactFlow
           nodes={nodes}
           edges={edges}
