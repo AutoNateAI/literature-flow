@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardContent } from "@/components/DashboardContent";
 import { PromptLibrary } from "@/components/PromptLibrary";
@@ -72,6 +72,11 @@ const Dashboard = () => {
           isMobile={isMobile}
         />
         <main ref={mainRef} className={`flex-1 overflow-auto ${isMobile ? 'p-4' : 'p-6'}`}>
+          {isMobile && (
+            <div className="mb-4">
+              <SidebarTrigger />
+            </div>
+          )}
           {renderContent()}
         </main>
       </div>
