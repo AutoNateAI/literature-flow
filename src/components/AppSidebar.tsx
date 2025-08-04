@@ -34,8 +34,8 @@ const menuItems = [
 ];
 
 export function AppSidebar({ currentView, onNavigate, graphControls, isMobile = false }: AppSidebarProps) {
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed" || isMobile;
+  const { state, setOpenMobile } = useSidebar();
+  const collapsed = state === "collapsed" && !isMobile;
 
   return (
     <Sidebar 
@@ -63,7 +63,12 @@ export function AppSidebar({ currentView, onNavigate, graphControls, isMobile = 
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
-                    onClick={() => onNavigate(item.id)}
+                    onClick={() => {
+                      onNavigate(item.id);
+                      if (isMobile) {
+                        setOpenMobile(false);
+                      }
+                    }}
                     className={`glass-button w-full justify-start gap-3 py-3 ${
                       currentView === item.id 
                         ? "bg-primary/20 text-primary border-primary/30 glow-effect" 
