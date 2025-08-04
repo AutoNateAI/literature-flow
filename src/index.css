@@ -223,4 +223,31 @@ All colors MUST be HSL.
       filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.9));
     }
   }
+
+  /* Path highlighting for insight tracing */
+  .path-highlighted {
+    opacity: 1 !important;
+    filter: brightness(1.4) drop-shadow(0 0 20px currentColor) drop-shadow(0 0 40px currentColor);
+    transform: scale(1.1);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    animation: pathPulse 2s ease-in-out infinite;
+  }
+
+  .path-not-highlighted {
+    opacity: 0.08 !important;
+    filter: grayscale(1) blur(1px);
+    transition: all 0.3s ease;
+  }
+
+  @keyframes pathPulse {
+    0%, 100% { 
+      filter: brightness(1.4) drop-shadow(0 0 20px currentColor) drop-shadow(0 0 40px currentColor);
+      transform: scale(1.1);
+    }
+    50% { 
+      filter: brightness(1.6) drop-shadow(0 0 30px currentColor) drop-shadow(0 0 60px currentColor);
+      transform: scale(1.12);
+    }
+  }
 }

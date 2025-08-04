@@ -502,6 +502,92 @@ const NotebookToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourceP
   );
 };
 
+const NotebookToSourceEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  return (
+    <>
+      <defs>
+        <linearGradient id={`notebook-source-gradient-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#F97316" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#EA580C" stopOpacity="1" />
+        </linearGradient>
+        <marker
+          id={`notebook-source-arrow-${id}`}
+          markerWidth="12"
+          markerHeight="8"
+          refX="10"
+          refY="4"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <polygon points="0,0 0,8 10,4" fill="#EA580C" />
+        </marker>
+      </defs>
+      <BaseEdge
+        path={edgePath}
+        style={{
+          stroke: `url(#notebook-source-gradient-${id})`,
+          strokeWidth: 2.5,
+          animation: 'flow 2s linear infinite',
+          strokeDasharray: '10,5',
+        }}
+        markerEnd={`url(#notebook-source-arrow-${id})`}
+      />
+    </>
+  );
+};
+
+const SourceToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  return (
+    <>
+      <defs>
+        <linearGradient id={`source-concept-gradient-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#0891B2" stopOpacity="1" />
+        </linearGradient>
+        <marker
+          id={`source-concept-arrow-${id}`}
+          markerWidth="12"
+          markerHeight="8"
+          refX="10"
+          refY="4"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <polygon points="0,0 0,8 10,4" fill="#0891B2" />
+        </marker>
+      </defs>
+      <BaseEdge
+        path={edgePath}
+        style={{
+          stroke: `url(#source-concept-gradient-${id})`,
+          strokeWidth: 3,
+          animation: 'shimmer 1.8s linear infinite',
+          strokeDasharray: '8,4',
+        }}
+        markerEnd={`url(#source-concept-arrow-${id})`}
+      />
+    </>
+  );
+};
+
 const ProjectToNotebookEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }: any) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -620,6 +706,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     conceptToInsight: ConceptToInsightEdge,
     conceptToHypothesis: ConceptToHypothesisEdge,
     notebookToConcept: NotebookToConceptEdge,
+    notebookToSource: NotebookToSourceEdge,
+    sourceToConcept: SourceToConceptEdge,
     projectToNotebook: ProjectToNotebookEdge,
   }), []);
 
