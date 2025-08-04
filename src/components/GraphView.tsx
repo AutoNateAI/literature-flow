@@ -21,10 +21,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info } from "lucide-react";
+import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain } from "lucide-react";
 
 interface GraphViewProps {
   projectId: string;
@@ -180,6 +181,27 @@ const SourceNode = ({ data }: { data: any }) => (
   </div>
 );
 
+const InsightNode = ({ data }: { data: any }) => (
+  <div className="px-4 py-3 shadow-lg rounded-lg bg-gradient-to-br from-indigo-100 to-indigo-200 border-3 border-indigo-300 min-w-[180px] max-w-[280px]">
+    <Handle type="target" position={Position.Top} />
+    <div className="flex items-start gap-2">
+      <Brain className="h-5 w-5 text-indigo-700 mt-0.5 flex-shrink-0" />
+      <div className="flex-1">
+        <div className="font-bold text-sm text-indigo-900">{data.title}</div>
+        {data.details && (
+          <div className="text-xs text-indigo-700 mt-1 leading-relaxed">
+            {data.details.length > 80 ? `${data.details.substring(0, 80)}...` : data.details}
+          </div>
+        )}
+        <Badge variant="outline" className="text-xs mt-2 border-indigo-300 text-indigo-700">
+          Insight
+        </Badge>
+      </div>
+    </div>
+    <Handle type="source" position={Position.Bottom} />
+  </div>
+);
+
 const nodeTypes = {
   hypothesis: HypothesisNode,
   concept: ConceptNode,
@@ -188,6 +210,7 @@ const nodeTypes = {
   publication: PublicationNode,
   notebook: NotebookNode,
   source: SourceNode,
+  insight: InsightNode,
 };
 
 export function GraphView({ projectId }: GraphViewProps) {
@@ -197,6 +220,11 @@ export function GraphView({ projectId }: GraphViewProps) {
   const [edgeDialogOpen, setEdgeDialogOpen] = useState(false);
   const [edgeAnnotation, setEdgeAnnotation] = useState("");
   const [edgeType, setEdgeType] = useState("supports");
+  const [layoutMode, setLayoutMode] = useState<'hierarchical' | 'spatial'>('hierarchical');
+  const [insightDialogOpen, setInsightDialogOpen] = useState(false);
+  const [insightTitle, setInsightTitle] = useState("");
+  const [insightDetails, setInsightDetails] = useState("");
+  const [selectedConcepts, setSelectedConcepts] = useState<string[]>([]);
   const { user } = useAuth();
 
   const onConnect = useCallback(
@@ -263,6 +291,136 @@ export function GraphView({ projectId }: GraphViewProps) {
     return colors[edgeType as keyof typeof colors] || "#6b7280";
   };
 
+  const getHierarchicalLayout = (nodes: any[], notebookData: any[], resourceData: any[], nodeData: any[]) => {
+    const layoutNodes: Node[] = [];
+    let currentY = 50;
+    
+    // Level 1: Notebooks (top level)
+    notebookData.forEach((notebook, index) => {
+      layoutNodes.push({
+        id: `notebook-${notebook.id}`,
+        type: 'notebook',
+        position: { x: 200 + (index * 350), y: currentY },
+        data: {
+          title: notebook.title,
+          briefing: notebook.briefing,
+          upload_count: notebook.upload_count,
+          notebook_id: notebook.id
+        }
+      });
+    });
+
+    currentY += 200;
+
+    // Level 2: Sources (connected to notebooks)
+    resourceData.forEach((resource, index) => {
+      const notebookIndex = notebookData.findIndex(n => n.id === resource.notebook_id);
+      const xPos = notebookIndex >= 0 ? 200 + (notebookIndex * 350) + (index % 2) * 150 : 200 + (index * 200);
+      
+      layoutNodes.push({
+        id: `source-${resource.id}`,
+        type: 'source',
+        position: { x: xPos, y: currentY },
+        data: {
+          title: resource.title,
+          file_type: resource.file_type,
+          file_size: resource.file_size,
+          source_url: resource.source_url,
+          notebook_id: resource.notebook_id
+        }
+      });
+    });
+
+    currentY += 200;
+
+    // Level 3: Concepts (connected to sources)
+    nodeData.forEach((node, index) => {
+      let xPos = 400 + (index * 200);
+      let yPos = currentY;
+
+      // Try to position near related sources
+      if (node.concept_source && typeof node.concept_source === 'object') {
+        const sources = Array.isArray(node.concept_source) ? node.concept_source : [node.concept_source];
+        const firstSource = sources[0];
+        if (firstSource?.resource_id) {
+          const sourceNode = layoutNodes.find(n => n.id === `source-${firstSource.resource_id}`);
+          if (sourceNode) {
+            xPos = sourceNode.position.x + (index % 3 - 1) * 100;
+            yPos = currentY + Math.floor(index / 3) * 120;
+          }
+        }
+      }
+
+      layoutNodes.push({
+        id: node.id,
+        type: node.node_type,
+        position: { x: xPos, y: yPos },
+        data: {
+          title: node.title,
+          content: node.content,
+          confidence_score: node.confidence_score,
+          concept_source: node.concept_source,
+          extraction_method: node.extraction_method
+        }
+      });
+    });
+
+    return layoutNodes;
+  };
+
+  const getSpatialLayout = (nodes: any[], notebookData: any[], resourceData: any[], nodeData: any[]) => {
+    const layoutNodes: Node[] = [];
+    
+    // Add notebooks with saved positions or default
+    notebookData.forEach((notebook, index) => {
+      layoutNodes.push({
+        id: `notebook-${notebook.id}`,
+        type: 'notebook',
+        position: { x: 100, y: 100 + (index * 200) },
+        data: {
+          title: notebook.title,
+          briefing: notebook.briefing,
+          upload_count: notebook.upload_count,
+          notebook_id: notebook.id
+        }
+      });
+    });
+
+    // Add sources with saved positions or default
+    resourceData.forEach((resource, index) => {
+      layoutNodes.push({
+        id: `source-${resource.id}`,
+        type: 'source',
+        position: { x: 300, y: 100 + (index * 150) },
+        data: {
+          title: resource.title,
+          file_type: resource.file_type,
+          file_size: resource.file_size,
+          source_url: resource.source_url,
+          notebook_id: resource.notebook_id
+        }
+      });
+    });
+
+    // Add concepts with saved positions or default
+    nodeData.forEach(node => {
+      layoutNodes.push({
+        id: node.id,
+        type: node.node_type,
+        position: { x: node.position_x || 400, y: node.position_y || 300 },
+        data: {
+          title: node.title,
+          content: node.content,
+          confidence_score: node.confidence_score,
+          concept_source: node.concept_source,
+          extraction_method: node.extraction_method
+        }
+      });
+    });
+
+    return layoutNodes;
+  };
+
   const loadGraphData = async () => {
     if (!user) return;
 
@@ -294,53 +452,10 @@ export function GraphView({ projectId }: GraphViewProps) {
 
       if (resourceError) throw resourceError;
 
-      // Convert to React Flow nodes
-      const flowNodes: Node[] = [];
-      
-      // Add concept nodes
-      nodeData.forEach(node => {
-        flowNodes.push({
-          id: node.id,
-          type: node.node_type,
-          position: { x: node.position_x || 400, y: node.position_y || 300 },
-          data: {
-            title: node.title,
-            content: node.content,
-            confidence_score: node.confidence_score,
-            concept_source: node.concept_source,
-            extraction_method: node.extraction_method
-          }
-        });
-      });
-
-      // Add notebook nodes
-      notebookData.forEach((notebook, index) => {
-        flowNodes.push({
-          id: `notebook-${notebook.id}`,
-          type: 'notebook',
-          position: { x: 100, y: 100 + (index * 200) },
-          data: {
-            title: notebook.title,
-            briefing: notebook.briefing,
-            upload_count: notebook.upload_count
-          }
-        });
-      });
-
-      // Add source nodes  
-      resourceData.forEach((resource, index) => {
-        flowNodes.push({
-          id: `source-${resource.id}`,
-          type: 'source',
-          position: { x: 300, y: 100 + (index * 150) },
-          data: {
-            title: resource.title,
-            file_type: resource.file_type,
-            file_size: resource.file_size,
-            source_url: resource.source_url
-          }
-        });
-      });
+      // Apply layout based on mode
+      const flowNodes = layoutMode === 'hierarchical' 
+        ? getHierarchicalLayout([], notebookData, resourceData, nodeData)
+        : getSpatialLayout([], notebookData, resourceData, nodeData);
 
       // Load edges
       const { data: edgeData, error: edgeError } = await supabase
@@ -365,12 +480,31 @@ export function GraphView({ projectId }: GraphViewProps) {
         data: { edge_type: edge.edge_type, annotation: edge.annotation }
       }));
 
+      // Add hierarchical connections between notebooks and sources
+      resourceData.forEach(resource => {
+        if (resource.notebook_id) {
+          flowEdges.push({
+            id: `notebook-source-${resource.notebook_id}-${resource.id}`,
+            source: `notebook-${resource.notebook_id}`,
+            target: `source-${resource.id}`,
+            type: 'smoothstep',
+            label: 'contains',
+            labelStyle: { fontSize: 10, fontWeight: 400 },
+            style: { 
+              stroke: '#f97316',
+              strokeWidth: 2,
+            },
+            data: { edge_type: 'contains', annotation: 'Notebook contains source' }
+          });
+        }
+      });
+
       // Add automatic connections from concepts to their supporting sources
       nodeData.forEach(node => {
         if (node.concept_source && typeof node.concept_source === 'object') {
           const sources = Array.isArray(node.concept_source) ? node.concept_source : [node.concept_source];
           sources.forEach((source: any, index: number) => {
-            // Connect to notebook
+            // Connect to notebook (indirect through source)
             if (source.notebook_id) {
               flowEdges.push({
                 id: `concept-notebook-${node.id}-${source.notebook_id}-${index}`,
@@ -388,7 +522,7 @@ export function GraphView({ projectId }: GraphViewProps) {
               });
             }
             
-            // Connect to resource
+            // Connect to resource (direct)
             if (source.resource_id) {
               flowEdges.push({
                 id: `concept-resource-${node.id}-${source.resource_id}-${index}`,
@@ -417,9 +551,62 @@ export function GraphView({ projectId }: GraphViewProps) {
     }
   };
 
+  const createInsight = async () => {
+    if (!user || !insightTitle || selectedConcepts.length === 0) return;
+
+    try {
+      const { data: insight, error } = await supabase
+        .from('graph_nodes')
+        .insert({
+          project_id: projectId,
+          user_id: user.id,
+          node_type: 'insight',
+          title: insightTitle,
+          content: insightDetails,
+          position_x: 500,
+          position_y: 600,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Create connections from selected concepts to the insight
+      const edgePromises = selectedConcepts.map(conceptId =>
+        supabase.from('graph_edges').insert({
+          project_id: projectId,
+          user_id: user.id,
+          source_node_id: conceptId,
+          target_node_id: insight.id,
+          edge_type: 'supports',
+          annotation: 'Contributes to insight',
+          strength: 1.0
+        })
+      );
+
+      await Promise.all(edgePromises);
+
+      setInsightDialogOpen(false);
+      setInsightTitle("");
+      setInsightDetails("");
+      setSelectedConcepts([]);
+      loadGraphData();
+      toast.success("Insight created!");
+    } catch (error) {
+      console.error('Error creating insight:', error);
+      toast.error("Failed to create insight");
+    }
+  };
+
+  const getConceptNodes = () => {
+    return nodes.filter(node => 
+      ['concept', 'hypothesis', 'gap', 'discrepancy', 'publication'].includes(node.type || '')
+    );
+  };
+
   useEffect(() => {
     loadGraphData();
-  }, [projectId, user]);
+  }, [projectId, user, layoutMode]);
 
   const getNodeStats = () => {
     const stats = nodes.reduce((acc, node) => {
@@ -444,7 +631,156 @@ export function GraphView({ projectId }: GraphViewProps) {
             Visual representation of your research insights extracted from NotebookLM analysis
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Layout Toggle & Add Insight Button */}
+          <div className="flex justify-between items-center">
+            <div className="flex gap-2">
+              <Button
+                variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setLayoutMode('hierarchical')}
+                className="flex items-center gap-2"
+              >
+                <GitBranch className="h-4 w-4" />
+                Hierarchical
+              </Button>
+              <Button
+                variant={layoutMode === 'spatial' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setLayoutMode('spatial')}
+                className="flex items-center gap-2"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Spatial
+              </Button>
+            </div>
+            <Dialog open={insightDialogOpen} onOpenChange={setInsightDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Insight
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Insight</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="insight-title">Title</Label>
+                    <Input
+                      id="insight-title"
+                      value={insightTitle}
+                      onChange={(e) => setInsightTitle(e.target.value)}
+                      placeholder="Enter insight title..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="insight-details">Details</Label>
+                    <Textarea
+                      id="insight-details"
+                      value={insightDetails}
+                      onChange={(e) => setInsightDetails(e.target.value)}
+                      placeholder="Describe your insight..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label>Connected Concepts</Label>
+                    <div className="border rounded-lg p-3 max-h-32 overflow-y-auto">
+                      {getConceptNodes().map(node => (
+                        <label key={node.id} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedConcepts.includes(node.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedConcepts([...selectedConcepts, node.id]);
+                              } else {
+                                setSelectedConcepts(selectedConcepts.filter(id => id !== node.id));
+                              }
+                            }}
+                          />
+                          <span className="text-sm">{node.data.title}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={createInsight}
+                      disabled={!insightTitle || selectedConcepts.length === 0}
+                    >
+                      Create Insight
+                    </Button>
+                    <Button variant="outline" onClick={() => setInsightDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Improved Legend */}
+          <div className="border rounded-lg p-4 bg-muted/5">
+            <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+              <Network className="h-4 w-4" />
+              Node Types
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
+                  <Target className="h-2 w-2 text-white" />
+                </div>
+                <span className="text-xs">Research Focus</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Lightbulb className="h-2 w-2 text-white" />
+                </div>
+                <span className="text-xs">Concept</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="h-2 w-2 text-white" />
+                </div>
+                <span className="text-xs">Research Gap</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="h-2 w-2 text-white" />
+                </div>
+                <span className="text-xs">Discrepancy</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <BookOpen className="h-2 w-2 text-white" />
+                </div>
+                <span className="text-xs">Publication</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                  <BookOpen className="h-2 w-2 text-white" />
+                </div>
+                <span className="text-xs">Notebook</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center">
+                  <Link className="h-2 w-2 text-white" />
+                </div>
+                <span className="text-xs">Source</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
+                  <Brain className="h-2 w-2 text-white" />
+                </div>
+                <span className="text-xs">Insight</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Node Statistics */}
           <div className="flex flex-wrap gap-2">
             {nodeStats.hypothesis && (
               <Badge variant="secondary" className="bg-purple-100 text-purple-800">
@@ -479,6 +815,11 @@ export function GraphView({ projectId }: GraphViewProps) {
             {nodeStats.source && (
               <Badge variant="secondary" className="bg-teal-100 text-teal-800">
                 {nodeStats.source} Source{nodeStats.source > 1 ? 's' : ''}
+              </Badge>
+            )}
+            {nodeStats.insight && (
+              <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">
+                {nodeStats.insight} Insight{nodeStats.insight > 1 ? 's' : ''}
               </Badge>
             )}
             <Badge variant="outline">
@@ -522,12 +863,18 @@ export function GraphView({ projectId }: GraphViewProps) {
                 discrepancy: '#ef4444',
                 publication: '#10b981',
                 notebook: '#f97316',
-                source: '#14b8a6'
+                source: '#14b8a6',
+                insight: '#6366f1'
               };
               return colors[node.type as keyof typeof colors] || '#6b7280';
             }}
-            maskColor="hsl(var(--accent) / 0.1)"
-            style={{ backgroundColor: 'hsl(var(--background))' }}
+            maskColor="hsl(var(--muted) / 0.3)"
+            style={{ 
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))'
+            }}
+            pannable
+            zoomable
           />
           <Background gap={20} size={1} color="hsl(var(--border))" />
         </ReactFlow>
