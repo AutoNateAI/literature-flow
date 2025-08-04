@@ -1474,4 +1474,3 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     </div>
   );
 }
-}
