@@ -1487,17 +1487,53 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Connected Concepts</Label>
                     <div className="space-y-1">
-                      {nodes.filter(n => 
-                        ['concept', 'hypothesis', 'gap', 'discrepancy', 'publication'].includes(n.type || '') &&
-                        n.data.concept_source && selectedNodeDetail.title &&
-                        (n.data.concept_source.includes(selectedNodeDetail.title) || selectedNodeDetail.title.includes(n.data.concept_source))
-                      ).map(concept => (
-                        <div key={concept.id} className="text-xs bg-blue-50 p-2 rounded border border-blue-200">
-                          {concept.data.title} ({concept.type})
+                      {edges.filter(e => 
+                        (e.source === selectedNodeDetail.id || e.target === selectedNodeDetail.id) &&
+                        ['concept', 'hypothesis', 'gap', 'discrepancy', 'publication', 'insight'].includes(
+                          e.source === selectedNodeDetail.id ? 
+                            nodes.find(n => n.id === e.target)?.type || '' : 
+                            nodes.find(n => n.id === e.source)?.type || ''
+                        )
+                      ).map(edge => {
+                        const otherNodeId = edge.source === selectedNodeDetail.id ? edge.target : edge.source;
+                        const otherNode = nodes.find(n => n.id === otherNodeId);
+                        return otherNode ? (
+                          <div key={edge.id} className="text-xs bg-blue-50 p-2 rounded border border-blue-200">
+                            <div className="font-medium">{otherNode.data.title}</div>
+                            <div className="text-muted-foreground">Type: {otherNode.type} | Relation: {edge.data?.edge_type || 'connected'}</div>
+                          </div>
+                        ) : null;
+                      })}
+                      {edges.filter(e => 
+                        (e.source === selectedNodeDetail.id || e.target === selectedNodeDetail.id) &&
+                        ['concept', 'hypothesis', 'gap', 'discrepancy', 'publication', 'insight'].includes(
+                          e.source === selectedNodeDetail.id ? 
+                            nodes.find(n => n.id === e.target)?.type || '' : 
+                            nodes.find(n => n.id === e.source)?.type || ''
+                        )
+                      ).length === 0 && (
+                        <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+                          No connected concepts found
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
+                  
+                  {/* Resource Details */}
+                  {selectedNodeDetail.type === 'source' && (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">File Type</Label>
+                          <p className="text-xs bg-muted p-2 rounded">{selectedNodeDetail.file_type || 'Unknown'}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">File Size</Label>
+                          <p className="text-xs bg-muted p-2 rounded">{selectedNodeDetail.file_size || 'Unknown'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1530,24 +1566,6 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                       <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.concept_source}</p>
                     </div>
                   )}
-                  
-                  {/* Network Connections */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Network Connections</Label>
-                    <div className="space-y-1">
-                      {edges.filter(e => e.source === selectedNodeDetail.id || e.target === selectedNodeDetail.id).map(edge => {
-                        const otherNodeId = edge.source === selectedNodeDetail.id ? edge.target : edge.source;
-                        const otherNode = nodes.find(n => n.id === otherNodeId);
-                        const isOutgoing = edge.source === selectedNodeDetail.id;
-                        return (
-                          <div key={edge.id} className="text-xs bg-gray-50 p-2 rounded border">
-                            {isOutgoing ? '→' : '←'} {otherNode?.data.title} ({edge.data?.edge_type})
-                            {edge.label && <span className="text-muted-foreground ml-2">- {edge.label}</span>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
                 </div>
               )}
 
