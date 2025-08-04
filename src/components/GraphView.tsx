@@ -446,8 +446,38 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
           .eq('project_id', projectId)
           .eq('user_id', user.id);
 
-        if (nodesData) setNodes(nodesData);
-        if (edgesData) setEdges(edgesData);
+        // Transform nodes to ReactFlow format
+        if (nodesData) {
+          const transformedNodes = nodesData.map(node => ({
+            id: node.id,
+            type: node.node_type,
+            position: { 
+              x: node.position_x || Math.random() * 500, 
+              y: node.position_y || Math.random() * 500 
+            },
+            data: {
+              id: node.id,
+              title: node.title,
+              details: node.details,
+              ...node
+            }
+          }));
+          setNodes(transformedNodes);
+        }
+
+        // Transform edges to ReactFlow format  
+        if (edgesData) {
+          const transformedEdges = edgesData.map(edge => ({
+            id: edge.id,
+            source: edge.source_node_id,
+            target: edge.target_node_id,
+            type: 'smoothstep',
+            style: { strokeWidth: 2, stroke: '#10b981' },
+            label: edge.edge_type,
+            data: edge
+          }));
+          setEdges(transformedEdges);
+        }
       } catch (error) {
         console.error('Error loading graph data:', error);
       }
