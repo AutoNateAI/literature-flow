@@ -1552,12 +1552,32 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                     </div>
                   </div>
                   
-                  {selectedNodeDetail.concept_source && (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Source</Label>
-                      <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.concept_source}</p>
-                    </div>
-                  )}
+                  {/* Find connected source node */}
+                  {(() => {
+                    const connectedSourceEdge = edges.find(e => {
+                      const nodeId = selectedNodeDetail.id;
+                      const isConnected = e.source === nodeId || e.target === nodeId;
+                      const otherNodeId = e.source === nodeId ? e.target : e.source;
+                      const otherNode = nodes.find(n => n.id === otherNodeId);
+                      return isConnected && otherNode?.type === 'source';
+                    });
+                    
+                    const sourceNode = connectedSourceEdge ? nodes.find(n => 
+                      n.id === (connectedSourceEdge.source === selectedNodeDetail.id ? connectedSourceEdge.target : connectedSourceEdge.source)
+                    ) : null;
+                    
+                    return sourceNode ? (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Source</Label>
+                        <p className="text-sm bg-muted p-2 rounded">{sourceNode.data.title}</p>
+                      </div>
+                    ) : selectedNodeDetail.concept_source ? (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Source</Label>
+                        <p className="text-sm bg-muted p-2 rounded">{selectedNodeDetail.concept_source}</p>
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
               )}
 
