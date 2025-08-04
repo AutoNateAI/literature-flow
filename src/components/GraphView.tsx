@@ -357,30 +357,18 @@ const ConceptToConceptEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePo
     <>
       <defs>
         <linearGradient id={`concept-gradient-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#1D4ED8" stopOpacity="1" />
+          <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#EC4899" stopOpacity="1" />
         </linearGradient>
-        <marker
-          id={`concept-arrow-${id}`}
-          markerWidth="12"
-          markerHeight="8"
-          refX="10"
-          refY="4"
-          orient="auto"
-          markerUnits="strokeWidth"
-        >
-          <polygon points="0,0 0,8 10,4" fill="#1D4ED8" />
-        </marker>
       </defs>
       <BaseEdge
         path={edgePath}
         style={{
           stroke: `url(#concept-gradient-${id})`,
           strokeWidth: 3,
-          animation: 'dash 2s linear infinite',
           strokeDasharray: '8,4',
+          animation: 'dash 2s linear infinite',
         }}
-        markerEnd={`url(#concept-arrow-${id})`}
       />
     </>
   );
@@ -596,6 +584,11 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
   // Fixed multi-select state and behavior
   const [multiSelectedConcepts, setMultiSelectedConcepts] = useState<string[]>([]);
   const [multiSelectActive, setMultiSelectActive] = useState(false);
+  
+  // Path highlighting for insights
+  const [selectedInsights, setSelectedInsights] = useState<Set<string>>(new Set());
+  const [highlightedPaths, setHighlightedPaths] = useState<Set<string>>(new Set());
+  const [showPathModal, setShowPathModal] = useState(false);
 
   // Effect to track multi-select state
   useEffect(() => {
@@ -638,6 +631,108 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       animated: true,
     })), [edges, nodes]
   );
+
+  // Function to find all paths from insight to root
+  const findPathsToRoot = useCallback((insightId: string) => {
+    const paths: string[][] = [];
+    const visited = new Set<string>();
+    
+    const dfs = (nodeId: string, currentPath: string[]) => {
+      if (visited.has(nodeId)) return;
+      visited.add(nodeId);
+      
+      const newPath = [...currentPath, nodeId];
+      const node = nodes.find(n => n.id === nodeId);
+      
+      if (!node) return;
+      
+      // If this is a project node (root), we found a complete path
+      if (node.type === 'project') {
+        paths.push(newPath);
+        return;
+      }
+      
+      // Find parent edges (edges where this node is the target)
+      const parentEdges = edges.filter(edge => edge.target === nodeId);
+      
+      if (parentEdges.length === 0) {
+        // No parents found, this might be an orphaned node
+        paths.push(newPath);
+        return;
+      }
+      
+      // Recursively explore parent nodes
+      parentEdges.forEach(edge => {
+        dfs(edge.source, newPath);
+      });
+    };
+    
+    dfs(insightId, []);
+    return paths;
+  }, [nodes, edges]);
+
+  // Handle Ctrl+click on insight nodes
+  const handleNodeClick = useCallback((event: React.MouseEvent, node: any) => {
+    if (event.ctrlKey && node.type === 'insight') {
+      setSelectedInsights(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(node.id)) {
+          newSet.delete(node.id);
+        } else {
+          newSet.add(node.id);
+        }
+        
+        // Update highlighted paths
+        const allPaths = new Set<string>();
+        newSet.forEach(insightId => {
+          const paths = findPathsToRoot(insightId);
+          paths.forEach(path => {
+            // Add all nodes and edges in the path to highlighted set
+            for (let i = 0; i < path.length; i++) {
+              allPaths.add(path[i]);
+              if (i > 0) {
+                // Find edge between path[i-1] and path[i]
+                const edge = edges.find(e => 
+                  (e.source === path[i-1] && e.target === path[i]) ||
+                  (e.source === path[i] && e.target === path[i-1])
+                );
+                if (edge) allPaths.add(edge.id);
+              }
+            }
+          });
+        });
+        
+        setHighlightedPaths(allPaths);
+        setShowPathModal(newSet.size > 0);
+        
+        return newSet;
+      });
+    }
+  }, [findPathsToRoot, edges]);
+
+  // Update nodes with highlighting
+  const highlightedNodes = useMemo(() => {
+    return nodes.map(node => ({
+      ...node,
+      style: {
+        ...node.style,
+        opacity: highlightedPaths.size > 0 ? (highlightedPaths.has(node.id) ? 1 : 0.3) : 1,
+        filter: highlightedPaths.has(node.id) ? 'drop-shadow(0 0 10px #8B5CF6)' : 'none'
+      }
+    }));
+  }, [nodes, highlightedPaths]);
+
+  // Update edges with highlighting
+  const highlightedEdges = useMemo(() => {
+    return processedEdges.map(edge => ({
+      ...edge,
+      style: {
+        ...edge.style,
+        opacity: highlightedPaths.size > 0 ? (highlightedPaths.has(edge.id) ? 1 : 0.2) : 1,
+        strokeWidth: highlightedPaths.has(edge.id) ? 4 : edge.style?.strokeWidth || 2
+      }
+    }));
+  }, [processedEdges, highlightedPaths]);
 
   // Preserve layout mode and node positions
   useEffect(() => {
@@ -1719,13 +1814,14 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       </Card>
 
       {/* React Flow Graph */}
-      <div className="h-full border rounded-lg bg-background">
+      <div className="h-full border rounded-lg bg-background relative">
         <ReactFlow
-          nodes={nodes}
-          edges={processedEdges}
+          nodes={highlightedNodes}
+          edges={highlightedEdges}
           onNodesChange={onNodesChangeWithSave}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onNodeClick={handleNodeClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
@@ -1763,6 +1859,79 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
           />
           <Background gap={20} size={1} color="hsl(var(--border))" />
         </ReactFlow>
+
+        {/* Path Analysis Modal */}
+        {showPathModal && (
+          <div className="absolute top-4 right-4 w-80 bg-card border border-border rounded-lg shadow-lg z-10 max-h-96 overflow-hidden">
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-foreground">Insight Paths Analysis</h3>
+                <button
+                  onClick={() => {
+                    setShowPathModal(false);
+                    setSelectedInsights(new Set());
+                    setHighlightedPaths(new Set());
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {selectedInsights.size} insight{selectedInsights.size !== 1 ? 's' : ''} selected
+              </p>
+            </div>
+            
+            <div className="overflow-y-auto max-h-80">
+              {Array.from(selectedInsights).map(insightId => {
+                const insightNode = nodes.find(n => n.id === insightId);
+                const paths = findPathsToRoot(insightId);
+                
+                return (
+                  <div key={insightId} className="p-4 border-b border-border/50">
+                    <div className="font-medium text-sm text-foreground mb-2">
+                      💡 {insightNode?.data.title || insightNode?.data.content || 'Insight'}
+                    </div>
+                    
+                    {paths.map((path, pathIndex) => (
+                      <div key={pathIndex} className="ml-4 mb-2">
+                        <div className="text-xs text-muted-foreground mb-1">
+                          Path {pathIndex + 1} ({path.length} nodes):
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {path.reverse().map((nodeId, nodeIndex) => {
+                            const node = nodes.find(n => n.id === nodeId);
+                            const nodeTypeEmoji = {
+                              project: '📁',
+                              notebook: '📓', 
+                              concept: '🔗',
+                              insight: '💡'
+                            }[node?.type] || '📄';
+                            
+                            return (
+                              <div key={nodeId} className="flex items-center">
+                                <div className="text-xs bg-muted rounded px-2 py-1">
+                                  {nodeTypeEmoji} {node?.data.title || node?.data.content || 'Node'}
+                                </div>
+                                {nodeIndex < path.length - 1 && (
+                                  <div className="text-muted-foreground mx-1">→</div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="p-3 bg-muted/50 text-xs text-muted-foreground">
+              Hold Ctrl and click insight nodes to trace paths to root
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Connection Dialog */}
