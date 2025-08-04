@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit } from "lucide-react";
+import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit, GripVertical, Minimize2, Maximize2 } from "lucide-react";
 
 interface GraphViewProps {
   projectId: string;
@@ -340,6 +340,13 @@ export function GraphView({ projectId }: GraphViewProps) {
   const [multiSelectedConcepts, setMultiSelectedConcepts] = useState<string[]>([]);
   const [sourceSelectionRows, setSourceSelectionRows] = useState([{ id: 1, notebook: '', source: '', concept: '' }]);
   const [projectData, setProjectData] = useState<any>(null);
+  
+  // Floating controls state
+  const [controlsPosition, setControlsPosition] = useState({ x: 20, y: 20 });
+  const [isControlsMinimized, setIsControlsMinimized] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  
   const { user } = useAuth();
 
   // Memoize nodeTypes to prevent React Flow warnings
@@ -866,371 +873,205 @@ export function GraphView({ projectId }: GraphViewProps) {
     return stats;
   };
 
+  // Drag handlers for floating controls
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - controlsPosition.x,
+      y: e.clientY - controlsPosition.y
+    });
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDragging) {
+      setControlsPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  }, [isDragging, dragStart]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
   const nodeStats = getNodeStats();
 
-  return (
-    <div className="h-full space-y-4">
-      {/* Header & Stats */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Network className="h-5 w-5" />
-            Research Literature Map
-          </CardTitle>
-          <CardDescription>
-            Visual representation of your research insights extracted from NotebookLM analysis
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+  // Floating Controls Component
+  const FloatingControls = () => (
+    <div
+      className="fixed z-50 bg-background border border-border rounded-lg shadow-lg"
+      style={{
+        left: controlsPosition.x,
+        top: controlsPosition.y,
+        cursor: isDragging ? 'grabbing' : 'default'
+      }}
+    >
+      {/* Drag Handle */}
+      <div
+        className="flex items-center justify-between p-2 bg-muted/50 border-b border-border cursor-grab active:cursor-grabbing"
+        onMouseDown={handleMouseDown}
+      >
+        <div className="flex items-center gap-2">
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Graph Controls</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsControlsMinimized(!isControlsMinimized)}
+          className="h-6 w-6 p-0"
+        >
+          {isControlsMinimized ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+        </Button>
+      </div>
+
+      {!isControlsMinimized && (
+        <div className="p-4 space-y-4 min-w-[280px]">
           {/* Layout Toggle & Add Insight Button */}
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2">
+          <div className="flex justify-between items-center gap-2">
+            <div className="flex gap-1">
               <Button
                 variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setLayoutMode('hierarchical')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 text-xs"
               >
-                <GitBranch className="h-4 w-4" />
+                <GitBranch className="h-3 w-3" />
                 Hierarchical
               </Button>
               <Button
                 variant={layoutMode === 'spatial' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setLayoutMode('spatial')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 text-xs"
               >
-                <LayoutGrid className="h-4 w-4" />
+                <LayoutGrid className="h-3 w-3" />
                 Spatial
               </Button>
             </div>
-            <Dialog open={insightDialogOpen} onOpenChange={setInsightDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Insight
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Insight</DialogTitle>
-                </DialogHeader>
-                 <div className="space-y-4">
-                   <div>
-                     <Label htmlFor="insight-title">Title</Label>
-                     <Input
-                       id="insight-title"
-                       value={insightTitle}
-                       onChange={(e) => setInsightTitle(e.target.value)}
-                       placeholder="Enter insight title..."
-                     />
-                   </div>
-                   <div>
-                     <Label htmlFor="insight-details">Details</Label>
-                     <Textarea
-                       id="insight-details"
-                       value={insightDetails}
-                       onChange={(e) => setInsightDetails(e.target.value)}
-                       placeholder="Describe your insight..."
-                       rows={3}
-                     />
-                   </div>
-
-                    {/* Source Selection Rows */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <Label>Source & Concept Selection</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={addSourceSelectionRow}
-                          className="h-8"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add Row
-                        </Button>
-                      </div>
-                      
-                      {sourceSelectionRows.map((row, index) => (
-                        <div key={row.id} className="border rounded-lg p-3 space-y-2">
-                          <div className="flex justify-between items-center">
-                            <Label className="text-sm font-medium">Selection {index + 1}</Label>
-                            {sourceSelectionRows.length > 1 && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeSourceSelectionRow(row.id)}
-                                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                              >
-                                ×
-                              </Button>
-                            )}
-                          </div>
-                          
-                          <div className="grid grid-cols-3 gap-2">
-                            {/* Notebook Selection */}
-                            <div>
-                              <Label className="text-xs text-muted-foreground">Notebook</Label>
-                              <Select 
-                                value={row.notebook} 
-                                onValueChange={(value) => updateSourceSelectionRow(row.id, 'notebook', value)}
-                              >
-                                <SelectTrigger className="h-8">
-                                  <SelectValue placeholder="Select..." />
-                                </SelectTrigger>
-                                <SelectContent className="bg-background border border-border z-50 max-h-48 overflow-y-auto">
-                                  {nodes.filter(n => n.type === 'notebook').map(notebook => (
-                                    <SelectItem 
-                                      key={notebook.id} 
-                                      value={notebook.id}
-                                      className="bg-background hover:bg-accent focus:bg-accent"
-                                    >
-                                      {notebook.data.title}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Source Selection */}
-                            <div>
-                              <Label className="text-xs text-muted-foreground">Source</Label>
-                              <Select 
-                                value={row.source} 
-                                onValueChange={(value) => updateSourceSelectionRow(row.id, 'source', value)}
-                                disabled={!row.notebook}
-                              >
-                                <SelectTrigger className="h-8">
-                                  <SelectValue placeholder="Select..." />
-                                </SelectTrigger>
-                                <SelectContent className="bg-background border border-border z-50 max-h-48 overflow-y-auto">
-                                  {nodes.filter(n => 
-                                    n.type === 'source' && 
-                                    (!row.notebook || n.data.notebook_id === row.notebook.replace('notebook-', ''))
-                                  ).map(source => (
-                                    <SelectItem 
-                                      key={source.id} 
-                                      value={source.id}
-                                      className="bg-background hover:bg-accent focus:bg-accent"
-                                    >
-                                      {source.data.title}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Concept Selection */}
-                            <div>
-                              <Label className="text-xs text-muted-foreground">Concept</Label>
-                              <Select 
-                                value={row.concept} 
-                                onValueChange={(value) => {
-                                  updateSourceSelectionRow(row.id, 'concept', value);
-                                  if (value && !selectedConcepts.includes(value)) {
-                                    setSelectedConcepts([...selectedConcepts, value]);
-                                  }
-                                }}
-                                disabled={!row.source}
-                              >
-                                <SelectTrigger className="h-8">
-                                  <SelectValue placeholder="Select..." />
-                                </SelectTrigger>
-                                <SelectContent className="bg-background border border-border z-50 max-h-48 overflow-y-auto">
-                                  {getConceptNodes().filter(node => 
-                                    !row.source || 
-                                    (node.data.concept_source && 
-                                     nodes.find(n => n.id === row.source)?.data.title &&
-                                     (node.data.concept_source.includes(nodes.find(n => n.id === row.source)?.data.title) ||
-                                      nodes.find(n => n.id === row.source)?.data.title.includes(node.data.concept_source)))
-                                  ).map(concept => (
-                                    <SelectItem 
-                                      key={concept.id} 
-                                      value={concept.id}
-                                      className="bg-background hover:bg-accent focus:bg-accent"
-                                    >
-                                      {concept.data.title}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                   {/* Selected Concepts Display */}
-                   <div>
-                     <Label>Selected Concepts ({selectedConcepts.length})</Label>
-                     <div className="border rounded-lg p-3 max-h-32 overflow-y-auto bg-muted/5">
-                       {selectedConcepts.length === 0 ? (
-                         <p className="text-sm text-muted-foreground">No concepts selected</p>
-                       ) : (
-                         <div className="flex flex-wrap gap-1">
-                           {selectedConcepts.map(conceptId => {
-                             const concept = nodes.find(n => n.id === conceptId);
-                             return concept ? (
-                               <Badge 
-                                 key={conceptId} 
-                                 variant="secondary" 
-                                 className="flex items-center gap-1"
-                               >
-                                 {concept.data.title}
-                                 <button
-                                   onClick={() => setSelectedConcepts(selectedConcepts.filter(id => id !== conceptId))}
-                                   className="ml-1 text-xs hover:text-destructive"
-                                 >
-                                   ×
-                                 </button>
-                               </Badge>
-                             ) : null;
-                           })}
-                         </div>
-                       )}
-                     </div>
-                   </div>
-
-                   <div className="flex gap-2">
-                     <Button 
-                       onClick={createInsight}
-                       disabled={!insightTitle || selectedConcepts.length === 0}
-                     >
-                       Create Insight
-                     </Button>
-                     <Button variant="outline" onClick={() => {
-                       setInsightDialogOpen(false);
-                       setSelectedNotebook("");
-                       setSelectedSource("");
-                       setSelectedConcept("");
-                       setSelectedConcepts([]);
-                     }}>
-                       Cancel
-                     </Button>
-                   </div>
-                 </div>
-              </DialogContent>
-            </Dialog>
+            <Button
+              onClick={() => setInsightDialogOpen(true)}
+              size="sm"
+              className="flex items-center gap-1 text-xs"
+            >
+              <Plus className="h-3 w-3" />
+              Add Insight
+            </Button>
           </div>
 
-          {/* Improved Legend */}
-          <div className="border rounded-lg p-4 bg-muted/5">
-            <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-              <Network className="h-4 w-4" />
-              Node Types
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Node Types Legend */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium">Node Types</h4>
+            <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
-                  <Target className="h-2 w-2 text-white" />
-                </div>
-                <span className="text-xs">Research Focus</span>
+                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                <span>Research Focus</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                  <Lightbulb className="h-2 w-2 text-white" />
-                </div>
-                <span className="text-xs">Concept</span>
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span>Concept</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="h-2 w-2 text-white" />
-                </div>
-                <span className="text-xs">Research Gap</span>
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <span>Research Gap</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="h-2 w-2 text-white" />
-                </div>
-                <span className="text-xs">Discrepancy</span>
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <span>Discrepancy</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                  <BookOpen className="h-2 w-2 text-white" />
-                </div>
-                <span className="text-xs">Publication</span>
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span>Publication</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
-                  <BookOpen className="h-2 w-2 text-white" />
-                </div>
-                <span className="text-xs">Notebook</span>
+                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                <span>Notebook</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center">
-                  <Link className="h-2 w-2 text-white" />
-                </div>
-                <span className="text-xs">Source</span>
+                <div className="w-3 h-3 rounded-full bg-teal-500"></div>
+                <span>Source</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
-                  <Brain className="h-2 w-2 text-white" />
-                </div>
-                <span className="text-xs">Insight</span>
+                <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                <span>Insight</span>
               </div>
             </div>
           </div>
 
           {/* Node Statistics */}
-          <div className="flex flex-wrap gap-2">
-            {nodeStats.hypothesis && (
-              <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                {nodeStats.hypothesis} Research Question{nodeStats.hypothesis > 1 ? 's' : ''}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium">Statistics</h4>
+            <div className="flex flex-wrap gap-1">
+              {nodeStats.concept && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                  {nodeStats.concept} Concept{nodeStats.concept > 1 ? 's' : ''}
+                </Badge>
+              )}
+              {nodeStats.hypothesis && (
+                <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
+                  {nodeStats.hypothesis} Research Focus
+                </Badge>
+              )}
+              {nodeStats.gap && (
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
+                  {nodeStats.gap} Gap{nodeStats.gap > 1 ? 's' : ''}
+                </Badge>
+              )}
+              {nodeStats.discrepancy && (
+                <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
+                  {nodeStats.discrepancy} Discrepanc{nodeStats.discrepancy > 1 ? 'ies' : 'y'}
+                </Badge>
+              )}
+              {nodeStats.publication && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                  {nodeStats.publication} Publication{nodeStats.publication > 1 ? 's' : ''}
+                </Badge>
+              )}
+              {nodeStats.notebook && (
+                <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs">
+                  {nodeStats.notebook} Notebook{nodeStats.notebook > 1 ? 's' : ''}
+                </Badge>
+              )}
+              {nodeStats.source && (
+                <Badge variant="secondary" className="bg-teal-100 text-teal-800 text-xs">
+                  {nodeStats.source} Source{nodeStats.source > 1 ? 's' : ''}
+                </Badge>
+              )}
+              {nodeStats.insight && (
+                <Badge variant="secondary" className="bg-indigo-100 text-indigo-800 text-xs">
+                  {nodeStats.insight} Insight{nodeStats.insight > 1 ? 's' : ''}
+                </Badge>
+              )}
+              <Badge variant="outline" className="text-xs">
+                {edges.length} Connection{edges.length !== 1 ? 's' : ''}
               </Badge>
-            )}
-            {nodeStats.concept && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                {nodeStats.concept} Concept{nodeStats.concept > 1 ? 's' : ''}
-              </Badge>
-            )}
-            {nodeStats.gap && (
-              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                {nodeStats.gap} Research Gap{nodeStats.gap > 1 ? 's' : ''}
-              </Badge>
-            )}
-            {nodeStats.discrepancy && (
-              <Badge variant="secondary" className="bg-red-100 text-red-800">
-                {nodeStats.discrepancy} Discrepanc{nodeStats.discrepancy > 1 ? 'ies' : 'y'}
-              </Badge>
-            )}
-            {nodeStats.publication && (
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                {nodeStats.publication} Key Publication{nodeStats.publication > 1 ? 's' : ''}
-              </Badge>
-            )}
-            {nodeStats.notebook && (
-              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                {nodeStats.notebook} Notebook{nodeStats.notebook > 1 ? 's' : ''}
-              </Badge>
-            )}
-            {nodeStats.source && (
-              <Badge variant="secondary" className="bg-teal-100 text-teal-800">
-                {nodeStats.source} Source{nodeStats.source > 1 ? 's' : ''}
-              </Badge>
-            )}
-            {nodeStats.insight && (
-              <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">
-                {nodeStats.insight} Insight{nodeStats.insight > 1 ? 's' : ''}
-              </Badge>
-            )}
-            <Badge variant="outline">
-              {edges.length} Connection{edges.length !== 1 ? 's' : ''}
-            </Badge>
-          </div>
-          {nodes.length === 0 && (
-            <div className="text-center py-4 text-muted-foreground">
-              <Info className="h-8 w-8 mx-auto mb-2" />
-              <p>No concepts in your graph yet.</p>
-              <p className="text-sm">Use the "Extract Concepts" tab to add insights from NotebookLM.</p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="h-full space-y-4 relative">
+      {/* Floating Controls */}
+      <FloatingControls />
+      {/* React Flow Graph */}
 
       {/* React Flow Graph */}
-      <div className="h-[700px] border rounded-lg bg-background">
+      <div className="h-full border rounded-lg bg-background">
         <ReactFlow
           nodes={nodes}
           edges={edges}
