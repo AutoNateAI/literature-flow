@@ -9,7 +9,7 @@ import { Upload, FileText, Trash2, ExternalLink, BookOpen, Target } from "lucide
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { WorkflowPrompts } from "./WorkflowPrompts";
+import { WorkflowBuilder } from "./WorkflowBuilder";
 import { ConceptExtractor } from "./ConceptExtractor";
 import { ResourceManager } from "./ResourceManager";
 
@@ -313,7 +313,7 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
       </TabsContent>
 
       <TabsContent value="workflow">
-        <WorkflowPrompts notebookUrl={notebooks[0]?.notebook_url} />
+        <WorkflowBuilder workflowId={projectId} />
       </TabsContent>
 
       <TabsContent value="extract">
