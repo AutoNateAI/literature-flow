@@ -32,32 +32,239 @@ interface GraphViewProps {
 }
 
 const initialNodes: Node[] = [
+  // Research Focus (Center)
   {
-    id: '1',
-    position: { x: 250, y: 25 },
-    data: { label: 'Research Focus' },
+    id: 'research-focus',
+    position: { x: 400, y: 200 },
+    data: { 
+      label: 'AI in Education Research',
+      type: 'Research Focus',
+      icon: Target 
+    },
     type: 'default',
-    style: { backgroundColor: '#e9d5ff', border: '2px solid #8b5cf6' },
+    style: { 
+      backgroundColor: 'hsl(270 95% 90%)', 
+      border: '3px solid hsl(270 95% 60%)',
+      borderRadius: '12px',
+      padding: '16px',
+      fontSize: '14px',
+      fontWeight: '600',
+      color: 'hsl(270 95% 20%)',
+      width: '180px',
+      height: '80px'
+    },
+  },
+  // Key Concepts
+  {
+    id: 'concept-1',
+    position: { x: 100, y: 50 },
+    data: { 
+      label: 'Machine Learning Algorithms',
+      type: 'Concept',
+      icon: Lightbulb 
+    },
+    type: 'default',
+    style: { 
+      backgroundColor: 'hsl(210 95% 90%)', 
+      border: '2px solid hsl(210 95% 60%)',
+      borderRadius: '8px',
+      padding: '12px',
+      fontSize: '12px',
+      color: 'hsl(210 95% 20%)',
+      width: '160px',
+      height: '60px'
+    },
   },
   {
-    id: '2',
-    position: { x: 100, y: 125 },
-    data: { label: 'Concept A' },
+    id: 'concept-2',
+    position: { x: 700, y: 50 },
+    data: { 
+      label: 'Personalized Learning',
+      type: 'Concept',
+      icon: Lightbulb 
+    },
     type: 'default',
-    style: { backgroundColor: '#dbeafe', border: '2px solid #3b82f6' },
+    style: { 
+      backgroundColor: 'hsl(210 95% 90%)', 
+      border: '2px solid hsl(210 95% 60%)',
+      borderRadius: '8px',
+      padding: '12px',
+      fontSize: '12px',
+      color: 'hsl(210 95% 20%)',
+      width: '160px',
+      height: '60px'
+    },
   },
   {
-    id: '3',
-    position: { x: 400, y: 125 },
-    data: { label: 'Concept B' },
+    id: 'concept-3',
+    position: { x: 50, y: 350 },
+    data: { 
+      label: 'Learning Analytics',
+      type: 'Concept',
+      icon: Lightbulb 
+    },
     type: 'default',
-    style: { backgroundColor: '#dbeafe', border: '2px solid #3b82f6' },
+    style: { 
+      backgroundColor: 'hsl(210 95% 90%)', 
+      border: '2px solid hsl(210 95% 60%)',
+      borderRadius: '8px',
+      padding: '12px',
+      fontSize: '12px',
+      color: 'hsl(210 95% 20%)',
+      width: '160px',
+      height: '60px'
+    },
+  },
+  // Research Gaps
+  {
+    id: 'gap-1',
+    position: { x: 300, y: 50 },
+    data: { 
+      label: 'Implementation Challenges',
+      type: 'Research Gap',
+      icon: AlertTriangle 
+    },
+    type: 'default',
+    style: { 
+      backgroundColor: 'hsl(45 95% 85%)', 
+      border: '2px solid hsl(45 95% 50%)',
+      borderRadius: '8px',
+      padding: '12px',
+      fontSize: '12px',
+      color: 'hsl(45 95% 20%)',
+      width: '160px',
+      height: '60px'
+    },
+  },
+  // Publications/Sources
+  {
+    id: 'source-1',
+    position: { x: 600, y: 350 },
+    data: { 
+      label: 'Chen et al. (2023)',
+      type: 'Publication',
+      icon: BookOpen 
+    },
+    type: 'default',
+    style: { 
+      backgroundColor: 'hsl(120 40% 85%)', 
+      border: '2px solid hsl(120 40% 50%)',
+      borderRadius: '8px',
+      padding: '12px',
+      fontSize: '12px',
+      color: 'hsl(120 40% 20%)',
+      width: '140px',
+      height: '50px'
+    },
+  },
+  {
+    id: 'source-2',
+    position: { x: 750, y: 300 },
+    data: { 
+      label: 'Williams (2024)',
+      type: 'Publication',
+      icon: BookOpen 
+    },
+    type: 'default',
+    style: { 
+      backgroundColor: 'hsl(120 40% 85%)', 
+      border: '2px solid hsl(120 40% 50%)',
+      borderRadius: '8px',
+      padding: '12px',
+      fontSize: '12px',
+      color: 'hsl(120 40% 20%)',
+      width: '140px',
+      height: '50px'
+    },
+  },
+  // Insights
+  {
+    id: 'insight-1',
+    position: { x: 250, y: 350 },
+    data: { 
+      label: 'Cross-disciplinary Approach Needed',
+      type: 'Insight',
+      icon: Brain 
+    },
+    type: 'default',
+    style: { 
+      backgroundColor: 'hsl(250 60% 85%)', 
+      border: '2px solid hsl(250 60% 50%)',
+      borderRadius: '8px',
+      padding: '12px',
+      fontSize: '12px',
+      color: 'hsl(250 60% 20%)',
+      width: '180px',
+      height: '60px'
+    },
+  },
+  // Notebooks
+  {
+    id: 'notebook-1',
+    position: { x: 500, y: 50 },
+    data: { 
+      label: 'Literature Review Notes',
+      type: 'Notebook',
+      icon: BookOpen 
+    },
+    type: 'default',
+    style: { 
+      backgroundColor: 'hsl(25 70% 85%)', 
+      border: '2px solid hsl(25 70% 50%)',
+      borderRadius: '8px',
+      padding: '12px',
+      fontSize: '12px',
+      color: 'hsl(25 70% 20%)',
+      width: '160px',
+      height: '60px'
+    },
+  },
+  // Discrepancy
+  {
+    id: 'discrepancy-1',
+    position: { x: 450, y: 350 },
+    data: { 
+      label: 'Conflicting Results on Effectiveness',
+      type: 'Discrepancy',
+      icon: AlertTriangle 
+    },
+    type: 'default',
+    style: { 
+      backgroundColor: 'hsl(0 70% 85%)', 
+      border: '2px solid hsl(0 70% 50%)',
+      borderRadius: '8px',
+      padding: '12px',
+      fontSize: '12px',
+      color: 'hsl(0 70% 20%)',
+      width: '180px',
+      height: '60px'
+    },
   },
 ];
 
 const initialEdges: Edge[] = [
-  { id: 'e1-2', source: '1', target: '2' },
-  { id: 'e1-3', source: '1', target: '3' },
+  // Research Focus connections
+  { id: 'e1', source: 'research-focus', target: 'concept-1', style: { stroke: 'hsl(210 95% 60%)', strokeWidth: 2 } },
+  { id: 'e2', source: 'research-focus', target: 'concept-2', style: { stroke: 'hsl(210 95% 60%)', strokeWidth: 2 } },
+  { id: 'e3', source: 'research-focus', target: 'concept-3', style: { stroke: 'hsl(210 95% 60%)', strokeWidth: 2 } },
+  
+  // Gap connections
+  { id: 'e4', source: 'concept-1', target: 'gap-1', style: { stroke: 'hsl(45 95% 50%)', strokeWidth: 2, strokeDasharray: '5,5' } },
+  { id: 'e5', source: 'concept-2', target: 'gap-1', style: { stroke: 'hsl(45 95% 50%)', strokeWidth: 2, strokeDasharray: '5,5' } },
+  
+  // Source connections
+  { id: 'e6', source: 'concept-2', target: 'source-1', style: { stroke: 'hsl(120 40% 50%)', strokeWidth: 2 } },
+  { id: 'e7', source: 'concept-2', target: 'source-2', style: { stroke: 'hsl(120 40% 50%)', strokeWidth: 2 } },
+  { id: 'e8', source: 'source-1', target: 'discrepancy-1', style: { stroke: 'hsl(0 70% 50%)', strokeWidth: 2 } },
+  { id: 'e9', source: 'source-2', target: 'discrepancy-1', style: { stroke: 'hsl(0 70% 50%)', strokeWidth: 2 } },
+  
+  // Insight connections
+  { id: 'e10', source: 'concept-3', target: 'insight-1', style: { stroke: 'hsl(250 60% 50%)', strokeWidth: 2 } },
+  { id: 'e11', source: 'gap-1', target: 'insight-1', style: { stroke: 'hsl(250 60% 50%)', strokeWidth: 2 } },
+  
+  // Notebook connections
+  { id: 'e12', source: 'notebook-1', target: 'research-focus', style: { stroke: 'hsl(25 70% 50%)', strokeWidth: 2 } },
+  { id: 'e13', source: 'notebook-1', target: 'gap-1', style: { stroke: 'hsl(25 70% 50%)', strokeWidth: 2 } },
 ];
 
 export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControlsChange }) => {
@@ -67,11 +274,13 @@ export const GraphView: React.FC<GraphViewProps> = ({ projectId, onGraphControls
   const [layoutMode, setLayoutMode] = useState<'hierarchical' | 'spatial'>('hierarchical');
 
   const nodeStats = {
-    concept: 2,
+    concept: 3,
     hypothesis: 1,
-    insight: 0,
-    notebook: 0,
-    source: 0,
+    insight: 1,
+    notebook: 1,
+    source: 2,
+    gaps: 1,
+    discrepancies: 1,
   };
 
   return (
