@@ -192,8 +192,11 @@ export type Database = {
       graph_nodes: {
         Row: {
           color: string | null
+          concept_source: string | null
+          confidence_score: number | null
           content: string | null
           created_at: string
+          extraction_method: string | null
           id: string
           node_type: string
           notebook_id: string | null
@@ -208,8 +211,11 @@ export type Database = {
         }
         Insert: {
           color?: string | null
+          concept_source?: string | null
+          confidence_score?: number | null
           content?: string | null
           created_at?: string
+          extraction_method?: string | null
           id?: string
           node_type: string
           notebook_id?: string | null
@@ -224,8 +230,11 @@ export type Database = {
         }
         Update: {
           color?: string | null
+          concept_source?: string | null
+          confidence_score?: number | null
           content?: string | null
           created_at?: string
+          extraction_method?: string | null
           id?: string
           node_type?: string
           notebook_id?: string | null
@@ -261,6 +270,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notebook_resources: {
+        Row: {
+          created_at: string
+          file_size: string | null
+          file_type: string | null
+          id: string
+          notebook_id: string
+          project_id: string
+          source_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_size?: string | null
+          file_type?: string | null
+          id?: string
+          notebook_id: string
+          project_id: string
+          source_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_size?: string | null
+          file_type?: string | null
+          id?: string
+          notebook_id?: string
+          project_id?: string
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       notebooks: {
         Row: {
@@ -666,6 +714,36 @@ export type Database = {
           updated_at?: string
           user_id?: string
           workflow_data?: Json
+        }
+        Relationships: []
+      }
+      workflow_prompts: {
+        Row: {
+          created_at: string
+          expected_output: string | null
+          id: string
+          order_index: number
+          prompt_content: string
+          prompt_title: string
+          stage_name: string
+        }
+        Insert: {
+          created_at?: string
+          expected_output?: string | null
+          id?: string
+          order_index: number
+          prompt_content: string
+          prompt_title: string
+          stage_name: string
+        }
+        Update: {
+          created_at?: string
+          expected_output?: string | null
+          id?: string
+          order_index?: number
+          prompt_content?: string
+          prompt_title?: string
+          stage_name?: string
         }
         Relationships: []
       }
