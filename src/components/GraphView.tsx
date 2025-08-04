@@ -387,14 +387,16 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       // Save position changes to database with layout-specific columns
       changes.forEach(async (change) => {
         if (change.type === 'position' && change.position && user) {
-          // Only save positions for nodes that exist in the graph_nodes table
-          // Skip synthetic nodes like "project-..." and "notebook-..." and "source-..."
+          // Handle synthetic nodes (project, notebook, source) - save to localStorage
           if (change.id.startsWith('project-') || 
               change.id.startsWith('notebook-') || 
               change.id.startsWith('source-')) {
+            const storageKey = `${change.id}-${layoutMode}-position`;
+            localStorage.setItem(storageKey, JSON.stringify(change.position));
             return;
           }
 
+          // Handle actual graph nodes - save to database
           try {
             const updateData = layoutMode === 'hierarchical' 
               ? {
@@ -487,12 +489,15 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     if (projectData) {
       // Check if we have a project node with saved position
       const projectNode = nodeData.find(node => node.is_project_root);
+      const projectId = projectNode ? projectNode.id : `project-${projectData.id}`;
+      const savedPosition = JSON.parse(localStorage.getItem(`${projectId}-hierarchical-position`) || 'null');
+      
       const position = projectNode 
         ? { 
-            x: projectNode.hierarchical_position_x ?? 400, 
-            y: projectNode.hierarchical_position_y ?? currentY 
+            x: projectNode.hierarchical_position_x ?? savedPosition?.x ?? 400, 
+            y: projectNode.hierarchical_position_y ?? savedPosition?.y ?? currentY 
           }
-        : { x: 400, y: currentY };
+        : savedPosition || { x: 400, y: currentY };
       
       layoutNodes.push({
         id: projectNode ? projectNode.id : `project-${projectData.id}`,
@@ -509,12 +514,15 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       currentY += 150;
     }
     
-    // Level 1: Notebooks - use default positions (they're not in graph_nodes table)
+    // Level 1: Notebooks - use saved hierarchical positions or defaults
     notebookData.forEach((notebook, index) => {
+      const notebookId = `notebook-${notebook.id}`;
+      const savedPosition = JSON.parse(localStorage.getItem(`${notebookId}-hierarchical-position`) || 'null');
+      
       layoutNodes.push({
-        id: `notebook-${notebook.id}`,
+        id: notebookId,
         type: 'notebook',
-        position: { x: 200 + (index * 350), y: currentY },
+        position: savedPosition || { x: 200 + (index * 350), y: currentY },
         data: {
           title: notebook.title,
           briefing: notebook.briefing,
@@ -526,15 +534,21 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
 
     currentY += 200;
 
-    // Level 2: Sources - use default positions (they're not in graph_nodes table)
+    // Level 2: Sources - use saved hierarchical positions or defaults
     resourceData.forEach((resource, index) => {
-      const notebookIndex = notebookData.findIndex(n => n.id === resource.notebook_id);
-      const xPos = notebookIndex >= 0 ? 200 + (notebookIndex * 350) + (index % 2) * 150 : 200 + (index * 200);
+      const sourceId = `source-${resource.id}`;
+      let savedPosition = JSON.parse(localStorage.getItem(`${sourceId}-hierarchical-position`) || 'null');
+      
+      if (!savedPosition) {
+        const notebookIndex = notebookData.findIndex(n => n.id === resource.notebook_id);
+        const xPos = notebookIndex >= 0 ? 200 + (notebookIndex * 350) + (index % 2) * 150 : 200 + (index * 200);
+        savedPosition = { x: xPos, y: currentY };
+      }
       
       layoutNodes.push({
-        id: `source-${resource.id}`,
+        id: sourceId,
         type: 'source',
-        position: { x: xPos, y: currentY },
+        position: savedPosition,
         data: {
           title: resource.title,
           file_type: resource.file_type,
@@ -598,12 +612,15 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     // Add project root first if it exists
     if (projectData) {
       const projectNode = nodeData.find(node => node.is_project_root);
+      const projectId = projectNode ? projectNode.id : `project-${projectData.id}`;
+      const savedPosition = JSON.parse(localStorage.getItem(`${projectId}-spatial-position`) || 'null');
+      
       const position = projectNode 
         ? { 
-            x: projectNode.spatial_position_x ?? 400, 
-            y: projectNode.spatial_position_y ?? 50 
+            x: projectNode.spatial_position_x ?? savedPosition?.x ?? 400, 
+            y: projectNode.spatial_position_y ?? savedPosition?.y ?? 50 
           }
-        : { x: 400, y: 50 };
+        : savedPosition || { x: 400, y: 50 };
       
       layoutNodes.push({
         id: projectNode ? projectNode.id : `project-${projectData.id}`,
@@ -619,12 +636,15 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       });
     }
     
-    // Add notebooks with default spatial positions (they're not in graph_nodes table)
+    // Add notebooks with saved spatial positions or defaults
     notebookData.forEach((notebook, index) => {
+      const notebookId = `notebook-${notebook.id}`;
+      const savedPosition = JSON.parse(localStorage.getItem(`${notebookId}-spatial-position`) || 'null');
+      
       layoutNodes.push({
-        id: `notebook-${notebook.id}`,
+        id: notebookId,
         type: 'notebook',
-        position: { x: 100 + (index * 200), y: 100 + (index * 200) },
+        position: savedPosition || { x: 100 + (index * 200), y: 100 + (index * 200) },
         data: {
           title: notebook.title,
           briefing: notebook.briefing,
@@ -634,12 +654,15 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       });
     });
 
-    // Add sources with default spatial positions (they're not in graph_nodes table)
+    // Add sources with saved spatial positions or defaults
     resourceData.forEach((resource, index) => {
+      const sourceId = `source-${resource.id}`;
+      const savedPosition = JSON.parse(localStorage.getItem(`${sourceId}-spatial-position`) || 'null');
+      
       layoutNodes.push({
-        id: `source-${resource.id}`,
+        id: sourceId,
         type: 'source',
-        position: { x: 300 + (index * 150), y: 100 + (index * 150) },
+        position: savedPosition || { x: 300 + (index * 150), y: 100 + (index * 150) },
         data: {
           title: resource.title,
           file_type: resource.file_type,
@@ -1289,6 +1312,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           fitView
+          minZoom={0.01}
+          maxZoom={4}
           style={{ backgroundColor: 'hsl(var(--background))' }}
           connectionLineStyle={{ stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
           defaultEdgeOptions={{ 
@@ -1296,7 +1321,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
             style: { strokeWidth: 2, stroke: '#10b981' }
           }}
         >
-          <Controls />
+          <Controls showZoom showFitView showInteractive />
           <MiniMap 
             nodeColor={(node) => {
               const colors = {
