@@ -610,7 +610,6 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     if (sourceType === 'concept' && targetType === 'insight') return 'conceptToInsight';
     if (sourceType === 'concept' && targetType === 'hypothesis') return 'conceptToHypothesis';
     if (sourceType === 'notebook' && targetType === 'concept') return 'notebookToConcept';
-    if (sourceType === 'source' && targetType === 'concept') return 'notebookToConcept'; // Sources also use notebook style
     if (sourceType === 'project' && targetType === 'notebook') return 'projectToNotebook';
     
     return 'default';
@@ -711,37 +710,26 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     }
   }, [findPathsToRoot, edges]);
 
-  // Update nodes with dramatic highlighting
+  // Update nodes with highlighting
   const highlightedNodes = useMemo(() => {
     return nodes.map(node => ({
       ...node,
       style: {
         ...node.style,
-        opacity: highlightedPaths.size > 0 ? (highlightedPaths.has(node.id) ? 1 : 0.15) : 1,
-        filter: highlightedPaths.has(node.id) ? 
-          'drop-shadow(0 0 20px #8B5CF6) drop-shadow(0 0 40px #8B5CF6) brightness(1.2)' : 
-          highlightedPaths.size > 0 ? 'brightness(0.4) saturate(0.3)' : 'none',
-        transform: highlightedPaths.has(node.id) ? 'scale(1.05)' : 'scale(1)',
-        transition: 'all 0.3s ease-in-out',
-        zIndex: highlightedPaths.has(node.id) ? 1000 : 1
+        opacity: highlightedPaths.size > 0 ? (highlightedPaths.has(node.id) ? 1 : 0.3) : 1,
+        filter: highlightedPaths.has(node.id) ? 'drop-shadow(0 0 10px #8B5CF6)' : 'none'
       }
     }));
   }, [nodes, highlightedPaths]);
 
-  // Update edges with dramatic highlighting
+  // Update edges with highlighting
   const highlightedEdges = useMemo(() => {
     return processedEdges.map(edge => ({
       ...edge,
       style: {
         ...edge.style,
-        opacity: highlightedPaths.size > 0 ? (highlightedPaths.has(edge.id) ? 1 : 0.1) : 1,
-        strokeWidth: highlightedPaths.has(edge.id) ? 8 : edge.style?.strokeWidth || 2,
-        filter: highlightedPaths.has(edge.id) ? 
-          'drop-shadow(0 0 15px #8B5CF6) drop-shadow(0 0 30px #8B5CF6)' : 
-          'none',
-        animation: highlightedPaths.has(edge.id) ? 
-          'pulse 1s ease-in-out infinite, glow 2s ease-in-out infinite' : 
-          edge.style?.animation || 'none'
+        opacity: highlightedPaths.size > 0 ? (highlightedPaths.has(edge.id) ? 1 : 0.2) : 1,
+        strokeWidth: highlightedPaths.has(edge.id) ? 4 : edge.style?.strokeWidth || 2
       }
     }));
   }, [processedEdges, highlightedPaths]);
