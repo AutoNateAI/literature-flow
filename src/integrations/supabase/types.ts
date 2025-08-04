@@ -197,6 +197,8 @@ export type Database = {
           content: string | null
           created_at: string
           extraction_method: string | null
+          hierarchical_position_x: number | null
+          hierarchical_position_y: number | null
           id: string
           is_project_root: boolean | null
           node_type: string
@@ -206,6 +208,8 @@ export type Database = {
           position_y: number | null
           project_id: string
           size: string | null
+          spatial_position_x: number | null
+          spatial_position_y: number | null
           title: string
           updated_at: string
           user_id: string
@@ -217,6 +221,8 @@ export type Database = {
           content?: string | null
           created_at?: string
           extraction_method?: string | null
+          hierarchical_position_x?: number | null
+          hierarchical_position_y?: number | null
           id?: string
           is_project_root?: boolean | null
           node_type?: string
@@ -226,6 +232,8 @@ export type Database = {
           position_y?: number | null
           project_id: string
           size?: string | null
+          spatial_position_x?: number | null
+          spatial_position_y?: number | null
           title: string
           updated_at?: string
           user_id: string
@@ -237,6 +245,8 @@ export type Database = {
           content?: string | null
           created_at?: string
           extraction_method?: string | null
+          hierarchical_position_x?: number | null
+          hierarchical_position_y?: number | null
           id?: string
           is_project_root?: boolean | null
           node_type?: string
@@ -246,6 +256,8 @@ export type Database = {
           position_y?: number | null
           project_id?: string
           size?: string | null
+          spatial_position_x?: number | null
+          spatial_position_y?: number | null
           title?: string
           updated_at?: string
           user_id?: string

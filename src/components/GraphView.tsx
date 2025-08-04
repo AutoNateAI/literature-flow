@@ -384,16 +384,27 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     (changes: any[]) => {
       onNodesChange(changes);
       
-      // Save position changes to database
+      // Save position changes to database with layout-specific columns
       changes.forEach(async (change) => {
         if (change.type === 'position' && change.position && user) {
           try {
+            const updateData = layoutMode === 'hierarchical' 
+              ? {
+                  hierarchical_position_x: change.position.x,
+                  hierarchical_position_y: change.position.y,
+                  position_x: change.position.x, // Keep legacy column updated
+                  position_y: change.position.y
+                }
+              : {
+                  spatial_position_x: change.position.x,
+                  spatial_position_y: change.position.y,
+                  position_x: change.position.x, // Keep legacy column updated
+                  position_y: change.position.y
+                };
+
             await supabase
               .from('graph_nodes')
-              .update({
-                position_x: change.position.x,
-                position_y: change.position.y
-              })
+              .update(updateData)
               .eq('id', change.id);
           } catch (error) {
             console.error('Error saving node position:', error);
@@ -401,7 +412,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
         }
       });
     },
-    [onNodesChange, user]
+    [onNodesChange, user, layoutMode]
   );
 
   const saveConnection = async () => {
@@ -588,22 +599,35 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       });
     });
 
-    // Add concepts with saved positions or default
+    // Add concepts with saved positions based on layout mode
     nodeData.forEach(node => {
+      const isProjectRoot = node.is_project_root;
+      let position;
+      
+      if (layoutMode === 'hierarchical') {
+        position = { 
+          x: node.hierarchical_position_x || (isProjectRoot ? 400 : (400 + (nodeData.indexOf(node) % 5) * 200)), 
+          y: node.hierarchical_position_y || (isProjectRoot ? 50 : (300 + Math.floor(nodeData.indexOf(node) / 5) * 150))
+        };
+      } else {
+        position = { 
+          x: node.spatial_position_x || (isProjectRoot ? 400 : (100 + (nodeData.indexOf(node) % 6) * 180)), 
+          y: node.spatial_position_y || (isProjectRoot ? 50 : (100 + Math.floor(nodeData.indexOf(node) / 6) * 180))
+        };
+      }
+      
       layoutNodes.push({
         id: node.id,
         type: node.node_type,
-        position: { 
-          x: node.position_x || (400 + (nodeData.indexOf(node) % 5) * 200), 
-          y: node.position_y || (300 + Math.floor(nodeData.indexOf(node) / 5) * 150) 
-        },
+        position,
         data: {
           nodeId: node.id, // Add explicit nodeId for multi-select
           title: node.title,
           content: node.content,
           confidence_score: node.confidence_score,
           concept_source: node.concept_source,
-          extraction_method: node.extraction_method
+          extraction_method: node.extraction_method,
+          is_project_root: node.is_project_root
         }
       });
     });
