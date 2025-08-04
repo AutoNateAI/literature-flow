@@ -1552,9 +1552,9 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                     </div>
                   </div>
                   
-                  {/* Find connected source node or show concept_source */}
+                  {/* Find connected source using notebook_id */}
                   {(() => {
-                    // First try to find connected source node through edges
+                    // First try to find connected source node through edges (for future compatibility)
                     const connectedSourceEdge = edges.find(e => {
                       const nodeId = selectedNodeDetail.id;
                       const isConnected = e.source === nodeId || e.target === nodeId;
@@ -1575,24 +1575,31 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                       ) : null;
                     }
                     
-                    // If no edge connection, look for source nodes from the same notebook
+                    // Find source nodes from the same notebook using notebook_id
                     if (selectedNodeDetail.notebook_id) {
-                      const relatedSourceNode = nodes.find(n => 
+                      const relatedSourceNodes = nodes.filter(n => 
                         n.type === 'source' && 
                         n.data.notebook_id === selectedNodeDetail.notebook_id
                       );
                       
-                      if (relatedSourceNode) {
+                      if (relatedSourceNodes.length > 0) {
                         return (
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium">Source</Label>
-                            <p className="text-sm bg-muted p-2 rounded">{relatedSourceNode.data.title}</p>
+                            <Label className="text-sm font-medium">Source{relatedSourceNodes.length > 1 ? 's' : ''}</Label>
+                            <div className="space-y-1">
+                              {relatedSourceNodes.map(sourceNode => (
+                                <p key={sourceNode.id} className="text-sm bg-muted p-2 rounded">
+                                  {sourceNode.data.title}
+                                  {sourceNode.data.file_type && ` (${sourceNode.data.file_type})`}
+                                </p>
+                              ))}
+                            </div>
                           </div>
                         );
                       }
                     }
                     
-                    // Fallback to concept_source if no source node found
+                    // Fallback to concept_source if no source nodes found (legacy support)
                     return selectedNodeDetail.concept_source ? (
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Source</Label>
