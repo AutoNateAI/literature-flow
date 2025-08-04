@@ -1,10 +1,26 @@
-import { Book, Lightbulb, Workflow, Home, Plus, FileText, Upload, GitBranch, BookOpen } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
+import { Book, Lightbulb, Workflow, Home, Plus, FileText, Upload, GitBranch, BookOpen, Grid3x3 } from "lucide-react";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar, SidebarGroupLabel } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { DashboardView } from "@/pages/Dashboard";
 
 interface AppSidebarProps {
   currentView: DashboardView;
   onNavigate: (view: DashboardView) => void;
+  graphControls?: {
+    layoutMode: 'hierarchical' | 'spatial';
+    onLayoutChange: (mode: 'hierarchical' | 'spatial') => void;
+    onAddInsight: () => void;
+    multiSelectedConcepts: string[];
+    nodeStats: {
+      concepts: number;
+      hypotheses: number;
+      notebooks: number;
+      sources: number;
+      insights: number;
+      connections: number;
+    };
+  };
 }
 
 const menuItems = [
@@ -16,7 +32,7 @@ const menuItems = [
   { id: 'prompts' as DashboardView, title: "Prompt Library", icon: Lightbulb },
 ];
 
-export function AppSidebar({ currentView, onNavigate }: AppSidebarProps) {
+export function AppSidebar({ currentView, onNavigate, graphControls }: AppSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
@@ -58,6 +74,116 @@ export function AppSidebar({ currentView, onNavigate }: AppSidebarProps) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Graph Controls - Only shown on Literature Map view */}
+        {currentView === 'graph-view' && graphControls && (
+          <SidebarGroup className="mt-6">
+            <SidebarGroupLabel>Graph Controls</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {/* Layout Toggle & Add Insight Button */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-1">
+                    <Button
+                      variant={graphControls.layoutMode === 'hierarchical' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => graphControls.onLayoutChange('hierarchical')}
+                      className="flex items-center gap-1 text-xs flex-1"
+                    >
+                      <GitBranch className="h-3 w-3" />
+                      {!collapsed && "Hierarchical"}
+                    </Button>
+                    <Button
+                      variant={graphControls.layoutMode === 'spatial' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => graphControls.onLayoutChange('spatial')}
+                      className="flex items-center gap-1 text-xs flex-1"
+                    >
+                      <Grid3x3 className="h-3 w-3" />
+                      {!collapsed && "Spatial"}
+                    </Button>
+                  </div>
+                  <Button
+                    onClick={graphControls.onAddInsight}
+                    size="sm"
+                    className="w-full"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    {!collapsed && `Add Insight${graphControls.multiSelectedConcepts.length > 0 ? ` (${graphControls.multiSelectedConcepts.length})` : ''}`}
+                  </Button>
+                </div>
+
+                {!collapsed && (
+                  <>
+                    {/* Node Types */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Node Types</h4>
+                      <div className="grid grid-cols-1 gap-1 text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                          <span>Research Focus</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                          <span>Concept</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                          <span>Research Gap</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                          <span>Discrepancy</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                          <span>Publication</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                          <span>Notebook</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-teal-500"></div>
+                          <span>Source</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                          <span>Insight</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Statistics */}
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Statistics</h4>
+                      <div className="flex flex-wrap gap-1">
+                        <Badge variant="secondary" className="text-xs">
+                          {graphControls.nodeStats.concepts} Concepts
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {graphControls.nodeStats.hypotheses} Research Focus
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {graphControls.nodeStats.notebooks} Notebook
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {graphControls.nodeStats.sources} Source
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {graphControls.nodeStats.insights} Insight
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {graphControls.nodeStats.connections} Connections
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );

@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [currentView, setCurrentView] = useState<DashboardView>('dashboard');
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [graphControls, setGraphControls] = useState<any>(null);
   const mainRef = useRef<HTMLElement>(null);
 
   const handleNavigate = (view: DashboardView) => {
@@ -52,7 +53,7 @@ const Dashboard = () => {
           onCreateNew={() => setCurrentView('new-project')}
         />;
       case 'graph-view':
-        return selectedWorkflowId ? <GraphView projectId={selectedWorkflowId} /> : 
+        return selectedWorkflowId ? <GraphView projectId={selectedWorkflowId} onGraphControlsChange={setGraphControls} /> : 
                <div className="text-center p-8">Please select a project first</div>;
       default:
         return <DashboardContent key={refreshTrigger} onNavigate={handleNavigate} onSelectWorkflow={setSelectedWorkflowId} />;
@@ -62,7 +63,7 @@ const Dashboard = () => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full">
-        <AppSidebar currentView={currentView} onNavigate={handleNavigate} />
+        <AppSidebar currentView={currentView} onNavigate={handleNavigate} graphControls={graphControls} />
         <main ref={mainRef} className="flex-1 p-6 overflow-auto">
           {renderContent()}
         </main>
