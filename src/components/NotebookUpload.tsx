@@ -1,11 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, FileText, Trash2, ExternalLink, BookOpen, Target } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, FileText, Trash2, ExternalLink, BookOpen, Target, Edit3 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,9 +19,10 @@ interface NotebookUploadProps {
   projectId: string;
 }
 
-interface UploadedFile {
-  name: string;
-  size: number;
+interface Source {
+  title: string;
+  url?: string;
+  sourceName: string;
   type: string;
 }
 
@@ -32,79 +35,41 @@ interface Notebook {
   created_at: string;
 }
 
+const SOURCE_TYPES = [
+  "youtube video",
+  "publication", 
+  "white paper",
+  "blog",
+  "pdf document",
+  "article",
+  "research paper",
+  "website",
+  "book chapter",
+  "other"
+];
+
 export function NotebookUpload({ projectId }: NotebookUploadProps) {
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [notebookTitle, setNotebookTitle] = useState("");
-  const [briefing, setBriefing] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingNotebook, setEditingNotebook] = useState<Notebook | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  
+  // Form state
+  const [notebookTitle, setNotebookTitle] = useState("");
+  const [notebookUrl, setNotebookUrl] = useState("");
+  const [briefing, setBriefing] = useState("");
+  const [sources, setSources] = useState<Source[]>([{
+    title: "",
+    url: "",
+    sourceName: "",
+    type: ""
+  }]);
+
   const { user } = useAuth();
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const newFiles = files.map(file => ({
-      name: file.name,
-      size: file.size,
-      type: file.type
-    }));
-    setUploadedFiles(prev => [...prev, ...newFiles]);
-  };
-
-  const removeFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
-
-  const createNotebook = async () => {
-    if (!user || !notebookTitle.trim() || uploadedFiles.length === 0) {
-      toast.error("Please provide a title and upload at least one file");
-      return;
-    }
-
-    setIsCreating(true);
-
-    try {
-      // Create notebook record
-      const { data: notebook, error } = await supabase
-        .from('notebooks')
-        .insert({
-          project_id: projectId,
-          user_id: user.id,
-          title: notebookTitle,
-          briefing: briefing,
-          upload_count: uploadedFiles.length,
-          notebook_url: `https://notebooklm.google.com/notebook/${Math.random().toString(36).substr(2, 9)}`
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Reset form
-      setNotebookTitle("");
-      setBriefing("");
-      setUploadedFiles([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-
-      // Refresh notebooks list
-      fetchNotebooks();
-
-      toast.success("Notebook created successfully!");
-    } catch (error) {
-      console.error("Error creating notebook:", error);
-      toast.error("Failed to create notebook");
-    } finally {
-      setIsCreating(false);
-    }
-  };
+  useEffect(() => {
+    fetchNotebooks();
+  }, [projectId, user]);
 
   const fetchNotebooks = async () => {
     if (!user) return;
@@ -124,8 +89,167 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
     }
   };
 
+  const resetForm = () => {
+    setNotebookTitle("");
+    setNotebookUrl("");
+    setBriefing("");
+    setSources([{
+      title: "",
+      url: "",
+      sourceName: "",
+      type: ""
+    }]);
+    setEditingNotebook(null);
+  };
+
+  const openCreateModal = () => {
+    resetForm();
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (notebook: Notebook) => {
+    setEditingNotebook(notebook);
+    setNotebookTitle(notebook.title);
+    setNotebookUrl(notebook.notebook_url || "");
+    setBriefing(notebook.briefing || "");
+    // Load sources from notebook_resources table
+    loadNotebookSources(notebook.id);
+    setIsModalOpen(true);
+  };
+
+  const loadNotebookSources = async (notebookId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('notebook_resources')
+        .select('*')
+        .eq('notebook_id', notebookId);
+
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setSources(data.map(resource => ({
+          title: resource.title,
+          url: resource.source_url || "",
+          sourceName: resource.title, // Use title as source name for now
+          type: resource.file_type || ""
+        })));
+      }
+    } catch (error) {
+      console.error("Error loading sources:", error);
+    }
+  };
+
+  const addSource = () => {
+    setSources([...sources, {
+      title: "",
+      url: "",
+      sourceName: "",
+      type: ""
+    }]);
+  };
+
+  const removeSource = (index: number) => {
+    setSources(sources.filter((_, i) => i !== index));
+  };
+
+  const updateSource = (index: number, field: keyof Source, value: string) => {
+    const updatedSources = [...sources];
+    updatedSources[index] = { ...updatedSources[index], [field]: value };
+    setSources(updatedSources);
+  };
+
+  const saveNotebook = async () => {
+    if (!user || !notebookTitle.trim()) {
+      toast.error("Please provide a notebook title");
+      return;
+    }
+
+    setIsCreating(true);
+
+    try {
+      let notebookId = editingNotebook?.id;
+
+      if (editingNotebook) {
+        // Update existing notebook
+        const { error } = await supabase
+          .from('notebooks')
+          .update({
+            title: notebookTitle,
+            briefing: briefing,
+            notebook_url: notebookUrl,
+            upload_count: sources.filter(s => s.title.trim()).length
+          })
+          .eq('id', editingNotebook.id);
+
+        if (error) throw error;
+      } else {
+        // Create new notebook
+        const { data: notebook, error } = await supabase
+          .from('notebooks')
+          .insert({
+            project_id: projectId,
+            user_id: user.id,
+            title: notebookTitle,
+            briefing: briefing,
+            notebook_url: notebookUrl,
+            upload_count: sources.filter(s => s.title.trim()).length
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        notebookId = notebook.id;
+      }
+
+      // Clear existing resources if editing
+      if (editingNotebook) {
+        await supabase
+          .from('notebook_resources')
+          .delete()
+          .eq('notebook_id', editingNotebook.id);
+      }
+
+      // Insert sources as notebook_resources
+      const validSources = sources.filter(s => s.title.trim());
+      if (validSources.length > 0) {
+        const { error: resourcesError } = await supabase
+          .from('notebook_resources')
+          .insert(
+            validSources.map(source => ({
+              notebook_id: notebookId,
+              project_id: projectId,
+              user_id: user.id,
+              title: source.title,
+              source_url: source.url || null,
+              file_type: source.type || null
+            }))
+          );
+
+        if (resourcesError) throw resourcesError;
+      }
+
+      resetForm();
+      setIsModalOpen(false);
+      fetchNotebooks();
+
+      toast.success(editingNotebook ? "Notebook updated successfully!" : "Notebook created successfully!");
+    } catch (error) {
+      console.error("Error saving notebook:", error);
+      toast.error("Failed to save notebook");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   const deleteNotebook = async (notebookId: string) => {
     try {
+      // Delete resources first
+      await supabase
+        .from('notebook_resources')
+        .delete()
+        .eq('notebook_id', notebookId);
+
+      // Delete notebook
       const { error } = await supabase
         .from('notebooks')
         .delete()
@@ -141,11 +265,6 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
     }
   };
 
-  // Fetch notebooks on component mount
-  useState(() => {
-    fetchNotebooks();
-  });
-
   return (
     <Tabs defaultValue="notebooks" className="space-y-6">
       <TabsList className="grid w-full grid-cols-4">
@@ -156,157 +275,224 @@ export function NotebookUpload({ projectId }: NotebookUploadProps) {
       </TabsList>
 
       <TabsContent value="notebooks" className="space-y-6">
-        {/* Upload & Create Section */}
+        {/* Header with Create Button */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              Create NotebookLM Integration
-            </CardTitle>
-            <CardDescription>
-              Upload sources to create a new NotebookLM notebook, then use our workflow to analyze them
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* File Upload */}
-            <div>
-              <Label htmlFor="file-upload">Upload Files</Label>
-              <div 
-                className="border-2 border-dashed border-muted rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Click to upload PDFs, articles, or notes for NotebookLM analysis
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx,.txt"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                />
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  NotebookLM Integration
+                </CardTitle>
+                <CardDescription>
+                  Manage your NotebookLM notebooks and their sources for this project
+                </CardDescription>
               </div>
-            </div>
-
-            {/* Uploaded Files List */}
-            {uploadedFiles.length > 0 && (
-              <div className="space-y-2">
-                <Label>Files to Upload ({uploadedFiles.length})</Label>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {uploadedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-md">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        <span className="text-sm truncate">{file.name}</span>
-                        <span className="text-xs text-muted-foreground">({formatFileSize(file.size)})</span>
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={openCreateModal} className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Create Notebook
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingNotebook ? "Edit Notebook" : "Create New Notebook"}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {editingNotebook ? "Update your notebook details and sources" : "Set up a new NotebookLM notebook with sources"}
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4">
+                    {/* Notebook Details */}
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="notebook-title">Notebook Title *</Label>
+                        <Input
+                          id="notebook-title"
+                          value={notebookTitle}
+                          onChange={(e) => setNotebookTitle(e.target.value)}
+                          placeholder="e.g., AI Ethics Literature Review"
+                        />
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFile(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div>
+                        <Label htmlFor="notebook-url">NotebookLM URL</Label>
+                        <Input
+                          id="notebook-url"
+                          value={notebookUrl}
+                          onChange={(e) => setNotebookUrl(e.target.value)}
+                          placeholder="https://notebooklm.google.com/notebook/..."
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="briefing">Research Context (Optional)</Label>
+                        <Textarea
+                          id="briefing"
+                          value={briefing}
+                          onChange={(e) => setBriefing(e.target.value)}
+                          placeholder="Provide context about your research question..."
+                          rows={3}
+                        />
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {/* Notebook Details */}
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <Label htmlFor="notebook-title">Notebook Title</Label>
-                <Input
-                  id="notebook-title"
-                  value={notebookTitle}
-                  onChange={(e) => setNotebookTitle(e.target.value)}
-                  placeholder="e.g., AI Ethics Literature Review"
-                />
-              </div>
-              <div>
-                <Label htmlFor="briefing">Research Context (Optional)</Label>
-                <Textarea
-                  id="briefing"
-                  value={briefing}
-                  onChange={(e) => setBriefing(e.target.value)}
-                  placeholder="Provide context about your research question or what you're investigating..."
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            <Button 
-              onClick={createNotebook} 
-              disabled={!notebookTitle.trim() || uploadedFiles.length === 0 || isCreating}
-              className="w-full"
-            >
-              {isCreating ? "Creating Notebook..." : "Create NotebookLM Notebook"}
-            </Button>
-
-            <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-md border border-blue-200">
-              <strong>📖 Next Steps:</strong> After creating a notebook, use the "Analysis Workflow" tab to get prompts for extracting insights from NotebookLM, then use "Extract Concepts" to add those insights to your research graph.
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Existing Notebooks */}
-        {notebooks.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Your NotebookLM Notebooks
-              </CardTitle>
-              <CardDescription>
-                Manage your project notebooks and track analysis progress
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {notebooks.map((notebook) => (
-                  <Card key={notebook.id} className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-lg">{notebook.title}</h4>
-                        {notebook.briefing && (
-                          <p className="text-sm text-muted-foreground mt-1 mb-3">{notebook.briefing}</p>
-                        )}
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <FileText className="h-3 w-3" />
-                            {notebook.upload_count} sources
-                          </span>
-                          <span>Created {new Date(notebook.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {notebook.notebook_url && (
-                          <Button
-                            variant="default"
-                            size="sm"
-                            asChild
-                          >
-                            <a href={notebook.notebook_url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-4 w-4 mr-1" />
-                              Open NotebookLM
-                            </a>
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteNotebook(notebook.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
+                    {/* Sources */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label>Sources</Label>
+                        <Button variant="outline" size="sm" onClick={addSource}>
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add Source
                         </Button>
                       </div>
+                      
+                      {sources.map((source, index) => (
+                        <Card key={index} className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium">Source {index + 1}</h4>
+                              {sources.length > 1 && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeSource(index)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label>Title *</Label>
+                                <Input
+                                  value={source.title}
+                                  onChange={(e) => updateSource(index, 'title', e.target.value)}
+                                  placeholder="Source title"
+                                />
+                              </div>
+                              <div>
+                                <Label>Source Name</Label>
+                                <Input
+                                  value={source.sourceName}
+                                  onChange={(e) => updateSource(index, 'sourceName', e.target.value)}
+                                  placeholder="Author/Publication name"
+                                />
+                              </div>
+                              <div>
+                                <Label>URL (Optional)</Label>
+                                <Input
+                                  value={source.url}
+                                  onChange={(e) => updateSource(index, 'url', e.target.value)}
+                                  placeholder="https://..."
+                                />
+                              </div>
+                              <div>
+                                <Label>Type</Label>
+                                <Select
+                                  value={source.type}
+                                  onValueChange={(value) => updateSource(index, 'type', value)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {SOURCE_TYPES.map((type) => (
+                                      <SelectItem key={type} value={type}>
+                                        {type}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
                     </div>
-                  </Card>
-                ))}
-              </div>
+
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsModalOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={saveNotebook}
+                        disabled={!notebookTitle.trim() || isCreating}
+                      >
+                        {isCreating ? "Saving..." : editingNotebook ? "Update Notebook" : "Create Notebook"}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {/* Notebooks List */}
+        {notebooks.length > 0 ? (
+          <div className="space-y-4">
+            {notebooks.map((notebook) => (
+              <Card key={notebook.id} className="p-4 cursor-pointer hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between">
+                  <div 
+                    className="flex-1"
+                    onClick={() => openEditModal(notebook)}
+                  >
+                    <h4 className="font-semibold text-lg">{notebook.title}</h4>
+                    {notebook.briefing && (
+                      <p className="text-sm text-muted-foreground mt-1 mb-3">{notebook.briefing}</p>
+                    )}
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <FileText className="h-3 w-3" />
+                        {notebook.upload_count} sources
+                      </span>
+                      <span>Created {new Date(notebook.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEditModal(notebook)}
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Button>
+                    {notebook.notebook_url && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        asChild
+                      >
+                        <a href={notebook.notebook_url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          Open NotebookLM
+                        </a>
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteNotebook(notebook.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <BookOpen className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+              <h3 className="font-medium mb-2">No notebooks yet</h3>
+              <p className="text-muted-foreground mb-4">Create your first NotebookLM integration to get started</p>
             </CardContent>
           </Card>
         )}
