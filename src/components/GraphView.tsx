@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit } from "lucide-react";
+import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit, Folder } from "lucide-react";
 
 interface GraphViewProps {
   projectId: string;
@@ -308,12 +308,46 @@ const InsightNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: {
   </div>
 );
 
+const ProjectNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: { 
+  data: any; 
+  setSelectedNodeDetail: (data: any) => void;
+  setNodeDetailOpen: (open: boolean) => void;
+}) => (
+  <div 
+    className="px-6 py-4 shadow-lg rounded-lg bg-gradient-to-br from-purple-100 to-blue-100 border-3 border-purple-300 min-w-[200px] max-w-[300px] cursor-pointer hover:shadow-xl transition-shadow"
+    onClick={() => {
+      setSelectedNodeDetail({ ...data, type: 'project' });
+      setNodeDetailOpen(true);
+    }}
+  >
+    <Handle type="target" position={Position.Top} />
+    <div className="flex items-start gap-3">
+      <Folder className="h-6 w-6 text-purple-700 mt-0.5 flex-shrink-0" />
+      <div className="flex-1">
+        <div className="font-bold text-lg text-purple-900">{data.title}</div>
+        {(data.hypothesis || data.research_focus) && (
+          <div className="text-sm text-purple-700 mt-2 leading-relaxed">
+            {data.hypothesis || data.research_focus}
+          </div>
+        )}
+        {data.paper_type && (
+          <Badge variant="outline" className="text-xs mt-3 border-purple-400 text-purple-800">
+            {data.paper_type}
+          </Badge>
+        )}
+      </div>
+    </div>
+    <Handle type="source" position={Position.Bottom} />
+  </div>
+);
+
 const createNodeTypes = (
   multiSelectedConcepts: string[],
   setMultiSelectedConcepts: (fn: (prev: string[]) => string[]) => void,
   setSelectedNodeDetail: (data: any) => void,
   setNodeDetailOpen: (open: boolean) => void
 ) => ({
+  project: (props: any) => ProjectNode({ ...props, setSelectedNodeDetail, setNodeDetailOpen }),
   hypothesis: (props: any) => HypothesisNode({ ...props, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen }),
   concept: (props: any) => ConceptNode({ ...props, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen }),
   gap: GapNode,
