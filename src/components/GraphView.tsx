@@ -714,7 +714,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
     if (!user) return;
 
     try {
-      // Load graph nodes
+      // Load ALL graph nodes (including notebooks, sources, concepts, etc.)
       const { data: nodeData, error: nodeError } = await supabase
         .from('graph_nodes')
         .select('*')
@@ -723,25 +723,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
 
       if (nodeError) throw nodeError;
 
-      // Load notebooks for this project
-      const { data: notebookData, error: notebookError } = await supabase
-        .from('notebooks')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('user_id', user.id);
-
-      if (notebookError) throw notebookError;
-
-      // Load notebook resources for this project
-      const { data: resourceData, error: resourceError } = await supabase
-        .from('notebook_resources')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('user_id', user.id);
-
-      if (resourceError) throw resourceError;
-
-      // Load project data (for hierarchical root)
+      // Load project data (for hierarchical root if needed)
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
@@ -750,10 +732,10 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
 
       if (projectError) throw projectError;
 
-      // Apply layout based on mode
+      // Apply layout based on mode using only graph nodes
       const flowNodes = layoutMode === 'hierarchical' 
-        ? getHierarchicalLayout([], notebookData || [], resourceData || [], nodeData || [], projectData)
-        : getSpatialLayout([], notebookData || [], resourceData || [], nodeData || [], projectData);
+        ? getHierarchicalLayoutFromNodes(nodeData || [], projectData)
+        : getSpatialLayoutFromNodes(nodeData || [], projectData);
 
       // Load edges
       const { data: edgeData, error: edgeError } = await supabase
@@ -778,80 +760,126 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
         data: { edge_type: edge.edge_type, annotation: edge.annotation }
       }));
 
-      // Add hierarchical connections between project and notebooks (for both views)
-      if (projectData) {
-        const projectNodeId = nodeData.find(node => node.is_project_root)?.id || `project-${projectData.id}`;
-        (notebookData || []).forEach(notebook => {
-          flowEdges.push({
-            id: `project-notebook-${projectData.id}-${notebook.id}`,
-            source: projectNodeId,
-            target: `notebook-${notebook.id}`,
-            type: 'smoothstep',
-            label: 'includes',
-            labelStyle: { fontSize: 10, fontWeight: 400 },
-            style: { 
-              stroke: '#8b5cf6',
-              strokeWidth: 2,
-            },
-            data: { edge_type: 'includes', annotation: 'Project includes notebook' }
-          });
-        });
-      }
-
-      // Add hierarchical connections between notebooks and sources
-      (resourceData || []).forEach(resource => {
-        if (resource.notebook_id) {
-          flowEdges.push({
-            id: `notebook-source-${resource.notebook_id}-${resource.id}`,
-            source: `notebook-${resource.notebook_id}`,
-            target: `source-${resource.id}`,
-            type: 'smoothstep',
-            label: 'contains',
-            labelStyle: { fontSize: 10, fontWeight: 400 },
-            style: { 
-              stroke: '#f97316',
-              strokeWidth: 2,
-            },
-            data: { edge_type: 'contains', annotation: 'Notebook contains source' }
-          });
-        }
-      });
-
-      // Add automatic connections from concepts to their supporting sources
-      (nodeData || []).forEach(node => {
-        if (node.concept_source) {
-          // Find matching resource by title
-          const matchingResource = (resourceData || []).find(resource => 
-            resource.title === node.concept_source || 
-            resource.title.includes(node.concept_source) ||
-            node.concept_source.includes(resource.title)
-          );
-          
-          if (matchingResource) {
-            // Connect source to concept
-            flowEdges.push({
-              id: `source-concept-${matchingResource.id}-${node.id}`,
-              source: `source-${matchingResource.id}`,
-              target: node.id,
-              type: 'smoothstep',
-              label: 'cites',
-              labelStyle: { fontSize: 10, fontWeight: 400 },
-              style: { 
-                stroke: '#14b8a6',
-                strokeWidth: 2,
-              },
-              data: { edge_type: 'cites', annotation: 'Resource citation' }
-            });
-          }
-        }
-      });
-
       setNodes(flowNodes);
       setEdges(flowEdges);
     } catch (error) {
       console.error('Error loading graph data:', error);
-      toast.error("Failed to load graph data");
     }
+  };
+
+  // New layout functions that work directly with graph nodes
+  const getHierarchicalLayoutFromNodes = (nodeData: any[], projectData: any) => {
+    const layoutNodes: Node[] = [];
+    
+    // Add project root node if exists
+    const projectRootNode = nodeData.find(node => node.is_project_root);
+    if (projectRootNode) {
+      layoutNodes.push({
+        id: projectRootNode.id,
+        type: 'project',
+        position: { 
+          x: projectRootNode.hierarchical_position_x ?? 400, 
+          y: projectRootNode.hierarchical_position_y ?? 50 
+        },
+        data: {
+          title: projectData.title,
+          hypothesis: projectData.hypothesis,
+          paper_type: projectData.paper_type,
+          theme: projectData.theme,
+          research_focus: projectData.research_focus
+        }
+      });
+    }
+
+    // Add all other nodes from graph_nodes
+    nodeData.forEach((node, index) => {
+      if (node.is_project_root) return; // Skip project root as it's already added
+      
+      const position = { 
+        x: node.hierarchical_position_x ?? (100 + (index % 6) * 180), 
+        y: node.hierarchical_position_y ?? (100 + Math.floor(index / 6) * 180)
+      };
+      
+      layoutNodes.push({
+        id: node.id,
+        type: node.node_type,
+        position,
+        data: {
+          nodeId: node.id,
+          title: node.title,
+          content: node.content,
+          confidence_score: node.confidence_score,
+          concept_source: node.concept_source,
+          extraction_method: node.extraction_method,
+          is_project_root: node.is_project_root,
+          notebook_id: node.notebook_id,
+          file_type: node.file_type,
+          file_size: node.file_size,
+          source_url: node.source_url,
+          briefing: node.content, // For notebooks
+          upload_count: 0 // Default for notebooks
+        }
+      });
+    });
+
+    return layoutNodes;
+  };
+
+  const getSpatialLayoutFromNodes = (nodeData: any[], projectData: any) => {
+    const layoutNodes: Node[] = [];
+    
+    // Add project root node if exists
+    const projectRootNode = nodeData.find(node => node.is_project_root);
+    if (projectRootNode) {
+      layoutNodes.push({
+        id: projectRootNode.id,
+        type: 'project',
+        position: { 
+          x: projectRootNode.spatial_position_x ?? 400, 
+          y: projectRootNode.spatial_position_y ?? 50 
+        },
+        data: {
+          title: projectData.title,
+          hypothesis: projectData.hypothesis,
+          paper_type: projectData.paper_type,
+          theme: projectData.theme,
+          research_focus: projectData.research_focus
+        }
+      });
+    }
+
+    // Add all other nodes from graph_nodes
+    nodeData.forEach((node, index) => {
+      if (node.is_project_root) return; // Skip project root as it's already added
+      
+      const position = { 
+        x: node.spatial_position_x ?? (100 + (index % 6) * 180), 
+        y: node.spatial_position_y ?? (100 + Math.floor(index / 6) * 180)
+      };
+      
+      layoutNodes.push({
+        id: node.id,
+        type: node.node_type,
+        position,
+        data: {
+          nodeId: node.id,
+          title: node.title,
+          content: node.content,
+          confidence_score: node.confidence_score,
+          concept_source: node.concept_source,
+          extraction_method: node.extraction_method,
+          is_project_root: node.is_project_root,
+          notebook_id: node.notebook_id,
+          file_type: node.file_type,
+          file_size: node.file_size,
+          source_url: node.source_url,
+          briefing: node.content, // For notebooks
+          upload_count: 0 // Default for notebooks
+        }
+      });
+    });
+
+    return layoutNodes;
   };
 
   const createInsight = async () => {
@@ -1552,9 +1580,9 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                     </div>
                   </div>
                   
-                  {/* Find connected source using notebook_id */}
+                  {/* Find connected source using actual graph edges */}
                   {(() => {
-                    // First try to find connected source node through edges (for future compatibility)
+                    // Look for connected source nodes through database edges
                     const connectedSourceEdge = edges.find(e => {
                       const nodeId = selectedNodeDetail.id;
                       const isConnected = e.source === nodeId || e.target === nodeId;
