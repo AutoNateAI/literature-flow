@@ -776,8 +776,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
         data: { edge_type: edge.edge_type, annotation: edge.annotation }
       }));
 
-      // Add hierarchical connections between project and notebooks
-      if (projectData && layoutMode === 'hierarchical') {
+      // Add hierarchical connections between project and notebooks (for both views)
+      if (projectData) {
         const projectNodeId = nodeData.find(node => node.is_project_root)?.id || `project-${projectData.id}`;
         (notebookData || []).forEach(notebook => {
           flowEdges.push({
@@ -1322,6 +1322,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
             style: { strokeWidth: 2, stroke: '#10b981' }
           }}
         >
+          <Controls />
           <MiniMap 
             nodeColor={(node) => {
               const colors = {
@@ -1339,20 +1340,10 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
             maskColor="hsl(var(--muted) / 0.3)"
             style={{ 
               backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px'
+              border: '1px solid hsl(var(--border))'
             }}
-            className="!absolute !bottom-4 !left-4 !w-32 !h-24 !shadow-lg"
             pannable
             zoomable
-          />
-          <Controls 
-            style={{
-              background: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px'
-            }}
-            className="!absolute !bottom-4 !right-4 !shadow-lg"
           />
           <Background gap={20} size={1} color="hsl(var(--border))" />
         </ReactFlow>
