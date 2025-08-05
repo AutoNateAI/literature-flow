@@ -1807,34 +1807,34 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
         )}
       </div>
 
-      {/* Controls Section - Now below the graph */}
-      <Card className={`${isMobile ? 'mt-2' : 'mt-4'}`}>
-        <CardContent className={`${isMobile ? 'space-y-3 pt-4 pb-4' : 'space-y-4 pt-6'}`}>
+      {/* Controls Section - Minimized for mobile, aligned to bottom */}
+      <Card className={`${isMobile ? 'mt-0 border-t border-x-0 border-b-0 rounded-none' : 'mt-4'}`}>
+        <CardContent className={`${isMobile ? 'space-y-2 pt-3 pb-3' : 'space-y-4 pt-6'}`}>
           {/* Layout Toggle & Add Insight Button */}
-          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-center items-center'}`}>
-            <div className={`flex gap-2 ${isMobile ? 'justify-center' : ''}`}>
+          <div className={`flex ${isMobile ? 'flex-row gap-2 justify-between' : 'justify-center items-center'}`}>
+            <div className={`flex gap-1 ${isMobile ? '' : ''}`}>
               <Button
                 variant={layoutMode === 'hierarchical' ? 'default' : 'outline'}
                 size={isMobile ? 'sm' : 'sm'}
                 onClick={() => setLayoutMode('hierarchical')}
-                className="flex items-center gap-2"
+                className={`flex items-center gap-1 ${isMobile ? 'px-2' : ''}`}
               >
-                <GitBranch className="h-4 w-4" />
+                <GitBranch className="h-3 w-3" />
                 {!isMobile && 'Hierarchical'}
               </Button>
               <Button
                 variant={layoutMode === 'spatial' ? 'default' : 'outline'}
                 size={isMobile ? 'sm' : 'sm'}
                 onClick={() => setLayoutMode('spatial')}
-                className="flex items-center gap-2"
+                className={`flex items-center gap-1 ${isMobile ? 'px-2' : ''}`}
               >
-                <LayoutGrid className="h-4 w-4" />
+                <LayoutGrid className="h-3 w-3" />
                 {!isMobile && 'Spatial'}
               </Button>
              </div>
             
             {/* Multi-Select Controls - Show on both mobile and desktop */}
-            <div className={`flex gap-2 ${isMobile ? 'justify-center' : 'justify-center'}`}>
+            <div className={`flex gap-1 ${isMobile ? 'flex-shrink-0' : 'justify-center'}`}>
               <Button
                 variant={conceptMultiSelectMode ? "default" : "outline"}
                 size="sm"
@@ -1845,10 +1845,10 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                     setMultiSelectedConcepts([]);
                   }
                 }}
-                className="flex items-center gap-2"
+                className={`flex items-center gap-1 ${isMobile ? 'px-2 text-xs' : ''}`}
               >
-                <MousePointerClick className="h-4 w-4" />
-                {isMobile ? `Concepts (${multiSelectedConcepts.length})` : `Select Concepts (${multiSelectedConcepts.length})`}
+                <MousePointerClick className="h-3 w-3" />
+                {isMobile ? `C (${multiSelectedConcepts.length})` : `Select Concepts (${multiSelectedConcepts.length})`}
               </Button>
               <Button
                 variant={traceMode ? "default" : "outline"}
@@ -1861,10 +1861,10 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                     setHighlightedPaths(new Set());
                   }
                 }}
-                className="flex items-center gap-2"
+                className={`flex items-center gap-1 ${isMobile ? 'px-2 text-xs' : ''}`}
               >
-                <Route className="h-4 w-4" />
-                {isMobile ? `Trace (${selectedInsights.size})` : `Trace Paths (${selectedInsights.size})`}
+                <Route className="h-3 w-3" />
+                {isMobile ? `T (${selectedInsights.size})` : `Trace Paths (${selectedInsights.size})`}
               </Button>
             </div>
             
