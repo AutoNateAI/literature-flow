@@ -35,12 +35,13 @@ interface GraphViewProps {
 }
 
 // Enhanced Node Components for Research Graph
-const HypothesisNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen }: { 
+const HypothesisNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen, conceptMultiSelectMode }: { 
   data: any; 
   multiSelectedConcepts: string[]; 
   setMultiSelectedConcepts: (fn: (prev: string[]) => string[]) => void;
   setSelectedNodeDetail: (data: any) => void;
   setNodeDetailOpen: (open: boolean) => void;
+  conceptMultiSelectMode: boolean;
 }) => {
   const nodeId = data.nodeId || data.id;
   return (
@@ -49,10 +50,10 @@ const HypothesisNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts,
         multiSelectedConcepts.includes(nodeId) ? 'ring-4 ring-blue-500 bg-blue-100' : ''
       }`}
       onClick={(e) => {
-        if (e.shiftKey) {
+        if (conceptMultiSelectMode || e.shiftKey) {
           e.preventDefault();
           e.stopPropagation();
-          console.log('Shift+click on hypothesis, node ID:', nodeId);
+          console.log('Multi-select on hypothesis, node ID:', nodeId);
           setMultiSelectedConcepts(prev => {
             const isAlreadySelected = prev.includes(nodeId);
             if (isAlreadySelected) {
@@ -87,12 +88,13 @@ const HypothesisNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts,
   );
 };
 
-const ConceptNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen }: { 
+const ConceptNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen, conceptMultiSelectMode }: { 
   data: any; 
   multiSelectedConcepts: string[]; 
   setMultiSelectedConcepts: (fn: (prev: string[]) => string[]) => void;
   setSelectedNodeDetail: (data: any) => void;
   setNodeDetailOpen: (open: boolean) => void;
+  conceptMultiSelectMode: boolean;
 }) => {
   const nodeId = data.nodeId || data.id;
   return (
@@ -101,10 +103,10 @@ const ConceptNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts, se
         multiSelectedConcepts.includes(nodeId) ? 'ring-4 ring-blue-500 bg-blue-100' : ''
       }`}
       onClick={(e) => {
-        if (e.shiftKey) {
+        if (conceptMultiSelectMode || e.shiftKey) {
           e.preventDefault();
           e.stopPropagation();
-          console.log('Shift+click on concept, node ID:', nodeId);
+          console.log('Multi-select on concept, node ID:', nodeId);
           console.log('Node data:', data);
           console.log('Current multiSelectedConcepts:', multiSelectedConcepts);
           
@@ -120,10 +122,8 @@ const ConceptNode = ({ data, multiSelectedConcepts, setMultiSelectedConcepts, se
           });
         } else {
           // Only open detail if not in multi-select mode
-          if (multiSelectedConcepts.length === 0) {
-            setSelectedNodeDetail({ ...data, type: 'concept' });
-            setNodeDetailOpen(true);
-          }
+          setSelectedNodeDetail({ ...data, type: 'concept' });
+          setNodeDetailOpen(true);
         }
       }}
     >
@@ -279,16 +279,17 @@ const SourceNode = ({ id, data, setSelectedNodeDetail, setNodeDetailOpen }: {
   </div>
 );
 
-const InsightNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen }: { 
+const InsightNode = ({ data, setSelectedNodeDetail, setNodeDetailOpen, traceMode }: { 
   data: any; 
   setSelectedNodeDetail: (data: any) => void;
   setNodeDetailOpen: (open: boolean) => void;
+  traceMode: boolean;
 }) => (
   <div 
     className="px-4 py-3 shadow-lg rounded-lg bg-gradient-to-br from-indigo-100 to-indigo-200 border-3 border-indigo-300 min-w-[180px] max-w-[280px] cursor-pointer hover:shadow-xl transition-shadow"
     onClick={(e) => {
-      if (e.ctrlKey) {
-        // For Ctrl+click, don't open modal - let the main handleNodeClick handle path highlighting
+      if (traceMode || e.ctrlKey) {
+        // For trace mode or Ctrl+click, don't open modal - let the main handleNodeClick handle path highlighting
         return;
       }
       // Normal click opens the modal
@@ -731,17 +732,19 @@ const createNodeTypes = (
   multiSelectedConcepts: string[],
   setMultiSelectedConcepts: (fn: (prev: string[]) => string[]) => void,
   setSelectedNodeDetail: (data: any) => void,
-  setNodeDetailOpen: (open: boolean) => void
+  setNodeDetailOpen: (open: boolean) => void,
+  conceptMultiSelectMode: boolean,
+  traceMode: boolean
 ) => ({
   project: (props: any) => ProjectNode({ ...props, setSelectedNodeDetail, setNodeDetailOpen }),
-  hypothesis: (props: any) => HypothesisNode({ ...props, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen }),
-  concept: (props: any) => ConceptNode({ ...props, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen }),
+  hypothesis: (props: any) => HypothesisNode({ ...props, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen, conceptMultiSelectMode }),
+  concept: (props: any) => ConceptNode({ ...props, multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen, conceptMultiSelectMode }),
   gap: GapNode,
   discrepancy: DiscrepancyNode,
   publication: PublicationNode,
   notebook: (props: any) => NotebookNode({ ...props, setSelectedNodeDetail, setNodeDetailOpen }),
   source: (props: any) => SourceNode({ ...props, id: props.id, setSelectedNodeDetail, setNodeDetailOpen }),
-  insight: (props: any) => InsightNode({ ...props, setSelectedNodeDetail, setNodeDetailOpen }),
+  insight: (props: any) => InsightNode({ ...props, setSelectedNodeDetail, setNodeDetailOpen, traceMode }),
 });
 
 export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) {
@@ -768,6 +771,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
   // Fixed multi-select state and behavior
   const [multiSelectedConcepts, setMultiSelectedConcepts] = useState<string[]>([]);
   const [multiSelectActive, setMultiSelectActive] = useState(false);
+  const [conceptMultiSelectMode, setConceptMultiSelectMode] = useState(false);
+  const [traceMode, setTraceMode] = useState(false);
   
   // Path highlighting for insights
   const [selectedInsights, setSelectedInsights] = useState<Set<string>>(new Set());
@@ -776,13 +781,13 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
 
   // Effect to track multi-select state
   useEffect(() => {
-    setMultiSelectActive(multiSelectedConcepts.length > 0);
-  }, [multiSelectedConcepts]);
+    setMultiSelectActive(multiSelectedConcepts.length > 0 || conceptMultiSelectMode);
+  }, [multiSelectedConcepts, conceptMultiSelectMode]);
 
   // Memoize nodeTypes to prevent React Flow warnings
   const nodeTypes = useMemo(() => 
-    createNodeTypes(multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen), 
-    [multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen]
+    createNodeTypes(multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen, conceptMultiSelectMode, traceMode), 
+    [multiSelectedConcepts, setMultiSelectedConcepts, setSelectedNodeDetail, setNodeDetailOpen, conceptMultiSelectMode, traceMode]
   );
 
   // Create edge types with different animations and colors
@@ -861,7 +866,7 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
 
   // Handle Ctrl+click on insight nodes
   const handleNodeClick = useCallback((event: React.MouseEvent, node: any) => {
-    if (event.ctrlKey && node.type === 'insight') {
+    if ((traceMode || event.ctrlKey) && node.type === 'insight') {
       setSelectedInsights(prev => {
         const newSet = new Set(prev);
         if (newSet.has(node.id)) {
@@ -1828,37 +1833,40 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
               </Button>
              </div>
             
-            {/* Mobile Multi-Select Controls */}
-            {isMobile && (
-              <div className="flex gap-2 justify-center">
-                <Button
-                  variant={multiSelectedConcepts.length > 0 ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    if (multiSelectedConcepts.length > 0) {
-                      setMultiSelectedConcepts([]);
-                    }
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <MousePointerClick className="h-4 w-4" />
-                  Concepts ({multiSelectedConcepts.length})
-                </Button>
-                <Button
-                  variant={selectedInsights.size > 0 ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    if (selectedInsights.size > 0) {
-                      setSelectedInsights(new Set());
-                    }
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <Route className="h-4 w-4" />
-                  Trace ({selectedInsights.size})
-                </Button>
-              </div>
-            )}
+            {/* Multi-Select Controls - Show on both mobile and desktop */}
+            <div className={`flex gap-2 ${isMobile ? 'justify-center' : 'justify-center'}`}>
+              <Button
+                variant={conceptMultiSelectMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setConceptMultiSelectMode(!conceptMultiSelectMode);
+                  if (!conceptMultiSelectMode) {
+                    // Clear selection when enabling mode
+                    setMultiSelectedConcepts([]);
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                <MousePointerClick className="h-4 w-4" />
+                {isMobile ? `Concepts (${multiSelectedConcepts.length})` : `Select Concepts (${multiSelectedConcepts.length})`}
+              </Button>
+              <Button
+                variant={traceMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setTraceMode(!traceMode);
+                  if (!traceMode) {
+                    // Clear selection when enabling mode
+                    setSelectedInsights(new Set());
+                    setHighlightedPaths(new Set());
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                <Route className="h-4 w-4" />
+                {isMobile ? `Trace (${selectedInsights.size})` : `Trace Paths (${selectedInsights.size})`}
+              </Button>
+            </div>
             
             <Dialog open={insightDialogOpen} onOpenChange={setInsightDialogOpen}>
               <DialogTrigger asChild>
