@@ -1650,22 +1650,37 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
   const nodeStats = getNodeStats();
 
   return (
-    <div className="h-full relative">
-      {/* Header */}
-      <Card>
-        <CardHeader>
-          <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
-            <Network className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+    <div className={`${isMobile ? 'h-screen flex flex-col' : 'h-full relative'}`}>
+      {/* Mobile Header */}
+      {isMobile && (
+        <div className="p-4 border-b">
+          <h2 className="font-semibold text-lg flex items-center gap-2">
+            <Network className="h-5 w-5" />
             Research Literature Map
-          </CardTitle>
-          <CardDescription className={isMobile ? 'text-sm' : ''}>
+          </h2>
+          <p className="text-sm text-muted-foreground">
             Visual representation of your research insights extracted from NotebookLM analysis
-          </CardDescription>
-        </CardHeader>
-      </Card>
+          </p>
+        </div>
+      )}
 
-      {/* React Flow Graph - Now above controls */}
-      <div className={`${isMobile ? 'h-96' : 'h-[60vh]'} border rounded-lg bg-background relative mt-4`}>
+      {/* Desktop Header */}
+      {!isMobile && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Network className="h-5 w-5" />
+              Research Literature Map
+            </CardTitle>
+            <CardDescription>
+              Visual representation of your research insights extracted from NotebookLM analysis
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {/* React Flow Graph - Expanded height */}
+      <div className={`${isMobile ? 'flex-1 border-x bg-background relative' : 'h-[60vh] border rounded-lg bg-background relative mt-4'}`}>
         <ReactFlow
           nodes={highlightedNodes}
           edges={highlightedEdges}
@@ -1788,8 +1803,8 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
       </div>
 
       {/* Controls Section - Now below the graph */}
-      <Card className="mt-4">
-        <CardContent className="space-y-4 pt-6">
+      <Card className={`${isMobile ? 'mt-2' : 'mt-4'}`}>
+        <CardContent className={`${isMobile ? 'space-y-3 pt-4 pb-4' : 'space-y-4 pt-6'}`}>
           {/* Layout Toggle & Add Insight Button */}
           <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-center items-center'}`}>
             <div className={`flex gap-2 ${isMobile ? 'justify-center' : ''}`}>
