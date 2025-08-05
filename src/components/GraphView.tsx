@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit, Folder } from "lucide-react";
+import { Lightbulb, AlertTriangle, BookOpen, Target, Network, Link, Info, LayoutGrid, GitBranch, Plus, Brain, FileText, Database, Edit, Folder, MousePointerClick, Route } from "lucide-react";
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, MarkerType } from '@xyflow/react';
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -1826,7 +1826,40 @@ export function GraphView({ projectId, onGraphControlsChange }: GraphViewProps) 
                 <LayoutGrid className="h-4 w-4" />
                 {!isMobile && 'Spatial'}
               </Button>
-            </div>
+             </div>
+            
+            {/* Mobile Multi-Select Controls */}
+            {isMobile && (
+              <div className="flex gap-2 justify-center">
+                <Button
+                  variant={multiSelectedConcepts.length > 0 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    if (multiSelectedConcepts.length > 0) {
+                      setMultiSelectedConcepts([]);
+                    }
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <MousePointerClick className="h-4 w-4" />
+                  Concepts ({multiSelectedConcepts.length})
+                </Button>
+                <Button
+                  variant={selectedInsights.size > 0 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    if (selectedInsights.size > 0) {
+                      setSelectedInsights(new Set());
+                    }
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Route className="h-4 w-4" />
+                  Trace ({selectedInsights.size})
+                </Button>
+              </div>
+            )}
+            
             <Dialog open={insightDialogOpen} onOpenChange={setInsightDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2">
